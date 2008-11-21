@@ -52,12 +52,12 @@ named pipe and the error output is written to the
 .I /tmp/nxt_server_err_$KEY
 named pipe.
 
-The name of the commands are identical to the names of the libnxt tools,
+The name of the commands are identical to the names of the aNXT tools,
 without the "nxt_" prefix. Before a command is written into the input pipe,
 arguments and options can be used. 
 
 A argument is identical to the commandline
-argument of the matching libnxt tool, but with a preceding "1" or "2" character
+argument of the matching aNXT tool, but with a preceding "1" or "2" character
 (followed by a space) for the first or the second commandline argument.
 No command supports more than two arguments. 
 
@@ -65,7 +65,7 @@ Sending data from/to the standard output is not possible. Instead files has
 to be used. The equivalents of nxt_motor_playback(1) and nxt_motor_record(1) 
 use a "1 filename" command to specify files.
 
-A option is identical to the option of the matching libnxt tool, but without 
+A option is identical to the option of the matching aNXT tool, but without 
 the leading "-" character.
 Options with values are composed by the option-character, a space and the
 value.
@@ -190,7 +190,7 @@ echo exit >> command pipe
 
 The
 .I nxt_server
-program should support almost all libnxt tools, but not administrative
+program should support almost all aNXT tools, but not administrative
 tools (tools documented in the section 8 of the manpages) and only commands
 that require the communication with a NXT brick (e.g. not file converters,
 not tools for errormessages).
@@ -380,7 +380,7 @@ The communication over named pipes often require flush operations.
 J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)
 .\" man page author: J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)
 .SH "SEE ALSO"
-.BR libnxt (3), 
+.BR libanxt (3), 
 .BR nxt_error (1),
 .BR nxt_udev (8),
 .BR nxt_info (1)

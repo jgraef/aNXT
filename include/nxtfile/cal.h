@@ -1,5 +1,7 @@
 /*
-    libnxt - A C library for using LEGO Mindstorms NXT
+    cal.h
+    aNXT - a NXt Toolkit
+    Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
 
     This program is free software: you can redistribute it and/or modify

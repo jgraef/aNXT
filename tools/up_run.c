@@ -1,6 +1,7 @@
 /*
     up_run.c
-    libnxt - A C library for using LEGO Mindstorms NXT
+    aNXT - a NXt Toolkit
+    Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
     Copyright (C) 2008  J. Scheurich (IITS Universitaet Stuttgart)
 

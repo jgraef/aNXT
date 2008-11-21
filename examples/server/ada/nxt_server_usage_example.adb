@@ -1,6 +1,7 @@
 --    nxt_server_usage_example.adb 
 --    example program to use the nxt_server program with Ada
---    libnxt - A C library for using LEGO Mindstorms NXT
+--    aNXT - a NXt Toolkit
+--    Libraries and tools for LEGO Mindstorms NXT robots
 --    Copyright (C) 2008  Janosch Graef <janosch.graef@gmx.net>
 --    Copyright (C) 2008  J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)
 --    Copyright (C) 2008  Dr. Peter.Hermann (IHR Universitaet Stuttgart)

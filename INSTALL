@@ -4,7 +4,10 @@ DEPENDENCIES:
 	libbluetooth
 	libgd
         libsndfile
+        sdl
+        fuse
 
 INSTALL:
-	Run 'make' to compile the library.
-	Run 'make install' as root to copy the libnxt.a to /usr/lib and nxt.h to /usr/include
+        Edit Makefile.config to adjust settings
+	Run 'make' to compile
+	Run 'make install' to install aNXT to /usr/local

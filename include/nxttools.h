@@ -1,6 +1,7 @@
 /*
-    libnxt - A C library for using LEGO Mindstorms NXT
-    libnxttools - A library of often used libnxt support functions 
+    libanxttools - A library of often used aNXT support functions 
+    aNXT - a NXt Toolkit
+    Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
     Copyright (C) 2008  J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)
 

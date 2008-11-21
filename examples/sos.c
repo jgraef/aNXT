@@ -1,6 +1,7 @@
 /*
     sos.c - example program to blink the SOS morsecode with the lightsensor
-    libnxt - A C library for using LEGO Mindstorms NXT
+    aNXT - a NXt Toolkit
+    Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
 
     This program is free software: you can redistribute it and/or modify
@@ -30,7 +31,7 @@ int main(int argc,char *argv[]) {
   int i;
   int sensor = NXT_SENSOR1; // Sensor port at which the light sensor is connected
 
-  nxt_init(); // Initializes libnxt
+  nxt_init(); // Initializes libanxt
   nxt_t *nxt = nxt_open(NULL); // Opens a NXT handle. 'NULL' means that we do
                                // not care about which NXT to open (good if
                                // you have only one NXT)

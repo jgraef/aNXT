@@ -1,6 +1,7 @@
 /*
-    nxtd.c
-    nxtd - A daemon for managing NXT connections
+    nxtd.c - A daemon for managing NXT connections
+    aNXT - a NXt Toolkit
+    Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
 
     This program is free software: you can redistribute it and/or modify

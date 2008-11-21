@@ -40,7 +40,7 @@ TOOLS = ../bin/nxt_info \
 	../bin/nxt_sensorgraph \
 	../bin/nxt_modfs \
 	../bin/nxt_pilot \
-	../bin/nxt-config
+	../bin/anxt-config
 
 all: $(TOOLS)
 
@@ -164,7 +164,7 @@ all: $(TOOLS)
 ../bin/nxt_pilot: pilot.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< `sdl-config --cflags` `sdl-config --libs` -lSDL_image $(LIBS)
 
-../bin/nxt-config: nxt-config.c
+../bin/anxt-config: anxt-config.c
 	$(CC) -o $@ $< -DVERSION="\"$(CONFIG_VERSION)\"" -DCFLAGS="\"$(CONFIG_CFLAGS)\"" -DLIBS="\"$(CONFIG_LIBS)\"" -DSTATIC_LIBS="\"$(CONFIG_STATIC_LIBS)\""
 
 clean:

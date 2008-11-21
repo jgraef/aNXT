@@ -1,22 +1,24 @@
-libnxt - A C library for using LEGO Mindstorms NXT
+aNXT -	a NXt Toolkit
+	Libraries and tools for LEGO Mindstorms NXT robots
 
-COMPILING A PROGRAM WITH LIBNXT:
+COMPILING A PROGRAM WITH THE aNXT LIBRARY:
 	Example:
-	gcc -o foobar `nxt-config --cflags --libs`
+	gcc -o foobar foobar.c `anxt-config --cflags --libs` 
 
 USE FOR TESTING:
         You will find some compiled programs in the bin directory after
         compilation. They can be used easily to test the most important 
-        commands of libnxt from the shell command prompt.
+        commands of aNXT from the shell command prompt.
 
 HELP:
 	Take a look in the directory "examples/" if you want to get a 
-        small overview on how to use libnxt.
+        small overview on how to use aNXT.
 	If you are having problems send me a mail: janosch.graef@gmx.net
 
 USB-PERMISSIONS:
-	By default the NXT is only writeable by root. Run 'make udev' to add 
-        udev-rules (40-nxt.rules) to make the NXT writable for group 'users'
+	By default the NXT brick is only accessable by root. 
+        Run 'nxt_udev' to add udev-rules (40-nxt.rules) to make the 
+        NXT accessable for group 'users'
 
 BLUETOOTH SECURITY:
 	You need a tool for handling bluetooth security. There are several 
