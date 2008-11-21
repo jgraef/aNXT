@@ -240,6 +240,7 @@ static void handle_argument(char option, char* argument)
        break;
      case 't': 
        sscanf(argument,"%lf",&time);
+       type = nxt_str2type(argument);
        break;
 
 

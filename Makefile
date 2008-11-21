@@ -3,15 +3,15 @@
 
 -include Makefile.config
 
-all: lib/libnxt.a lib/libnxttools.a lib/libnxtfile.a lib/libnxtnet.a bin/nxtd
+all: lib/libanxt.a lib/libanxttools.a lib/libanxtfile.a lib/libanxtnet.a bin/nxtd
 	make -C examples/
 	make -C tools/
 
-##### Make libnxt #####
+##### Make libanxt #####
 
-lib/libnxt.a: nxt.o us.o nxtcam.o
+lib/libanxt.a: nxt.o us.o nxtcam.o
 	$(AR) rs $@ $^
-	$(CC) -shared -Wl,-soname,libnxt.so.1 -o lib/libnxt.so.1 $^ -lc
+	$(CC) -shared -Wl,-soname,libanxt.so.1 -o lib/libanxt.so.1 $^ -lc
 
 nxt.o: nxt.c
 	$(CC) $(CFLAGS) -c -o $@ $< -DNXTD_PIDFILE=\"$(NXTD_PIDFILE)\" -DPATH_BIN=\"$(PATH_BIN)\"
@@ -22,18 +22,18 @@ us.o: us.c
 nxtcam.o: nxtcam.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-##### Make libnxttools #####
+##### Make libanxttools #####
 
-lib/libnxttools.a: nxttools.c
+lib/libanxttools.a: nxttools.c
 	$(CC) $(CFLAGS) -c -o nxttools.o $<
 	$(AR) rs $@ nxttools.o
-	$(CC) -shared -Wl,-soname,libnxttools.so.1 -o lib/libnxttools.so.1 nxttools.o -lc
+	$(CC) -shared -Wl,-soname,libanxttools.so.1 -o lib/libanxttools.so.1 nxttools.o -lc
 
-##### Make libnxtfile #####
+##### Make libanxtfile #####
 
-lib/libnxtfile.a: cal.o ric.o rmd.o rso.o nvconfig.o
+lib/libanxtfile.a: cal.o ric.o rmd.o rso.o nvconfig.o
 	$(AR) rs $@ $?
-	$(CC) -shared -Wl,-soname,libnxtfile.so.1 -o lib/libnxtfile.so.1 $^ -lc
+	$(CC) -shared -Wl,-soname,libanxtfile.so.1 -o lib/libanxtfile.so.1 $^ -lc
 
 cal.o: cal.c
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -52,23 +52,23 @@ nvconfig.o: nvconfig.c
 
 ##### Make nxtd #####
 
-bin/nxtd: nxtd.c nxtd_usb_$(USB_MOD).c nxtd_bt_$(BT_MOD).c lib/libnxtnet.a
-	$(CC) $(CFLAGS) -o $@ nxtd.c nxtd_usb_$(USB_MOD).c nxtd_bt_$(BT_MOD).c -Llib/ -lusb -lbluetooth -lnxtnet -DNXTD_PIDFILE=\"$(NXTD_PIDFILE)\"
+bin/nxtd: nxtd.c nxtd_usb_$(USB_MOD).c nxtd_bt_$(BT_MOD).c lib/libanxtnet.a
+	$(CC) $(CFLAGS) -o $@ nxtd.c nxtd_usb_$(USB_MOD).c nxtd_bt_$(BT_MOD).c -Llib/ -lusb -lbluetooth -lanxtnet -DNXTD_PIDFILE=\"$(NXTD_PIDFILE)\"
 
-##### Make nxtnet #####
+##### Make libanxtnet #####
 
-lib/libnxtnet.a: nxtnet.c
+lib/libanxtnet.a: nxtnet.c
 	$(CC) $(CFLAGS) -c -o nxtnet.o $<
 	$(AR) rs $@ nxtnet.o
-	$(CC) -shared -Wl,-soname,libnxtnet.so.1 -o lib/libnxtnet.so.1 nxtnet.o -lc
+	$(CC) -shared -Wl,-soname,libanxtnet.so.1 -o lib/libanxtnet.so.1 nxtnet.o -lc
 
 ##### Install target #####
 
 install:
 	cp -R lib/* $(PATH_LIB)
-	ln -sf $(PATH_LIB)/libnxt.so.1 $(PATH_LIB)/libnxt.so
-	ln -sf $(PATH_LIB)/libnxttools.so.1 $(PATH_LIB)/libnxttools.so
-	ln -sf $(PATH_LIB)/libnxtfile.so.1 $(PATH_LIB)/libnxtfile.so
+	ln -sf $(PATH_LIB)/libanxt.so.1 $(PATH_LIB)/libanxt.so
+	ln -sf $(PATH_LIB)/libanxttools.so.1 $(PATH_LIB)/libanxttools.so
+	ln -sf $(PATH_LIB)/libanxtfile.so.1 $(PATH_LIB)/libanxtfile.so
 	cp -R include/* $(PATH_INCLUDE)
 	cp -R bin/* $(PATH_BIN)
 	cp -R doc/man/* $(PATH_MAN)
