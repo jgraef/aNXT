@@ -1,0 +1,44 @@
+.\" This manpage is free software; the Free Software Foundation
+.\" gives unlimited permission to copy, distribute and modify it.
+.\" 
+.\"
+.\" Process this file with
+.\" groff -man -Tascii nxt_rmdc.1
+.\"
+.TH NXT_RMDC 1 "JUNE 2008" Linux "User Manuals"
+.SH NAME
+nxt_rmdc \- convert between midi and robot melody files
+.SH SYNOPSIS
+.B nxt_rmdc [
+.I options
+.B ]
+file
+.SH DESCRIPTION
+Rmd converter: Convert between midi sound files and robot melody files.
+.br
+Robot melody files (extension ".rmd") are usually used on the 
+Lego Mindstorms NXT brick.
+.br
+Robot melody files hold information about notes, that is frequency and 
+duration.
+.SH AVAILABILITY 
+Linux
+.SH OPTIONS
+.IP "-o outputfile"
+Set the name of output file.
+.br
+The usage of this option is recommended, cause the default
+.I outputfile
+is made from name of the inputfile (including extension) and the extension
+of the target format.
+.IP "-v"
+Verbose mode
+.SH EXAMPLES
+nxt_rmdc test.mid
+.LP
+Convert the inputfile 
+.I test.mid
+to a robot melody file named test.mid.rmd
+.SH AUTHOR
+Janosch Graef
+.\" man page author: J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)

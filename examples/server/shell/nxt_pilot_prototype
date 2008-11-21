@@ -1,0 +1,153 @@
+#!/bin/bash
+# This program is free software; the Free Software Foundation
+# gives unlimited permission to copy, distribute and modify it.
+
+which gtkdialog >/dev/null 2>/dev/null
+if test "$?" != "0" ; then
+   echo this program requires gtkdialog 1>&2
+   exit 1
+fi 
+
+NXT_NAME=
+if test "X_$1" = "X_-n"; then
+   NXT_NAME="-n $2"
+fi
+
+if test "X_$1" = "X_-h"; then
+   echo usage $0
+   echo prototype of a program to control a NXT brick without touching it
+   echo Options:
+   echo "      -n NXTNAME   Name of NXT (Default: first found) or bluetooth adress"
+   exit 0
+fi
+
+TMP_IMAGE=/tmp/nxt_pilot_$$.png
+
+NXTLIB_BIN=`dirname $0/../../../bin`
+
+killall $NXTLIB_BIN/nxt_server 2>/dev/null
+
+KEY=$$
+IN=/tmp/nxt_server_in_$KEY
+OUT=/tmp/nxt_server_out_$KEY
+ERR=/tmp/nxt_server_err_$KEY
+
+KILL_NXT_SERVER=1
+
+function nxt_cleanup {
+ rm -f $TMP_IMAGE
+ rm -f $IN
+ rm -f $OUT
+ rm -f $ERR
+ if test "X_$KILL_NXT_SERVER" = "1" ; then
+   killall -15 $NXTLIB_BIN/nxt_server 2>/dev/null
+ fi
+}
+
+# start nxt_server
+# on failure of nxt_server cleanup and kill this script
+($NXTLIB_BIN/nxt_server $NXT_NAME -o $KEY || (nxt_cleanup;kill -15 $KEY)) &
+
+#wait till nxt_server has connected to NXT and created named pipes
+while test ! -p $IN; do sleep 1; done
+
+KILL_NXT_SERVER=0
+
+# send dummy command first 
+# this is usefull in case of a loop, the commands in a loop would 
+# need "echo something >> $IN" instead of "echo something > $IN"
+echo dummy > $IN
+cat < $ERR
+cat < $OUT > /dev/null
+
+LEFT_IMAGE=\"$NXTLIB_BIN/../lib/left.png\"
+RIGHT_IMAGE=\"$NXTLIB_BIN/../lib/right.png\"
+
+while true; do 
+  echo "o $TMP_IMAGE" >> $IN
+  echo screenshot >> $IN
+  cat < $ERR
+  cat < $OUT > /dev/null
+
+  export MAIN_DIALOG='
+  <vbox>
+   <hbox>
+     <text>
+       <label>"    "</label>
+     </text>
+     <button>
+       <label>update</label>
+     </button>
+     <text>
+       <label>"        "</label>
+     </text>
+   </hbox>
+   <pixmap>
+     <input file>'$TMP_IMAGE'</input>
+   </pixmap>
+   <hbox>
+     <button>
+       <label>left</label>
+     </button>
+     <button>
+       <label>enter</label>
+     </button>
+     <button>
+       <label>right</label>
+     </button>
+   </hbox>
+   <hbox>
+     <text>
+       <label>"    "</label>
+     </text>
+     <button>
+       <label>exit</label>
+     </button>
+     <text>
+       <label>"            "</label>
+     </text>
+   </hbox>
+  </vbox>'
+
+EXIT=`gtkdialog --program MAIN_DIALOG`
+
+if test "$EXIT" = "EXIT=\"right\""; then
+  echo "b Right" >> $IN
+  echo setbutton >> $IN
+  cat < $ERR
+  cat < $OUT > /dev/null
+fi
+if test "$EXIT" = "EXIT=\"left\""; then
+  echo "b Left" >> $IN
+  echo setbutton >> $IN
+  cat < $ERR
+  cat < $OUT > /dev/null
+fi
+if test "$EXIT" = "EXIT=\"enter\""; then
+  echo "b Enter" >> $IN
+  echo setbutton >> $IN
+  cat < $ERR
+  cat < $OUT > /dev/null
+fi
+if test "$EXIT" = "EXIT=\"exit\""; then
+   echo "getprog" >> $IN
+   cat < $ERR >/dev/null
+   OUTPUT=`cat < $OUT`
+   if test "X_" != "X_$OUTPUT" ; then
+     echo stop >> $IN
+     cat < $ERR
+     cat < $OUT > /dev/null
+   else
+     echo "b Exit" >> $IN
+     echo setbutton >> $IN
+     cat < $ERR
+     cat < $OUT > /dev/null
+   fi
+fi
+if test "$EXIT" = "EXIT=\"abort\""; then
+  #exit nxt_server
+  echo exit >> $IN
+  nxt_cleanup
+  exit
+fi
+done

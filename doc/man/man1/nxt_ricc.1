@@ -1,0 +1,66 @@
+.\" This manpage is free software; the Free Software Foundation
+.\" gives unlimited permission to copy, distribute and modify it.
+.\" 
+.\"
+.\" Process this file with
+.\" groff -man -Tascii nxt_ricc.1
+.\"
+.TH NXT_RICC 1 "JUNE 2008" Linux "User Manuals"
+.SH NAME
+nxt_ricc \- convert between bitmap and robot picture graphics files
+.SH SYNOPSIS
+.B nxt_ricc [
+.I options
+.B ]
+file
+.SH DESCRIPTION
+Ric converter: Convert between bitmap images files (eg. jpeg or png format) 
+and robot picture graphics files.
+.br
+Robot picture graphics files (extension ".ric") are usually used on the 
+Lego Mindstorms NXT brick.
+.SH AVAILABILITY 
+Linux
+.SH OPTIONS
+.IP "-f outputformat"
+Set output format.
+.br
+This option is only required for RIC to PNG/JPEG conversion.
+.br
+Valid values for
+.I "outputformat"
+are png, jpg and gif.
+.IP "-i"
+Invert image.
+.br
+Convert white pixels to black and vise versa.
+.IP "-o outputfile"
+Set the name of output file.
+.br
+The usage of this option is recommended, cause the default
+.I outputfile
+is made from name of the inputfile (including extension) and the extension
+of the target format.
+.IP "-q quality"
+Set quality.
+.br
+This option is only usefull when saving to JPEG files.
+.br
+The default
+.I "quality"
+is -1, which means the best quality/memory ratio.
+.\" .IP "-t"
+.\" Use transparency instead of white (Works only for png or gif 
+.\" output 
+files)
+.IP "-v"
+Verbose mode
+.SH EXAMPLES
+nxt_ricc test.png
+.LP
+Convert the inputfile 
+.I test.png
+to a robot picture graphics file named test.png.ric
+.SH AUTHOR
+Janosch Graef
+.\" man page author: J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)

@@ -1,0 +1,182 @@
+#!/bin/bash
+# This program is free software; the Free Software Foundation
+# gives unlimited permission to copy, distribute and modify it.
+
+NXT_NAME=
+if test "X_$1" = "X_-n"; then
+   NXT_NAME="-n $2"
+fi
+
+if test "X_$1" = "X_-h"; then
+   echo usage $0
+   echo nxt_server test program
+   echo Options:
+   echo "      -n NXTNAME   Name of NXT (Default: first found) or bluetooth adress"
+   exit 0
+fi
+
+NXTLIB_BIN=`dirname $0`/../../../bin
+
+killall nxt_server 2>/dev/null
+
+KEY=$$
+IN=/tmp/nxt_server_in_$KEY
+OUT=/tmp/nxt_server_out_$KEY
+ERR=/tmp/nxt_server_err_$KEY
+
+KILL_NXT_SERVER=1
+
+function nxt_cleanup {
+ rm -f $IN
+ rm -f $OUT
+ rm -f $ERR
+ if test "X_$KILL_NXT_SERVER" = "1" ; then
+   killall -15 $NXTLIB_BIN/nxt_server 2>/dev/null
+ fi
+}
+
+# start nxt_server
+# on failure of nxt_server cleanup and kill this script
+($NXTLIB_BIN/nxt_server $NXT_NAME -o $KEY || (nxt_cleanup;kill -15 $KEY)) &
+
+# outcommented debugger start of nxt_server
+# xterm -fn 10x20 -e sh -c "(echo $KEY $NXT_NAME -o;gdb $NXTLIB_BIN/nxt_server)" &
+
+#wait till nxt_server has connected to NXT and created named pipes
+while test ! -p $IN; do sleep 1; done
+
+KILL_NXT_SERVER=0
+
+# send dummy command first 
+# this is usefull in case of a loop, the commands in a loop would 
+# need "echo something >> $IN" instead of "echo something > $IN"
+echo dummy > $IN
+cat < $ERR
+cat < $OUT > /dev/null
+
+for i in 1 2 3 4 5 6 7 8; do 
+  echo "f 440" >> $IN
+  echo "d 2000" >> $IN
+  echo beep >> $IN
+  cat < $ERR
+  cat < $OUT > /dev/null
+
+  echo "f 220" >> $IN
+  echo "d 1000" >> $IN
+  echo beep >> $IN
+  cat < $ERR
+  cat < $OUT > /dev/null
+done
+
+NUM=0
+BREAK=0
+while test "X_$BREAK" = "X_0" ; do
+  NUM=`expr $NUM + 1`
+  TEST_FILE=test$NUM.rxe
+  echo "1 $TEST_FILE" >> $IN
+  echo list >> $IN
+  ERROR=`cat < $ERR` 
+  RESULT=`cat < $OUT`
+  if test "X_$RESULT" = "X_" ; then
+    BREAK=1  
+  fi
+done
+echo "1 runtest.rxe" >> $IN
+echo "2 $TEST_FILE" >> $IN
+echo upload >> $IN
+cat < $ERR
+cat < $OUT
+
+echo "1 $TEST_FILE" >> $IN
+echo "2 /tmp/runtest.rxe" >> $IN
+echo download >> $IN
+cat < $ERR
+cat < $OUT
+
+echo run
+echo "1 $TEST_FILE" >> $IN
+echo run >> $IN
+cat < $ERR
+cat < $OUT
+
+sleep 1
+
+echo getprog
+echo getprog >> $IN     
+cat < $ERR
+cat < $OUT
+
+sleep 1
+
+echo stop
+echo stop >> $IN     
+cat < $ERR
+cat < $OUT
+
+echo "1 $TEST_FILE" >> $IN
+echo remove >> $IN
+cat < $ERR
+cat < $OUT
+
+if diff runtest.rxe /tmp/runtest.rxe ; then
+   echo need else > /dev/null
+else
+   echo error: runtest.rxe has been changed after upload and download to NXT 1>&2 
+   echo exit >> $IN
+   nxt_cleanup
+   exit 1
+fi
+
+echo info >> $IN     
+cat < $ERR
+cat < $OUT
+
+echo "1 *.mod" >> $IN
+echo lsmod >> $IN
+cat < $ERR
+cat < $OUT
+
+echo "1 *.*" >> $IN
+echo list >> $IN
+cat < $ERR
+cat < $OUT
+
+echo info >> $IN     
+cat < $ERR
+cat < $OUT
+
+echo "p 70" >> $IN
+echo motor >> $IN     
+cat < $ERR
+cat < $OUT
+
+sleep 3
+
+echo b >> $IN
+echo motor >> $IN     
+cat < $ERR
+cat < $OUT
+
+echo b >> $IN
+echo motor >> $IN     
+cat < $ERR
+cat < $OUT
+
+for i in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0; do 
+  echo "s 1" >> $IN
+  echo "t sound_db" >> $IN
+  echo "sensor" >> $IN
+  cat < $ERR 
+  cat < $OUT
+done
+
+echo "1 motor_recorded.txt" >> $IN
+echo "p 53" >> $IN
+echo motor_playback >> $IN
+cat < $ERR
+cat < $OUT
+
+#exit nxt_server
+echo exit >> $IN
+nxt_cleanup
+

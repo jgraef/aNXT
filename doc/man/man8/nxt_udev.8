@@ -1,0 +1,24 @@
+.\" This manpage is free software; the Free Software Foundation
+.\" gives unlimited permission to copy, distribute and modify it.
+.\"
+.\" Process this file with
+.\" groff -man -Tascii nxt_udev.1
+.\"
+.TH NXT_UDEV 8 "SEPTEMBER 2008" Linux "User Manuals"
+.SH NAME
+nxt_udev \- generate udev rules for USB access to the LEGO mindstorms NXT brick 
+.SH SYNOPSIS
+.B nxt_udev
+.I user
+.SH DESCRIPTION
+Generate Linux udev rules for USB access to the LEGO mindstorms NXT brick.
+
+Usually it requires root rights to access a USB device under Linux.
+With a rule for the Linux udev system it is possible to assign a device
+to a user.
+.I nxt_udev
+copies a file with udev rules to the directory /etc/udev/rules.d
+.SH AVAILABILITY 
+Linux
+.SH "SEE ALSO"
+udev (7)

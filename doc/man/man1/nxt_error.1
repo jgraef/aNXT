@@ -1,0 +1,27 @@
+.\" This manpage is free software; the Free Software Foundation
+.\" gives unlimited permission to copy, distribute and modify it.
+.\" 
+.\"
+.\" Process this file with
+.\" groff -man -Tascii nxt_error.1
+.\"
+.TH NXT_ERROR 1 "JUNE 2008" Linux "User Manuals"
+.SH NAME
+nxt_error \- Display error of NXT brick matching to errornumber
+.SH SYNOPSIS
+.B nxt_error
+.I errornumber
+.SH DESCRIPTION
+Display error of LEGO mindstroms NXT brick matching to errornumber.
+.I nxtlib
+shell commands return integer errors as return code.
+.I nxt_error
+can be used to get the matching errorstring.
+.SH AVAILABILITY 
+Linux
+.SH EXAMPLES
+nxt_error 192
+.LP
+This command display the string "Data contains out-of-range values"
+.\" man page author: J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)
+

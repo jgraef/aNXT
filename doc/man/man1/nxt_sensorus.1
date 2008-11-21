@@ -1,0 +1,100 @@
+.\" This manpage is free software; the Free Software Foundation
+.\" gives unlimited permission to copy, distribute and modify it.
+.\" 
+.\"
+.\" Process this file with
+.\" groff -man -Tascii nxt_sensorus.1
+.\"
+.TH NXT_SENSORUS 1 "JUNE 2008" Linux "User Manuals"
+.SH NAME
+nxt_sensorus \- Get a value from the ultrasonic LEGO mindstorms NXT sensor
+.SH SYNOPSIS
+.B nxt_sensorus [
+.I options
+.B ]
+.SH DESCRIPTION
+Get a value from the ultrasonic digital LEGO mindstorms NXT sensor. 
+.br
+Most third party sensors (e.g. from HiTech or Mindsensor) are compatible
+to the ultrasonic sensor. So the 
+.I nxt_sensorus (1)
+program can be used for them too. Some of the third party sensors can
+be used with the
+.I nxt_sensorus (1)
+but do not deliver their full accuracy.
+Some of the third party sensors are not compatible to LEGOs ultrasonic
+sensor and there require special written functions similar to the nxt_us_* 
+.I libnxt(3)
+functions. 
+
+The use of the shell command
+.I nxt_sensorus (1)
+itself is not very usefull over bluetooth, cause the initialisation of the 
+bluetooth connection needs about 5 seconds in average.
+.br
+See the
+.I nxt_server (1)
+program and its examples for a better shell script solution.
+.SH AVAILABILITY 
+Linux
+.SH OPTIONS
+.IP "-n nxtname"
+Use the NXT with name 
+.I "nxtname" 
+\&. The default is the first found brick. 
+.sp
+Additionally, the bluetooth address of the NXT brick can be used as
+.I nxtname
+\&. You can get the bluetooth address and name of your USB connected
+NXT brick by using
+.I nxt_info(1)
+.IP "-s sensor"
+The 
+.I sensor
+values are: 1, 2, 3, 4.
+.br
+The default is the sensorport 4, the usual port (defined by Lego itself)
+for the ultrasonic sensor.
+.IP -r
+Reset sensor after reading
+.IP -v         
+Verbose mode: print value and unit.
+.SH EXIT STATUS
+.LP
+The following exit values shall be returned:
+.TP 7
+\ 0
+Successful completion.
+.TP 7
+>0
+A error occured. If the error is caused by a problem of the NXT brick itself, 
+a matching errorstring to the exit value can be displayed with the 
+.I nxt_error(1) 
+command.
+.sp
+.SH EXAMPLES
+nxt_sensorus -n 01:23:45:67:89:ab
+.LP
+Connect to the NXT brick with bluetooth address "01:23:45:67:89:ab" via 
+bluetooth and get the value of the ultrasonic sensor at port 4.
+.SH CAVEATS
+You can not get automatically access to the NXT brick.
+
+Either you need access rights to the NXT usb device. Use root rights or see  
+.I nxt_udev(8) 
+for more information.
+
+Or you need to pair the bluetooth devices of the host computer and the 
+NXT brick. There are several programs to do this, one is 
+"kbluetoothd".
+.SH AUTHOR
+Janosch Graef
+.\" man page author: J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)
+.SH "SEE ALSO"
+.BR libnxt (3), 
+.BR nxt_sensor (1),
+.BR nxt_server (1),
+.BR nxt_error (1),
+.BR nxt_udev (8),
+.BR nxt_info (1)
+

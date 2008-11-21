@@ -1,0 +1,76 @@
+.\" This manpage is free software; the Free Software Foundation
+.\" gives unlimited permission to copy, distribute and modify it.
+.\" 
+.\"
+.\" Process this file with
+.\" groff -man -Tascii nxt_up_run.1
+.\"
+.TH NXT_UP_RUN 1 "JUNE 2008" Linux "User Manuals"
+.SH NAME
+nxt_up_run \- upload and run a file to the LEGO mindstorms NXT brick
+.SH SYNOPSIS
+.B nxt_up_run [
+.I options
+.B ]
+input [output]
+.SH DESCRIPTION
+Upload a file from the host computer to the NXT brick and then start it on
+the NXT brick.
+.br
+If the name of the outputfile on the NXT brick ( 
+.I "output"
+) is not given, the name of the inputfile on the hostcomputer (
+.I "input"
+) is used.
+.SH AVAILABILITY 
+Linux
+.SH OPTIONS
+.IP "-n nxtname"
+Use the NXT with name 
+.I "nxtname" 
+\&. The default is the first found brick. 
+.sp
+Additionally, the bluetooth address of the NXT brick can be used as
+.I nxtname
+\&. You can get the bluetooth address and name of your USB connected
+NXT brick by using
+.I nxt_info(1)
+.SH EXIT STATUS
+.LP
+The following exit values shall be returned:
+.TP 7
+\ 0
+Successful completion.
+.TP 7
+>0
+A error occured. If the error is cause by a problem of the NXT brick itself, 
+a matching errorstring to the exit value can be displayed with the 
+.I nxt_error(1) 
+command.
+.sp
+.SH EXAMPLES
+nxt_up_run -n 01:23:45:67:89:ab test.rxe
+.LP
+Connect to the NXT brick with bluetooth address "01:23:45:67:89:ab" via 
+bluetooth, upload the file test.rxe from host computer to the NXT 
+brick as a linear file test.rxe and start this file on the NXT brick.
+.SH CAVEATS
+You can not get automatically access to the NXT brick.
+
+Either you need access rights to the NXT usb device. Use root rights or see  
+.I nxt_udev(8) 
+for more information.
+
+Or you need to pair the bluetooth devices of the host computer and the 
+NXT brick. There are several programs to do this, one is 
+"kbluetoothd".
+.SH AUTHOR
+Janosch Graef
+.\" man page author: J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)
+.SH "SEE ALSO"
+.BR libnxt (3), 
+.BR nxt_upload (1),
+.BR nxt_run (1),
+.BR nxt_error (1),
+.BR nxt_udev (8),
+.BR nxt_info (1)

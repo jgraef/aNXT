@@ -1,0 +1,414 @@
+.\" This manpage is free software; the Free Software Foundation
+.\" gives unlimited permission to copy, distribute and modify it.
+.\" 
+.\"
+.\" Process this file with
+.\" groff -man -Tascii nxt_server.1
+.\"
+.TH NXT_SERVER 1 "JUNE 2008" Linux "User Manuals"
+.SH NAME
+nxt_server \- Start server program to steer the NXT brick
+.SH SYNOPSIS
+.B nxt_server [
+.I options
+.B ]
+.B [
+.I key
+.B ]
+.SH DESCRIPTION
+The 
+.I nxt_server
+program is similar to a "open" command for the LEGO mindstorms NXT brick.
+.br
+Especially when communicating with a NXT brick over bluetooth, 
+multiple shell commands are very slow. Each shell command needs to
+initialise a bluetooth connection, which take 5 seconds in average. 
+A complete scan for available bluetooth devices take additional 10 seconds.
+.br
+The 
+.I nxt_server
+program solves this problem, by initalising the connection to the NXT brick
+once and then wait for commands via a named pipe. 
+
+The
+.I nxt_server
+program, makes it possible to program the NXT brick with any programming
+language, that support open, read, write and flush operations.
+The name of the named pipe for commands is generated as
+.I /tmp/nxt_server_in_$KEY
+where 
+.I $KEY
+is replaced by the
+.I key
+commandline argument of the
+.I nxt_server
+command (if present), or generated from the process id of the 
+.I nxt_server
+command (which can be investigated with the
+.I ps(1)
+command). The output of the commands is written to the 
+.I /tmp/nxt_server_out_$KEY
+named pipe and the error output is written to the
+.I /tmp/nxt_server_err_$KEY
+named pipe.
+
+The name of the commands are identical to the names of the libnxt tools,
+without the "nxt_" prefix. Before a command is written into the input pipe,
+arguments and options can be used. 
+
+A argument is identical to the commandline
+argument of the matching libnxt tool, but with a preceding "1" or "2" character
+(followed by a space) for the first or the second commandline argument.
+No command supports more than two arguments. 
+
+Sending data from/to the standard output is not possible. Instead files has
+to be used. The equivalents of nxt_motor_playback(1) and nxt_motor_record(1) 
+use a "1 filename" command to specify files.
+
+A option is identical to the option of the matching libnxt tool, but without 
+the leading "-" character.
+Options with values are composed by the option-character, a space and the
+value.
+
+Sending/receiving data over named pipes require a file open of the named
+pipe by both partners at the same time. 
+
+Sending is blocked, till the other partner opened the pipe and receive data. 
+
+Receiving is blocked, till the
+other partner opened the pipe and send data. 
+
+If one partner close the pipe, the communication is lost.
+
+So sucessfull communication needs to know the sequence of open, read and write
+operations. You can see the sequence for the 
+.I nxt_server 
+operations, when you use the verbose option. 
+
+.I nxt_server
+has two such sequences (depending on the commandline options): One sequence
+is made for usual programming languages and one for tools like shell scripts,
+which need to open/close the named pipe on every command.
+
+The sequence for usage with a usual programming languages is:
+
+Start nxt_server
+
+Open command pipe for output
+.br
+Open error pipe for input
+.br
+Open result pipe for input 
+
+Write 1. option/argument to the command pipe
+.br
+Write 2. option/argument to the command pipe
+.br
+Write 3. option/argument to the command pipe
+.br
+ ...
+.br
+Write command to the command pipe.
+
+Read error message (maybe a single carriage return) from the error pipe
+.br
+Read 1. data line from the result pipe
+.br
+Read 2. data line from the result pipe
+.br
+ ...
+.br
+Read single carriage return from the result pipe
+
+Write 1. option/argument to the command pipe
+.br
+Write 2. option/argument to the command pipe
+.br
+Write 3. option/argument to the command pipe
+.br
+ ...
+.br
+Write command to the command pipe
+
+Read error message from the error pipe
+.br
+Read 1. data line from the result pipe
+.br
+Read 2. data line from the result pipe
+.br
+ ...
+.br
+Read single carriage return from the result pipe.
+
+etc.
+.br 
+ ...
+
+write the string "exit" to the command pipe to stop nxt_server 
+
+Close command pipe.
+.br
+Close error pipe.
+.br
+Close result pipe.
+
+The sequence for usage with a shell script is:
+
+Start nxt_server -o
+
+echo 1. option/argument > command pipe
+.br
+echo 2. option/argument >> command pipe
+.br
+echo 3. option/argument >> command pipe
+.br
+ ...
+.br
+echo command >> command pipe
+
+cat << error pipe
+.br
+cat << result pipe
+
+echo 1. option/argument >> command pipe
+.br
+echo 2. option/argument >> command pipe
+.br
+echo 3. option/argument >> command pipe
+.br
+ ...
+.br
+echo command >> command pipe
+
+cat << error pipe
+.br
+cat << result pipe
+
+etc.
+
+echo exit >> command pipe
+
+The
+.I nxt_server
+program should support almost all libnxt tools, but not administrative
+tools (tools documented in the section 8 of the manpages) and only commands
+that require the communication with a NXT brick (e.g. not file converters,
+not tools for errormessages).
+.SH AVAILABILITY 
+Linux
+.SH OPTIONS
+.IP "-n nxtname"
+Use the NXT with name 
+.I "nxtname" 
+\&. The default is the first found brick. 
+.sp
+Additionally, the bluetooth address of the NXT brick can be used as
+.I nxtname
+\&. You can get the bluetooth address and name of your USB connected
+NXT brick by using
+.I nxt_info(1)
+.SH EXIT STATUS
+.LP
+The following exit values shall be returned:
+.TP 7
+\ 0
+Successful completion.
+.TP 7
+>0
+A error occured. If the error is caused by a problem of the NXT brick itself, 
+a matching errorstring to the exit value can be displayed with the 
+.I nxt_error(1) 
+command.
+.sp
+.SH EXAMPLES
+nxt_server -n 01:23:45:67:89:ab -o something
+.LP
+Connect to the NXT brick with bluetooth address "01:23:45:67:89:ab" via 
+bluetooth and open the connection to the NXT brick for further shell script
+commands based on key "something" like
+
+KEY=something
+.br
+IN=/tmp/nxt_server_in_$KEY
+.br
+OUT=/tmp/nxt_server_out_$KEY
+.br
+ERR=/tmp/nxt_server_err_$KEY
+
+echo "s 1" > $IN
+.br
+echo "t sound_db" >> $IN
+.br
+echo "sensor" >> $IN
+.br
+cat < $ERR 
+.br
+cat < $OUT
+
+echo "1 test.rxe" >> $IN
+.br
+echo run >> $IN
+.br
+cat < $ERR
+.br
+cat < $OUT
+
+echo "exit" >> $IN
+
+These commands are similar to 
+
+nxt_sensor -t -s 1
+.br
+nxt_run test.rxe
+
+The same for a usual programming language:
+
+nxt_server -n 01:23:45:67:89:ab something
+.LP
+Connect to the NXT brick with bluetooth address "01:23:45:67:89:ab" via 
+bluetooth and open the connection to the NXT brick for further commands based
+on key "something" with a Ada program like
+
+with Ada.Text_IO; use Ada.Text_IO;
+.br
+with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
+.br
+with Ada.Strings; use Ada.Strings;
+.br
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+
+procedure Main is
+.br
+   Key : Unbounded_String;
+.br
+   Line : Unbounded_String;
+.br
+   Commandpipe, ErrorPipe, ResultPipe : Unbounded_String;
+.br
+   Command, Error, Result: File_Type;
+.br
+begin
+.br
+   Key := To_Unbounded_String("something");
+
+   CommandPipe := "/tmp/nxt_server_in_" & Key;
+.br
+   Create(Command, Out_File, To_String(CommandPipe));
+.br
+   ErrorPipe := "/tmp/nxt_server_err_" & Key;
+.br
+   Open(Error, In_File, To_String(ErrorPipe));
+.br
+   ResultPipe := "/tmp/nxt_server_out_" & Key;
+.br
+   Open(Result, In_File, To_String(ResultPipe));
+
+   Put_Line(Command, "s 1");
+.br
+   Put_Line(Command, "t sound_db");
+.br
+   Put_Line(Command, "sensor");
+.br
+   Flush(Command);
+
+   Get_Line(Error, Line);
+.br
+   if Length(Line) > 0 then
+.br
+      Put_Line(Line);
+.br
+   end if;
+
+   loop 
+.br
+      Line := Get_Line(Result);
+.br
+      exit when Length(Line) = 0; 
+.br
+      Put_Line(Line);
+.br
+   end loop;
+
+   Put_Line(Command, "1 test.rxe");
+.br
+   Put_Line(Command, "run");
+.br
+   Flush(Command);
+
+   Get_Line(Error, Line);
+.br
+   if Length(Line) > 0 then
+.br
+      Put_Line(Line);
+.br
+   end if;
+
+   loop 
+.br
+      Line := Get_Line(Result);
+.br
+      exit when Length(Line) = 0; 
+.br
+      Put_Line(Line);
+.br
+   end loop;
+
+   Put_Line(Command, "exit");
+.br
+   Flush(Command);
+
+   Close(Command);
+.br
+   Close(Error);
+.br
+   Close(Result);
+.br
+end;
+.SH CAVEATS
+You can not get automatically access to the NXT brick.
+
+Either you need access rights to the NXT usb device. Use root rights or see  
+.I nxt_udev(8) 
+for more information.
+
+Or you need to pair the bluetooth devices of the host computer and the 
+NXT brick. There are several programs to do this, one is 
+"kbluetoothd".
+
+The communication over named pipes often require flush operations.
+.SH AUTHOR
+J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)
+.\" man page author: J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)
+.SH "SEE ALSO"
+.BR libnxt (3), 
+.BR nxt_error (1),
+.BR nxt_udev (8),
+.BR nxt_info (1)
+.BR mkfifo (1)
+.BR ps (1)
+.BR nxt_beep (1),
+.BR nxt_delflash (1),
+.BR nxt_download (1),
+.BR nxt_getprog (1),
+.BR nxt_list (1),
+.BR nxt_lsmod (1),
+.BR nxt_motor (1),
+.BR nxt_motor_playback (1),
+.BR nxt_motor_record (1),
+.BR nxt_pollcmd (1),
+.BR nxt_recv (1),
+.BR nxt_remove (1),
+.BR nxt_resetbt (1),
+.BR nxt_run (1),
+.BR nxt_scan (1),
+.BR nxt_screenshot (1),
+.BR nxt_send (1),
+.BR nxt_sensor (1),
+.BR nxt_sensorus (1),
+.BR nxt_setbutton (1),
+.BR nxt_setname (1),
+.BR nxt_stop (1),
+.BR nxt_tacho (1),
+.BR nxt_turnoff (1),
+.BR nxt_up_run (1),
+.BR nxt_upload (1),

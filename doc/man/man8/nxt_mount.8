@@ -1,0 +1,27 @@
+.\" This manpage is free software; the Free Software Foundation
+.\" gives unlimited permission to copy, distribute and modify it.
+.\"
+.\" Process this file with
+.\" groff -man -Tascii nxt_mount.1
+.\"
+.TH NXT_MOUNT 8 "SEPTEMBER 2008" Linux "User Manuals"
+.SH NAME
+nxt_mount \- mount the filesystem on a LEGO mindstorms NXT brick 
+.SH SYNOPSIS
+.B nxt_mount
+.I dir
+.SH DESCRIPTION
+Mount the filesystem on a LEGO mindstorms NXT brick to the directory
+.I dir
+on the Linux filesystem.
+.br
+This requires the "fuse" kernel functionality. Often, the "fuse" kernel 
+functionality is available via a kernel module. 
+It usually requires root rights under Linux to load a kernel module.
+.SH AVAILABILITY 
+Linux
+.SH "SEE ALSO"
+mount (8),
+.BR
+fusermount (1)
+
