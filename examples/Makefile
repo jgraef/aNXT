@@ -3,19 +3,11 @@
 
 -include ../Makefile.config
 
-all: blink melody sos
+all: 
+	make -C c/
 	make -C server/
 
-blink: blink.c
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
-
-melody: melody.c
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
-
-sos: sos.c
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
-
 clean:
-	rm -f blink melody sos
+	make -C c/ clean
 	make -C server/ clean
 

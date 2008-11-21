@@ -11,8 +11,8 @@ USE FOR TESTING:
         commands of aNXT from the shell command prompt.
 
 HELP:
-	Take a look in the directory "examples/" if you want to get a 
-        small overview on how to use aNXT.
+	Take a look in the directory "examples/" (or "examples/c") if you 
+        want to get a small overview on how to use aNXT.
 	If you are having problems send me a mail: janosch.graef@gmx.net
 
 USB-PERMISSIONS:
