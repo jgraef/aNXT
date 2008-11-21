@@ -1,0 +1,81 @@
+#!/bin/bash
+# This program is free software; the Free Software Foundation
+# gives unlimited permission to copy, distribute and modify it.
+
+NXT_NAME=
+if test "X_$1" = "X_-n"; then
+   NXT_NAME="-n $2"
+fi
+
+if test "X_$1" = "X_-h"; then
+   echo usage $0
+   echo nxt_server test program
+   echo Options:
+   echo "      -n NXTNAME   Name of NXT (Default: first found) or bluetooth adress"
+   exit 0
+fi
+
+NXTLIB_BIN=`dirname $0`/../../../bin
+
+killall nxt_server 2>/dev/null
+
+KEY=$$
+IN=/tmp/nxt_server_in_$KEY
+OUT=/tmp/nxt_server_out_$KEY
+ERR=/tmp/nxt_server_err_$KEY
+
+KILL_NXT_SERVER=1
+
+function nxt_cleanup {
+ rm -f $IN
+ rm -f $OUT
+ rm -f $ERR
+ if test "X_$KILL_NXT_SERVER" = "1" ; then
+   killall -15 $NXTLIB_BIN/nxt_server 2>/dev/null
+ fi
+}
+
+# start nxt_server
+# on failure of nxt_server cleanup and kill this script
+($NXTLIB_BIN/nxt_server $NXT_NAME -o $KEY || (nxt_cleanup;kill -15 $KEY)) &
+
+# outcommented debugger start of nxt_server
+# xterm -fn 10x20 -e sh -c "(echo $KEY $NXT_NAME -o;gdb $NXTLIB_BIN/nxt_server)" &
+
+#wait till nxt_server has connected to NXT and created named pipes
+while test ! -p $IN; do sleep 1; done
+
+KILL_NXT_SERVER=0
+
+# send dummy command first 
+# this is usefull in case of a loop, the commands in a loop would 
+# need "echo something >> $IN" instead of "echo something > $IN"
+echo dummy > $IN
+cat < $ERR
+cat < $OUT > /dev/null
+
+echo b >> $IN
+echo motor >> $IN     
+cat < $ERR
+cat < $OUT
+
+while true; do 
+  echo "s 1" >> $IN
+  echo "t sound_db" >> $IN
+  echo "sensor" >> $IN
+  cat < $ERR 
+  RESULT=`cat < $OUT`
+  echo $RESULT
+  if test $RESULT -gt 85 ; then
+    echo "1 motor_recorded.txt" >> $IN
+    echo "p 65" >> $IN
+    echo motor_playback >> $IN
+    cat < $ERR
+    cat < $OUT
+  fi 
+done
+
+#exit nxt_server
+echo exit >> $IN
+nxt_cleanup
+
