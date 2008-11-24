@@ -15,7 +15,25 @@ nxt_calibrate \-  calibrates a LEGO mindstorms NXT sensor
 .SH DESCRIPTION
 calibrates a LEGO mindstorms NXT sensor.
 .br
+The 
+.I nxt_calibrate
+program will ask you first to produce the lowest input and then to press enter
+to continue. 
+.br
+In the second step it will ask you  to produce the highest input and then to 
+press enter to continue.
+.br
+The result is stored on the NXT brick filesystem on files with the extension
+.I .cal
+.br
 Currently implemented are the LEGO light and the LEGO sound sensor.
+.br
+The filename for the light sensor is 
+.I Light Sensor.cal
+.br
+The filename for the sound sensor is 
+.I Sound Sensor.cal
+.br
 .SH AVAILABILITY 
 Linux
 .SH OPTIONS
@@ -52,7 +70,6 @@ are:
 light
 .br
 sound
-
 .SH EXIT STATUS
 .LP
 The following exit values shall be returned:
@@ -70,7 +87,9 @@ command.
 nxt_calibrate -n 01:23:45:67:89:ab -t light
 .LP
 Connect to the NXT brick with bluetooth address "01:23:45:67:89:ab" via 
-bluetooth and calibrates the lightsensor at port 2.
+bluetooth, calibrates the lightsensor at port 2 and write the resulting
+.I Light Sensor.cal
+file to the NXT brick filesystem.
 .SH CAVEATS
 You can not get automatically access to the NXT brick.
 
@@ -86,6 +105,8 @@ Janosch Graef
 .\" man page author: J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)
 .SH "SEE ALSO"
 .BR libanxt (3), 
+.BR nxt_list (1)
 .BR nxt_error (1),
 .BR nxt_udev (8),
 .BR nxt_info (1)
+
