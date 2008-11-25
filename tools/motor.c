@@ -38,6 +38,8 @@ void usage(char *cmd,int r) {
   fprintf(out,"\t-r ROTATION Set rotation (Default: 0. 0 means unlimited rotation)\n");
   fprintf(out,"\t-s          Stop motor (same as '-p 0')\n");
   fprintf(out,"\t-b          Use brake\n");
+  fprintf(out,"\t-y          Synchronise motor (be carefull, read manpage first)\n");
+  fprintf(out,"\t-i          Idle motor\n");
   exit(r);
 }
 
@@ -47,9 +49,11 @@ int main(int argc,char *argv[]) {
   int power = 50;
   int rot = 0;
   int brake = 0;
+  int synchronise = 0;
+  int idle = 0;
   int c,newmotor,newpower,newrot;
 
-  while ((c = getopt(argc,argv,":hm:p:r:sbn:"))!=-1) {
+  while ((c = getopt(argc,argv,":hm:p:r:sibyn:"))!=-1) {
     switch(c) {
       case 'h':
         usage(argv[0],0);
@@ -84,6 +88,12 @@ int main(int argc,char *argv[]) {
       case 'b':
         brake = 1;
         break;
+      case 'i':
+        idle = 1;
+        break;
+      case 'y':
+        synchronise = 1;
+        break;
       case 'n':
         name = strdup(optarg);
         break;
@@ -105,7 +115,10 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0),NXT_REGMODE_MOTOR_SPEED);
+  if (idle)
+    nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0),NXT_REGMODE_IDLE);
+  else
+    nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:synchronise?NXT_REGULATED:0),synchronise?(brake?NXT_REGMODE_MOTOR_SPEED:NXT_REGMODE_MOTOR_SYNC):NXT_REGMODE_MOTOR_SPEED);
 
   int ret = nxt_error(nxt);
   if (name!=NULL) free(name);

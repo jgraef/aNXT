@@ -59,6 +59,15 @@ The default
 is 0, which means unlimited movement.
 .IP -s
 Stop (coast) motor. Same as -p 0
+.IP -y
+Synchronise motor with another motor.
+.br
+Be carefull when using motor synchronisation. 
+.br
+Useing motor synchronisation without a slowing external force on the motors
+can easily result in a wild oscillating movement of the motors.
+.IP -i
+Idle motor
 .SH EXIT STATUS
 .LP
 The following exit values shall be returned:
