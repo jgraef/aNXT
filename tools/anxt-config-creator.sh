@@ -9,6 +9,8 @@
 # This file is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# based on gpg-error-config by g10 Code GmbH
 
 selfdir=`dirname $0`
 dir=$selfdir
@@ -35,6 +37,8 @@ cat << EOS
 # This file is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# based on gpg-error-config by g10 Code GmbH
 
 EOS
 
