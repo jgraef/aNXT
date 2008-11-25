@@ -10,7 +10,8 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-dir=`dirname $0`
+selfdir=`dirname $0`
+dir=$selfdir
 if test "X_$dir" = "X_."; then
     dir=$PWD
 fi
@@ -37,11 +38,11 @@ cat << EOS
 
 EOS
 
-echo version=\"`awk '/CONFIG_VERSION/ {split($0,part,"= ");print part[2]}' ../Makefile.config`\"
+echo version=\"`awk '/CONFIG_VERSION/ {split($0,part,"= ");print part[2]}' $selfdir/../Makefile.config`\"
 echo prefix=$dir
-echo libs=\"`awk '/CONFIG_LIBS/ {split($0,part,"= ");print part[2]}' ../Makefile.config`\"
-echo staticlibs=\"`awk '/CONFIG_STATIC_LIBS/ {split($0,part,"= ");print part[2]}' ../Makefile.config`\"
-echo cflags=\"`awk '/CONFIG_CFLAGS/ {split($0,part,"= ");print part[2]}' ../Makefile.config`\"
+echo libs=\"`awk '/CONFIG_LIBS/ {split($0,part,"= ");print part[2]}' $selfdir/../Makefile.config`\"
+echo staticlibs=\"`awk '/CONFIG_STATIC_LIBS/ {split($0,part,"= ");print part[2]}' $selfdir/../Makefile.config`\"
+echo cflags=\"`awk '/CONFIG_CFLAGS/ {split($0,part,"= ");print part[2]}' $selfdir/../Makefile.config`\"
 cat << EOS
 exec_prefix=\${prefix}/bin
 includedir=\${prefix}/include

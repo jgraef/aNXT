@@ -72,7 +72,7 @@ install:
 	cp -R include/* $(PATH_INCLUDE)
 	cp -R bin/* $(PATH_BIN)
 	cp -R doc/man/* $(PATH_MAN)
-	sh tool/anxt-config-creator.sh $(PREFIX) > $(PATH_BIN)/anxt-config
+	sh tools/anxt-config-creator.sh $(PREFIX) > $(PATH_BIN)/anxt-config
 	chmod 755 $(PATH_BIN)/anxt-config
 
 ##### Build distributable archive
