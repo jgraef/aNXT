@@ -164,8 +164,9 @@ all: $(TOOLS)
 ../bin/nxt_pilot: pilot.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< `sdl-config --cflags` `sdl-config --libs` -lSDL_image $(LIBS)
 
-../bin/anxt-config: anxt-config.c
-	$(CC) -o $@ $< -DVERSION="\"$(CONFIG_VERSION)\"" -DCFLAGS="\"$(CONFIG_CFLAGS)\"" -DLIBS="\"$(CONFIG_LIBS)\"" -DSTATIC_LIBS="\"$(CONFIG_STATIC_LIBS)\""
+../bin/anxt-config: anxt-config-creator.sh ../Makefile.config
+	sh anxt-config-creator.sh > $@
+	chmod 755 $(PATH_BIN)/anxt-config
 
 clean:
 	rm -f $(TOOLS)
