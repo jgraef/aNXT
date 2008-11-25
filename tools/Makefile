@@ -166,7 +166,7 @@ all: $(TOOLS)
 
 ../bin/anxt-config: anxt-config-creator.sh ../Makefile.config
 	sh anxt-config-creator.sh > $@
-	chmod 755 $(PATH_BIN)/anxt-config
+	chmod 755 $@
 
 clean:
 	rm -f $(TOOLS)
