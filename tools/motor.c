@@ -31,15 +31,16 @@ void usage(char *cmd,int r) {
   fprintf(out,"Usage: %s [OPTIONS]\n",cmd);
   fprintf(out,"Control a NXT motor\n");
   fprintf(out,"Options:\n");
-  fprintf(out,"\t-h          Show help\n");
-  fprintf(out,"\t-n NXTNAME  Name of NXT (Default: first found) or bluetooth address\n");
-  fprintf(out,"\t-m MOTOR    Select motor (Default: A. Valid values are: A, B, C, ABC)\n");
-  fprintf(out,"\t-p POWER    Set power (Default: (50 (\"weak\")))\n");
-  fprintf(out,"\t-r ROTATION Set rotation (Default: 0. 0 means unlimited rotation)\n");
-  fprintf(out,"\t-s          Stop motor (same as '-p 0')\n");
-  fprintf(out,"\t-b          Use brake\n");
-  fprintf(out,"\t-y          Synchronise motor (be carefull, read manpage first)\n");
-  fprintf(out,"\t-i          Idle motor\n");
+  fprintf(out,"\t-h           Show help\n");
+  fprintf(out,"\t-n NXTNAME   Name of NXT (Default: first found) or bluetooth address\n");
+  fprintf(out,"\t-m MOTOR     Select motor (Default: A. Valid values are: A, B, C, ABC)\n");
+  fprintf(out,"\t-p POWER     Set power (Default: (50 (\"weak\")))\n");
+  fprintf(out,"\t-r ROTATION  Set rotation (Default: 0. 0 means unlimited rotation)\n");
+  fprintf(out,"\t-s           Stop motor (same as '-p 0')\n");
+  fprintf(out,"\t-b           Use brake\n");
+  fprintf(out,"\t-y           Synchronise motor (be carefull, read manpage first)\n");
+  fprintf(out,"\t-i           Idle motor\n");
+  fprintf(out,"\t-t TURNRATIO Set turnratio (Default: (0 (\"straight on\")))\n");
   exit(r);
 }
 
@@ -51,9 +52,10 @@ int main(int argc,char *argv[]) {
   int brake = 0;
   int synchronise = 0;
   int idle = 0;
-  int c,newmotor,newpower,newrot;
+  int turnratio = 0;
+  int c,newmotor,newpower,newrot,newturnratio;
 
-  while ((c = getopt(argc,argv,":hm:p:r:sibyn:"))!=-1) {
+  while ((c = getopt(argc,argv,":hm:p:r:t:sibyn:"))!=-1) {
     switch(c) {
       case 'h':
         usage(argv[0],0);
@@ -91,6 +93,14 @@ int main(int argc,char *argv[]) {
       case 'i':
         idle = 1;
         break;
+      case 't':
+        newturnratio = atoi(optarg);
+        if (newturnratio<-100 || newturnratio>100) {
+          fprintf(stderr,"Invalid turnratio: %d\n",newturnratio);
+          usage(argv[0],1);
+        }
+        else turnratio = newturnratio;
+        break;
       case 'y':
         synchronise = 1;
         break;
@@ -116,9 +126,9 @@ int main(int argc,char *argv[]) {
   }
 
   if (idle)
-    nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0),NXT_REGMODE_IDLE);
+    nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0),NXT_REGMODE_IDLE,turnratio);
   else
-    nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:synchronise?NXT_REGULATED:0),synchronise?(brake?NXT_REGMODE_MOTOR_SPEED:NXT_REGMODE_MOTOR_SYNC):NXT_REGMODE_MOTOR_SPEED);
+    nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake||synchronise?NXT_BRAKE|NXT_REGULATED:0),synchronise?NXT_REGMODE_MOTOR_SYNC:NXT_REGMODE_MOTOR_SPEED,turnratio);
 
   int ret = nxt_error(nxt);
   if (name!=NULL) free(name);

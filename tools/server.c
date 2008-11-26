@@ -98,6 +98,7 @@ static int brake;              /*              option b */
 static int stop;               /*              option s */
 static int syncro;             /*              option y */
 static int idle;               /*              option i */
+static int turnratio;          /* argument for option t */
 
 /* nxt_motor_record arguments */
 static double time;            /* argument for option t */
@@ -140,7 +141,8 @@ static void reset_options(void)
   rot = 0;  
   brake = 0;
   syncro = 0;
-  idle= 0;
+  idle = 0;
+  turnratio = 0;
 
   time = 10;
 
@@ -252,6 +254,7 @@ static void handle_argument(char option, char* argument)
      case 't': 
        sscanf(argument,"%lf",&time);
        type = nxt_str2type(argument);
+       turnratio = atoi(argument);
        break;
 
 
@@ -410,10 +413,10 @@ static void handle_commmands(char *command, char *fifo_out, char *fifo_err)
     } else if (strcmp(command,"motor")==0) {
       if (power == INT_MAX)
         power = 50;
-      if (idle)
-        nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0),NXT_REGMODE_IDLE);
-      else
-        nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:syncro?NXT_REGULATED:0),syncro?(brake?NXT_REGMODE_MOTOR_SPEED:NXT_REGMODE_MOTOR_SYNC):NXT_REGMODE_MOTOR_SPEED);
+        if (idle)
+          nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0),NXT_REGMODE_IDLE,turnratio);
+        else
+          nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake||syncro?NXT_BRAKE|NXT_REGULATED:0),syncro?NXT_REGMODE_MOTOR_SYNC:NXT_REGMODE_MOTOR_SPEED,turnratio);
     } else if (strcmp(command,"motor_playback")==0) {
       int numvalues;
       double *times;

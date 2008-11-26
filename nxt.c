@@ -724,17 +724,20 @@ int nxt_getbattery(nxt_t *nxt) {
  *  @param motor (0,1,2)
  *  @param rotation (0..360)
  *  @param power (-100..100)
+ *  @param mode (0..7)
+ *  @param regmode (0..3)
+ *  @param turnratio (-100..100)
  *  @return Success?
- *  @note If rotation is 0 motor will turn until it's turned off
+ *  @note If rotation is 0 motor will work until it's turned off
  */
-int nxt_motor(nxt_t *nxt,int motor,unsigned int rotation,int power,int mode,int regmode) {
+int nxt_motor(nxt_t *nxt,int motor,unsigned int rotation,int power,int mode,int regmode,int turnratio) {
   if (!VALID_MOTOR(motor)) return NXT_FAIL;
   nxt_packstart(nxt,0x04);
   nxt_packbyte(nxt,motor);
   nxt_packbyte(nxt,power);
   nxt_packbyte(nxt,mode);
   nxt_packbyte(nxt,regmode);
-  nxt_packbyte(nxt,0x00);
+  nxt_packbyte(nxt,turnratio);
   nxt_packbyte(nxt,0x20);
   nxt_packdword(nxt,rotation);
   test(nxt_con_send(nxt));

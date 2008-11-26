@@ -72,9 +72,9 @@
 #define NXT_NUM_TYPES 12
 #define NXT_NUM_MODES 8
 
-#define nxt_setmotorrotation(nxt,motor,rot,power) nxt_motor(nxt,motor,rot,power,NXT_MOTORON,NXT_REGMODE_MOTOR_SPEED)
-#define nxt_setmotorbrake(nxt,motor)              nxt_motor(nxt,motor,0,0,NXT_MOTORON|NXT_BRAKE|NXT_REGULATED,NXT_REGMODE_MOTOR_SPEED)
-#define nxt_setmotorcoast(nxt,motor)              nxt_motor(nxt,motor,0,0,0,NXT_REGMODE_IDLE)
+#define nxt_setmotorrotation(nxt,motor,rot,power) nxt_motor(nxt,motor,rot,power,NXT_MOTORON,NXT_REGMODE_MOTOR_SPEED,0)
+#define nxt_setmotorbrake(nxt,motor)              nxt_motor(nxt,motor,0,0,NXT_MOTORON|NXT_BRAKE|NXT_REGULATED,NXT_REGMODE_MOTOR_SPEED,0)
+#define nxt_setmotorcoast(nxt,motor)              nxt_motor(nxt,motor,0,0,0,NXT_REGMODE_IDLE,0)
 
 #define NXT_BUFFER_POLL      0x00
 #define NXT_BUFFER_HIGHSPEED 0x01
@@ -210,7 +210,7 @@ int nxt_setsensormode(nxt_t *nxt,int sensor,int type,int mode);
 int nxt_getsensorval(nxt_t *nxt,int sensor);
 int nxt_resetsensor(nxt_t *nxt,int sensor);
 int nxt_getbattery(nxt_t *nxt);
-int nxt_motor(nxt_t *nxt,int motor,unsigned int rotation,int power,int mode,int regmode);
+int nxt_motor(nxt_t *nxt,int motor,unsigned int rotation,int power,int mode,int regmode, int turnratio);
 int nxt_tacho(nxt_t *nxt,int motor);
 int nxt_resettacho(nxt_t *nxt,int motor,int relative);
 int nxt_runprogram(nxt_t *nxt,char *filename);
