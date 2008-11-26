@@ -96,7 +96,7 @@ void usage(char *cmd,int r) {
   fprintf(out,"\t-p PORT      Set TCP port\n");
   fprintf(out,"\t-l FILE      Set log file\n");
   fprintf(out,"\t-P PASSWORD  Set password\n");
-  fprintf(out,"\t-l FILE      Use local mode\n");
+  fprintf(out,"\t-L           Use local mode\n");
   exit(r);
 }
 
