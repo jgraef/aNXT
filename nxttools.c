@@ -138,7 +138,7 @@ void nxt_motor_record(nxt_t *nxt,int motor,double t,nxt_motor_record_callback ca
   double time = 0;
   int capacity = 256;
   int fill_counter = 0;
-  nxt_motor(nxt,motor,0,0,NXT_MOTORON,NXT_REGMODE_MOTOR_SPEED);
+  nxt_motor(nxt,motor,0,0,NXT_MOTORON,NXT_REGMODE_MOTOR_SPEED,0);
   gettimeofday(&starttv,NULL);
   while (1) {
     rot = nxt_tacho(nxt,motor);
