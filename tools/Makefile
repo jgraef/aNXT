@@ -40,6 +40,8 @@ TOOLS = ../bin/nxt_info \
 	../bin/nxt_sensorgraph \
 	../bin/nxt_modfs \
 	../bin/nxt_pilot \
+	../bin/nxt_reset_tacho \
+	../bin/nxt_motor_travel \
 	../bin/anxt-config
 
 all: $(TOOLS)
@@ -160,6 +162,12 @@ all: $(TOOLS)
 
 ../bin/nxt_modfs: modfs.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS) `pkg-config fuse --cflags --libs`
+
+../bin/nxt_reset_tacho: reset_tacho.c ../lib/libanxt.a
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+
+../bin/nxt_motor_travel: motor_travel.c ../lib/libanxt.a
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
 ../bin/nxt_pilot: pilot.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< `sdl-config --cflags` `sdl-config --libs` -lSDL_image $(LIBS)
