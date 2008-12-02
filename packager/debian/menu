@@ -1,0 +1,8 @@
+?package(aNXT):\
+   needs="x11" \
+   section="Apps/Tools"\
+   title="nxt_pilot" \
+   command="/usr/bin/nxt_pilot" \
+   icon="/usr/share/pixmaps/nxt_pilot.png"
+
+

@@ -141,6 +141,8 @@ int main(int argc,char *argv[]) {
 
   nxt_resettacho(nxt,motor1,1);
   nxt_resettacho(nxt,motor2,1);
+  nxt_resettacho(nxt,motor1,0);
+  nxt_resettacho(nxt,motor2,0);
 
   if (idle)
     nxt_motor(nxt,motor1,rotation1,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0),NXT_REGMODE_IDLE,turnratio);

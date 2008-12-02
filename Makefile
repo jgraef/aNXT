@@ -65,12 +65,16 @@ lib/libanxtnet.a: nxtnet.c
 ##### Install target #####
 
 install:
+	mkdir -p $(PATH_LIB)
 	cp -R lib/* $(PATH_LIB)
 	ln -sf $(PATH_LIB)/libanxt.so.1 $(PATH_LIB)/libanxt.so
 	ln -sf $(PATH_LIB)/libanxttools.so.1 $(PATH_LIB)/libanxttools.so
 	ln -sf $(PATH_LIB)/libanxtfile.so.1 $(PATH_LIB)/libanxtfile.so
+	mkdir -p $(PATH_INCLUDE)
 	cp -R include/* $(PATH_INCLUDE)
+	mkdir -p $(PATH_BIN)
 	cp -R bin/* $(PATH_BIN)
+	mkdir -p $(PATH_MAN)
 	cp -R doc/man/* $(PATH_MAN)
 	sh tools/anxt-config-creator.sh $(PREFIX) > $(PATH_BIN)/anxt-config
 	chmod 755 $(PATH_BIN)/anxt-config
