@@ -10,3 +10,10 @@ Architecture: any
 Depends: ${shlibs:Depends}
 Description: aNXT - a NXt Toolkit
  Libraries and tools for LEGO Mindstorms NXT robots
+ aNXT implement most of the LEGO(R) Mindstorms(R) NXT direct commands 
+ and commands for the LEGO(R) Mindstorms(R) NXT communication protocol
+ in C as a library. This commands allow to steer a NXT brick or transfer 
+ data to a NXT brick via USB or bluetooth.
+ Additionally, there are commandline tools for up/downloading files, 
+ starting/stopping .rxe programs, get values from sensors and steer motors.
+ 
