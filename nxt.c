@@ -736,9 +736,15 @@ int nxt_motor(nxt_t *nxt,int motor,unsigned int rotation,int power,int mode,int 
   nxt_packbyte(nxt,motor);
   nxt_packbyte(nxt,power);
   nxt_packbyte(nxt,mode);
-  nxt_packbyte(nxt,regmode);
+  if ((power == 0) && ((mode & NXT_BRAKE) == 0))
+    nxt_packbyte(nxt,NXT_REGMODE_IDLE);
+  else
+    nxt_packbyte(nxt,regmode);
   nxt_packbyte(nxt,turnratio);
-  nxt_packbyte(nxt,0x20);
+  if ((power == 0) && ((mode & NXT_BRAKE) == 0))
+    nxt_packbyte(nxt,NXT_RUN_STATE_IDLE);
+  else
+    nxt_packbyte(nxt,NXT_RUN_STATE_RUNNING);
   nxt_packdword(nxt,rotation);
   test(nxt_con_send(nxt));
   test(nxt_con_recv(nxt,3));

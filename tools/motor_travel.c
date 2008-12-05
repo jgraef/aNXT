@@ -59,6 +59,9 @@ int main(int argc,char *argv[]) {
   int motor2 = 2;
   char motor1string[2];
   char motor2string[2];
+  int mode = 0;
+  int regmode = 0;
+  int runstate = 0;
 
   while ((c = getopt(argc,argv,":hm:p:r:t:sibyn:"))!=-1) {
     switch(c) {
@@ -136,22 +139,27 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  rotation1=rot;
-  rotation2=rot;
+  rotation1 = rot;
+  rotation2 = rot;
+
+  nxt_motor(nxt,motor1,rotation1,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?:NXT_REGMODE_IDLE,turnratio);
+  nxt_motor(nxt,motor2,rotation2,0,mode,regmode,turnratio);
 
   nxt_resettacho(nxt,motor1,1);
   nxt_resettacho(nxt,motor2,1);
   nxt_resettacho(nxt,motor1,0);
   nxt_resettacho(nxt,motor2,0);
 
-  if (idle)
-    nxt_motor(nxt,motor1,rotation1,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0),NXT_REGMODE_IDLE,turnratio);
-  else
-    nxt_motor(nxt,motor1,rotation1,brake?0:power,NXT_MOTORON|(brake||synchronise?NXT_BRAKE|NXT_REGULATED:0),synchronise?NXT_REGMODE_MOTOR_SYNC:NXT_REGMODE_MOTOR_SPEED,turnratio);
-  if (idle)
-    nxt_motor(nxt,motor2,rotation2,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0),NXT_REGMODE_IDLE,turnratio);
-  else
-    nxt_motor(nxt,motor2,rotation2,brake?0:power,NXT_MOTORON|(brake||synchronise?NXT_BRAKE|NXT_REGULATED:0),synchronise?NXT_REGMODE_MOTOR_SYNC:NXT_REGMODE_MOTOR_SPEED,turnratio);
+  if (idle) {
+    mode = brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0);
+    regmode = NXT_REGMODE_IDLE;
+  } else {
+    mode = NXT_MOTORON|(brake||(synchronise && (turnratio == 0))?NXT_BRAKE:0)|NXT_REGULATED;
+    regmode = synchronise && (power != 0)?NXT_REGMODE_MOTOR_SYNC:NXT_REGMODE_MOTOR_SPEED;
+  }
+
+  nxt_motor(nxt,motor1,rotation1,brake?0:power,mode,regmode,turnratio);
+  nxt_motor(nxt,motor2,rotation2,brake?0:power,mode,regmode,turnratio);
 
   int ret = nxt_error(nxt);
   if (name!=NULL) free(name);

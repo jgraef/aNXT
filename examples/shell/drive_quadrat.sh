@@ -8,16 +8,12 @@ if test "X_$?" != "X_0"; then
    sleep 11
 fi
 
-echo drive a quadrat with synchronised motors B and C
+echo drive a quadrat with synchronised motors B and C and motorcross wheels
 for i in 1 2 3 4; do 
-   $DIR/../../bin/nxt_motor_travel -p 50
-   sleep 1.5
-   $DIR/../../bin/nxt_motor_travel -p 20
-   $DIR/../../bin/nxt_motor_travel -p 45 -t 100
-   sleep 1.3
-   $DIR/../../bin/nxt_motor_travel -p 20 -t 100
+   $DIR/../../bin/nxt_motor_travel -p 40
+   sleep 3
+   $DIR/../../bin/nxt_motor_travel -p 75 -t 100
+   sleep 0.458
 done
-$DIR/../../bin/nxt_motor_travel -p 0 -b
-$DIR/../../bin/nxt_motor -mB -s 
-$DIR/../../bin/nxt_motor -mC -s 
+$DIR/../../bin/nxt_motor_travel -p 0
 
