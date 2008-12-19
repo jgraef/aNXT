@@ -25,6 +25,7 @@
 #include <strings.h>
 #include <unistd.h>
 #include <gd.h>
+#include <nxttools.h>
 
 void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;
@@ -81,7 +82,6 @@ int main(int argc,char *argv[]) {
     }
   }
 
-  nxt_init();
   nxt_t *nxt = nxt_open(name);
   if (nxt==NULL) {
     fprintf(stderr,"Could not find NXT\n");

@@ -31,4 +31,4 @@ struct cal_data {
 size_t cal_encode(void **ptr,int min,int max);
 void cal_decode(void *ptr,int *min,int *max);
 
-#endif
+#endif /* _NXTFILE_CAL_H_ */

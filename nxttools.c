@@ -21,6 +21,7 @@
 
 #include "nxttools.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -360,4 +361,148 @@ char *nxt_getMode(int i) {
     return modes[i];
   else
     return NULL;
+}
+
+/**
+ * Gets number of motor port from a string like "A"
+ *  @param str string of motor
+ *  @return number of motor port or -1 on failure
+ */
+int nxt_str2motorport(char *str) {
+  int motor;
+  if (strcasecmp(str,"abc")==0) motor = NXT_MOTORABC;
+  else if (strlen(str)==1) {
+    motor = tolower(*str)-'a';
+    if (motor<0 || motor>2) motor = -1;
+  }
+  else motor = -1;
+  return motor;
+}
+
+/**
+ * Gets number of button from a string like "enter"
+ *  @param str string of button
+ *  @return number of button or 0 on failure
+ */
+int nxt_str2btn(char *str) {
+  if (strcasecmp(str,"enter")==0) return NXT_UI_BUTTON_ENTER;
+  else if (strcasecmp(str,"left")==0) return NXT_UI_BUTTON_LEFT;
+  else if (strcasecmp(str,"right")==0) return NXT_UI_BUTTON_RIGHT;
+  else if (strcasecmp(str,"exit")==0) return NXT_UI_BUTTON_EXIT;
+  else return 0;
+}
+
+/**
+ * Gets number of bitmap fileformat from a string like "png"
+ *  @param str string of bitmap fileformat
+ *  @return number of fileformat or 0 on failure
+ */
+int nxt_str2fmt(char *str) {
+  if (strcasecmp(str,"jpeg")==0) return NXT_JPEG;
+  else if (strcasecmp(str,"png")==0) return NXT_PNG;
+  else return 0;
+}
+
+#define BUFSIZE 4096
+
+/**
+ * Download a file src from NXT brick to file dest on host filesystem
+ *  @param nxt NXT handle
+ *  @param src file on NXT
+ *  @param dest filename on host
+ *  @return Success?
+ */
+int nxt_download(nxt_t *nxt,char *src,char *dest) {
+  size_t size = 0;
+  int fh;
+  int ret = 0;
+  char *buffer = NULL;
+
+  fh = nxt_file_open(nxt,src,NXT_OREAD,&size);
+  if (fh>=0) {
+    FILE *output = NULL;
+    if (strcmp(dest,"-")==0) output = stdout;
+    else {
+      output = fopen(dest,"w");
+      if (output==NULL) {
+        fprintf(stderr,"Error: %s\n",strerror(errno));
+        return -1;
+      }
+    }
+    if (size>0) {
+      buffer = malloc(size);
+      size = nxt_file_read(nxt,fh,buffer,size);
+      if (size>=0) {
+        int rest;
+        rest = size;
+        do {
+          int written;
+          written = fwrite(buffer,1,rest,output);
+          if (written<=0) {
+            perror(dest);
+            ret = -1;
+          }
+          rest -= written;
+        } while (rest>0);
+      } else {
+        fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
+        ret = -1;
+      }
+    }
+    if (output!=stdout)
+      if (fclose(output)!=0) {
+        perror(dest);
+        ret = -1;
+      }
+  } else {
+    fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
+    ret = -1;
+  }
+
+  if (buffer!=NULL) free(buffer);
+  if (fh>=0) nxt_file_close(nxt,fh);
+  return ret;
+}
+
+/**
+ * Download a file src from NXT brick to file dest on host filesystem
+ *  @param nxt NXT handle
+ *  @param src filename on host
+ *  @param dest file on NXT
+ *  @param oflag open flags for nxt_file_open
+ *  @return Success?
+ */
+
+int nxt_upload(nxt_t *nxt,char *src,char *dest,int oflag) {
+  char *buf = malloc(BUFSIZE);
+  size_t size = 0;
+  int ret = 0;
+  FILE *input;
+
+  if (strcmp(src,"-")==0) input = stdin;
+  else {
+    input = fopen(src,"r");
+    if (input==NULL) {
+      fprintf(stderr,"Error: %s\n",strerror(errno));
+      return -1;
+    }
+  }
+
+  while (!feof(input)) {
+    size += fread(buf+size,1,BUFSIZE,input);
+    buf = realloc(buf,size+BUFSIZE);
+  }
+
+  int handle = nxt_file_open(nxt,dest,oflag,size);
+  if (handle>=0) {
+    nxt_file_write(nxt,handle,buf,size);
+    nxt_file_close(nxt,handle);
+  }
+  else {
+    fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
+    ret = -1;
+  }
+
+  free(buf);
+  return ret;
 }

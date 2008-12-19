@@ -1,5 +1,5 @@
 /*
-    nxtd.h
+    nxtd_usb_dummy.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -18,34 +18,24 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _NXTD_H_
-#define _NXTD_H_
+#ifndef _NXTD_USB_DUMMY_H_
+#define _NXTD_USB_DUMMY_H_
 
-#include <usb.h>
-#include <pthread.h>
+#include <sys/types.h>
 
-#define NXTD_MAXNUM 256
+#include "nxtd.h"
 
-typedef enum {
-  NXTD_USB,
-  NXTD_BT
-} nxtd_conn_t;
-
-struct nxtd_nxt {
-  char *name;
-  nxtd_conn_t conn_type;
-  unsigned int i;
-  time_t conn_timeout;
+struct nxtd_nxt_usb {
+  struct nxtd_nxt nxt;
 };
 
-struct {
-  pthread_mutex_t mutex;
-  struct nxtd_nxt *list[NXTD_MAXNUM];
-  unsigned int i;
-} nxts;
+int nxtd_usb_init();
+void nxtd_usb_shutdown();
+void nxtd_usb_close(struct nxtd_nxt_usb *nxt);
+void nxtd_usb_scan();
+int nxtd_usb_connect(struct nxtd_nxt_usb *nxt);
+int nxtd_usb_disconnect(struct nxtd_nxt_usb *nxt);
+ssize_t nxtd_usb_send(struct nxtd_nxt_usb *nxt,const void *data,size_t size);
+ssize_t nxtd_usb_recv(struct nxtd_nxt_usb  *nxt,void *data,size_t size);
 
-int nxtd_nxt_reg(struct nxtd_nxt *nxt);
-struct nxtd_nxt *nxtd_nxt_find(const char *name,nxtd_conn_t conn_type);
-void nxtd_nxt_refresh(struct nxtd_nxt *nxt);
-
-#endif /* _NXTD_H_ */
+#endif  /* _NXTD_USB_DUMMY_H_ */

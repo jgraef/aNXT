@@ -75,4 +75,4 @@ struct ric_copybits {
 size_t ric_encode(void **ptr,unsigned int width,unsigned int height,void *bitmap);
 ssize_t ric_decode(void **ptr,void *data,size_t data_size,unsigned int *width,unsigned int *height);
 
-#endif
+#endif /* _NXTFILE_RIC_H_ */

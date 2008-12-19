@@ -20,16 +20,16 @@
 
 #include <sys/types.h>
 #include <usb.h>
+#include <time.h>
 
 #include "nxtd.h"
+#include "nxtd_usb_libusb.h"
 
-#define NXT_USB_VENDORID      0x0694
-#define NXT_USB_PRODUCTID     0x0002
-#define NXT_USB_OUT_ENDPOINT  0x01
-#define NXT_USB_IN_ENDPOINT   0x82
-#define NXT_USB_TIMEOUT       1000
-#define NXT_USB_INTERFACE     0
-#define NXT_USB_CONFIG        1
+#ifdef NXT_USB_IDLE_TIMEOUT
+  #define nxtd_usb_timeout(n) (n)->nxt.conn_timeout = time(NULL)+NXT_USB_IDLE_TIMEOUT;
+#else
+  #define nxtd_usb_timeout(n) (n)->nxt.conn_timeout = 0;
+#endif
 
 int nxtd_usb_init() {
   usb_init();
@@ -44,20 +44,18 @@ void nxtd_usb_shutdown() {
  * Gets name of NXT device
  *  @param handle USB handle
  *  @return Name of NXT
- *  @todo Use of direct USB read/write is possible and nicer then using dummy NXT descriptors
  */
 static char *nxtd_usb_getname(struct usb_dev_handle *handle) {
   static char buffer[33];
-  // Dummy NXT
-  struct nxtd_nxt_usb nxt;
-  nxt.usb_handle = handle;
-
+  // send
   buffer[0] = 0x01;
   buffer[1] = 0x9B;
-  if (nxtd_usb_send(&nxt,buffer,3)==-1) return NULL;
-  if (nxtd_usb_recv(&nxt,buffer,33)==-1) return NULL;
+  usb_bulk_write(handle,NXT_USB_OUT_ENDPOINT,buffer,3,NXT_USB_WAIT_TIMEOUT);
+
+  // receive
+  usb_bulk_read(handle,NXT_USB_IN_ENDPOINT,buffer,33,NXT_USB_WAIT_TIMEOUT);
   if (buffer[2]!=0) return NULL;
-  return buffer+3;
+  else return buffer+3;
 }
 
 /**
@@ -81,8 +79,27 @@ static struct usb_dev_handle *nxtd_usb_opendev(struct usb_device *dev) {
  */
 void nxtd_usb_close(struct nxtd_nxt_usb *nxt) {
   nxtd_usb_disconnect(nxt);
-  free(nxt->nxt.nxt_name);
+  free(nxt->nxt.name);
   free(nxt);
+}
+
+/**
+ * Find NXT by USB Device
+ *  @param dev USB Device
+ *  @return NXT
+ */
+struct nxtd_nxt_usb *nxtd_usb_finddev(struct usb_device *dev) {
+  struct nxtd_nxt_usb *nxt;
+  size_t i;
+
+  for (i=0;i<NXTD_MAXNUM;i++) {
+    if (nxts.list[i]!=NULL && nxts.list[i]->conn_type==NXTD_USB) {
+      nxt = (struct nxtd_nxt_usb*)nxts.list[i];
+      if (nxt->usb_dev==dev) return nxt;
+    }
+  }
+
+  return NULL;
 }
 
 /**
@@ -92,23 +109,28 @@ void nxtd_usb_scan() {
   struct usb_bus *bus;
   struct usb_device *dev;
   struct usb_dev_handle *handle;
+  struct nxtd_nxt_usb *nxt;
 
   usb_find_busses();
   usb_find_devices();
   for (bus = usb_busses; bus; bus = bus->next) {
     for (dev = bus->devices; dev; dev = dev->next) {
-      if (dev->descriptor.idVendor==NXT_USB_VENDORID && dev->descriptor.idProduct==NXT_USB_PRODUCTID) {
+      if (nxt = nxtd_usb_finddev(dev)) nxtd_nxt_refresh((struct nxtd_nxt*)nxt);
+      else if (dev->descriptor.idVendor==NXT_USB_VENDORID && dev->descriptor.idProduct==NXT_USB_PRODUCTID) {
         handle = nxtd_usb_opendev(dev);
         if (handle!=NULL) {
-          char *nxt_name = nxtd_usb_getname(handle);
-          struct nxtd_nxt_usb *nxt = malloc(sizeof(struct nxtd_nxt_usb));
-          nxt->nxt.nxt_name = strdup(nxt_name);
-          nxt->nxt.conn_type = CONN_USB;
-          nxt->usb_handle = NULL;
-          nxt->usb_dev = dev;
-          nxtd_nxt_reg((struct nxtd_nxt*)nxt);
+          char *name = nxtd_usb_getname(handle);
+          if (name!=NULL) {
+            nxt = malloc(sizeof(struct nxtd_nxt_usb));
+            nxt->nxt.name = strdup(name);
+            nxt->nxt.conn_type = NXTD_USB;
+            nxt->nxt.conn_timeout = 0;
+            nxt->usb_handle = NULL;
+            nxt->usb_dev = dev;
+            nxtd_nxt_reg((struct nxtd_nxt*)nxt);
+          }
+          usb_close(handle);
         }
-        usb_close(handle);
       }
     }
   }
@@ -122,7 +144,11 @@ void nxtd_usb_scan() {
 int nxtd_usb_connect(struct nxtd_nxt_usb *nxt) {
   if (nxt->usb_handle==NULL) {
     nxt->usb_handle = nxtd_usb_opendev(nxt->usb_dev);
-    return nxt->usb_handle==NULL?-1:0;
+    if (nxt->usb_handle!=NULL) {
+      nxtd_usb_timeout(nxt);
+      return 0;
+    }
+    else return -1;
   }
   else return 0;
 }
@@ -137,6 +163,7 @@ int nxtd_usb_disconnect(struct nxtd_nxt_usb *nxt) {
     usb_release_interface(nxt->usb_handle,NXT_USB_INTERFACE);
     usb_close(nxt->usb_handle);
     nxt->usb_handle = NULL;
+    nxt->nxt.conn_timeout = 0;
   }
   return 0;
 }
@@ -165,7 +192,7 @@ ssize_t nxtd_usb_send(struct nxtd_nxt_usb *nxt,const void *data,size_t size) {
   }
 #endif
   do {
-    if ((send = usb_bulk_write(nxt->usb_handle,NXT_USB_OUT_ENDPOINT,(void*)data,size-absolute,NXT_USB_TIMEOUT))<0) return -1;
+    if ((send = usb_bulk_write(nxt->usb_handle,NXT_USB_OUT_ENDPOINT,(void*)data+absolute,size-absolute,NXT_USB_WAIT_TIMEOUT))<0) return -1;
 #ifdef DEBUG
     fprintf(stderr, "usb_bulk_write send %d bytes\n", send);
 #endif
@@ -175,6 +202,7 @@ ssize_t nxtd_usb_send(struct nxtd_nxt_usb *nxt,const void *data,size_t size) {
 #ifdef DEBUG
   fprintf(stderr, "usb_bulk_write returned %d\n", absolute);
 #endif
+  nxtd_usb_timeout(nxt);
   return absolute;
 }
 
@@ -195,7 +223,7 @@ ssize_t nxtd_usb_recv(struct nxtd_nxt_usb *nxt,void *data,size_t size) {
   ssize_t recv;
   size_t absolute = 0;
   do {
-    if ((recv = usb_bulk_read(nxt->usb_handle,NXT_USB_IN_ENDPOINT,data,size-absolute,NXT_USB_TIMEOUT))<0) return -1;
+    if ((recv = usb_bulk_read(nxt->usb_handle,NXT_USB_IN_ENDPOINT,data+absolute,size-absolute,NXT_USB_WAIT_TIMEOUT))<0) return -1;
 #ifdef DEBUG
     fprintf(stderr, "nxt_usb_read received %d bytes\n", recv);
 #endif
@@ -212,5 +240,6 @@ ssize_t nxtd_usb_recv(struct nxtd_nxt_usb *nxt,void *data,size_t size) {
   }
   fprintf(stderr, "usb_bulk_read returned %d\n", absolute);
 #endif
+  nxtd_usb_timeout(nxt);
   return absolute;
 }

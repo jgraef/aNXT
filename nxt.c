@@ -24,7 +24,6 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include <errno.h>
 #include <stdio.h>
 #include <nxtnet.h>
 #include <unistd.h>
@@ -57,62 +56,62 @@ typedef enum {
 } nxt_cmd_t;
 
 /// Functions for packing packages
-void nxt_packbyte(nxt_t *nxt,uint8_t val) {
+static void nxt_packbyte(nxt_t *nxt,uint8_t val) {
   *(nxt->ptr)++ = val;
 }
-void nxt_packword(nxt_t *nxt,uint16_t val) {
+static void nxt_packword(nxt_t *nxt,uint16_t val) {
   set_word(nxt->ptr,val);
   nxt->ptr += 2;
 }
-void nxt_packdword(nxt_t *nxt,uint32_t val) {
+static void nxt_packdword(nxt_t *nxt,uint32_t val) {
   set_dword(nxt->ptr,val);
   nxt->ptr += 4;
 }
-void nxt_packstart(nxt_t *nxt,nxt_cmd_t cmd) {
+static void nxt_packstart(nxt_t *nxt,nxt_cmd_t cmd) {
   nxt->buffer[0] = cmd<0x80?NXT_TYPE_DIRECT_RESP:NXT_TYPE_SYSTEM_RESP;
   nxt->buffer[1] = cmd;
   nxt->ptr = nxt->buffer+2;
 }
-void nxt_packmem(nxt_t *nxt,void *buf,size_t len) {
+static void nxt_packmem(nxt_t *nxt,void *buf,size_t len) {
   memcpy(nxt->ptr,buf,len);
   nxt->ptr += len;
 }
-void nxt_packstr(nxt_t *nxt,const char *str,size_t maxlen) {
+static void nxt_packstr(nxt_t *nxt,const char *str,size_t maxlen) {
   strncpy(nxt->ptr,str,maxlen);
   nxt->ptr += maxlen;
 }
 
 /// Functions for unpacking packages
-uint8_t nxt_unpackbyte(nxt_t *nxt) {
+static uint8_t nxt_unpackbyte(nxt_t *nxt) {
   return *(nxt->ptr)++;
 }
-uint16_t nxt_unpackword(nxt_t *nxt) {
+static uint16_t nxt_unpackword(nxt_t *nxt) {
   uint16_t ret = get_word(nxt->ptr);
   nxt->ptr += 2;
   return ret;
 }
-uint32_t nxt_unpackdword(nxt_t *nxt) {
+static uint32_t nxt_unpackdword(nxt_t *nxt) {
   uint32_t ret = get_dword(nxt->ptr);
   nxt->ptr += 4;
   return ret;
 }
-int nxt_unpackstart(nxt_t *nxt,nxt_cmd_t cmd) {
+static int nxt_unpackstart(nxt_t *nxt,nxt_cmd_t cmd) {
   if ((nxt->buffer[0]&0xFF)!=NXT_TYPE_REPLY || (nxt->buffer[1]&0xFF)!=cmd) return NXT_FAIL;
   else {
     nxt->ptr = nxt->buffer+2;
     return NXT_SUCC;
   }
 }
-int nxt_unpackerror(nxt_t *nxt) {
+static int nxt_unpackerror(nxt_t *nxt) {
   nxt->error = *(nxt->ptr)++;
   return nxt->error;
 }
-void *nxt_unpackmem(nxt_t *nxt,size_t len) {
+static void *nxt_unpackmem(nxt_t *nxt,size_t len) {
   void *ret = nxt->ptr;
   nxt->ptr += len;
   return ret;
 }
-void *nxt_unpackstr(nxt_t *nxt,size_t len) {
+static void *nxt_unpackstr(nxt_t *nxt,size_t len) {
   char *ret = nxt->ptr;
   ret[len-1] = 0;
   nxt->ptr += len;
@@ -147,20 +146,11 @@ void nxt_wait_extra_long_after_communication_command(void)
   usleep(10 * NXT_COMMUNICATION_COMMAND_LATENCY);
 }
 
-
-/**
- * Initializes NXT library
- *  @todo Not needed anymore :)
- */
-void nxt_init() {
-}
-
 /**
  * Opens a NXT
  *  @param name Name of NXT
  *  @return NXT handle
  *  @note You can pass a NULL pointer as name if you wish to use the first NXT found
- *  @todo Test BT
  */
 nxt_t *nxt_open_net(char *name,const char *hostname,int port,const char *password) {
   size_t i,num_nxts;
@@ -319,7 +309,7 @@ nxt_contype_t nxt_getcontype(nxt_t *nxt) {
  *  @return File handle
  *  @note Use nxt_file_open
  */
-int nxt_file_open_write(nxt_t *nxt,const char *file,size_t size) {
+static int nxt_file_open_write(nxt_t *nxt,const char *file,size_t size) {
   nxt_packstart(nxt,0x81);
   nxt_packstr(nxt,file,20);
   nxt_packdword(nxt,size);
@@ -338,7 +328,7 @@ int nxt_file_open_write(nxt_t *nxt,const char *file,size_t size) {
  *  @return File handle
  *  @note Use nxt_file_open
  */
-int nxt_file_open_write_linear(nxt_t *nxt,const char *file,size_t size) {
+static int nxt_file_open_write_linear(nxt_t *nxt,const char *file,size_t size) {
   nxt_packstart(nxt,0x89);
   nxt_packstr(nxt,file,20);
   nxt_packdword(nxt,size);
@@ -356,7 +346,7 @@ int nxt_file_open_write_linear(nxt_t *nxt,const char *file,size_t size) {
  *  @return File handle
  *  @note Use nxt_file_open
  */
-int nxt_file_open_append(nxt_t *nxt,const char *file,size_t *avail) {
+static int nxt_file_open_append(nxt_t *nxt,const char *file,size_t *avail) {
   nxt_packstart(nxt,0x8C);
   nxt_packstr(nxt,file,20);
   test(nxt_con_send(nxt));
@@ -378,7 +368,7 @@ int nxt_file_open_append(nxt_t *nxt,const char *file,size_t *avail) {
  *  @return File handle
  *  @note Use nxt_file_open
  */
-int nxt_file_open_read(nxt_t *nxt,const char *file,size_t *filesize) {
+static int nxt_file_open_read(nxt_t *nxt,const char *file,size_t *filesize) {
   nxt_packstart(nxt,0x80);
   nxt_packstr(nxt,file,20);
   test(nxt_con_send(nxt));
@@ -574,7 +564,6 @@ int nxt_sendmsg(nxt_t *nxt,int mailbox,char *data) {
  *  @param clear Whether to clear message box
  *  @return Message as string
  *  @note The return pointer can and should be passed to free()
- *  @todo Does not work, when NXT is not connected via USB
  */
 char *nxt_recvmsg(nxt_t *nxt,int mailbox,int clear) {
   if (!VALID_MAILBOX(mailbox)) return NULL;
@@ -1132,7 +1121,6 @@ ssize_t nxt_lsread(nxt_t *nxt,int port,void **ptr) {
  *  @param tx How many bytes to send
  *  @param rx How many bytes to receive
  *  @param buf Buffer
- *  @todo Does not work, when NXT is not connected via USB
  */
 ssize_t nxt_lsxchg(nxt_t *nxt,int port,size_t tx,size_t rx,void *buf) {
   if (!VALID_SENSOR(port)) return NXT_FAIL;
@@ -1235,7 +1223,7 @@ int nxt_mod_close(nxt_t *nxt,int handle) {
  *  @param size Data size
  *  @return How many bytes read
  */
-static ssize_t nxt_mod_read_low(nxt_t *nxt,int modid,void *buf,off_t offset,size_t size) {
+static ssize_t nxt_mod_read_low(nxt_t *nxt,int modid,void *buf,size_t offset,size_t size) {
   nxt_packstart(nxt,0x94);
   nxt_packdword(nxt,modid);
   nxt_packword(nxt,offset);
@@ -1261,7 +1249,7 @@ static ssize_t nxt_mod_read_low(nxt_t *nxt,int modid,void *buf,off_t offset,size
  *  @param size Data size
  *  @return How many bytes read
  */
-ssize_t nxt_mod_read(nxt_t *nxt,int modid,void *buf,off_t offset,size_t size) {
+ssize_t nxt_mod_read(nxt_t *nxt,int modid,void *buf,size_t offset,size_t size) {
   int i;
   ssize_t partlen;
   int len = 0;
@@ -1415,149 +1403,4 @@ int nxt_screenshot(nxt_t *nxt,char buf[64][100]) {
     return 0;
   }
   else return -1;
-}
-
-/**
- * Gets number of motor port from a string like "A"
- *  @param str string of motor
- *  @return number of motor port or -1 on failure
- */
-int nxt_str2motorport(char *str) {
-  int motor;
-  if (strcasecmp(str,"abc")==0) motor = NXT_MOTORABC;
-  else if (strlen(str)==1) {
-    motor = tolower(*str)-'a';
-    if (motor<0 || motor>2) motor = -1;
-  }
-  else motor = -1;
-  return motor;
-}
-
-/**
- * Gets number of button from a string like "enter"
- *  @param str string of button
- *  @return number of button or 0 on failure
- */
-int nxt_str2btn(char *str) {
-  if (strcasecmp(str,"enter")==0) return NXT_UI_BUTTON_ENTER;
-  else if (strcasecmp(str,"left")==0) return NXT_UI_BUTTON_LEFT;
-  else if (strcasecmp(str,"right")==0) return NXT_UI_BUTTON_RIGHT;
-  else if (strcasecmp(str,"exit")==0) return NXT_UI_BUTTON_EXIT;
-  else return 0;
-}
-
-/**
- * Gets number of bitmap fileformat from a string like "png"
- *  @param str string of bitmap fileformat
- *  @return number of fileformat or 0 on failure
- */
-int nxt_str2fmt(char *str) {
-  if (strcasecmp(str,"jpeg")==0) return NXT_JPEG;
-  else if (strcasecmp(str,"png")==0) return NXT_PNG;
-  else return 0;
-}
-
-
-#define BUFSIZE 4096
-
-/**
- * Download a file src from NXT brick to file dest on host filesystem
- *  @param nxt NXT handle
- *  @param src file on NXT
- *  @param dest filename on host
- *  @return Success?
- */
-int nxt_download(nxt_t *nxt,char *src,char *dest) {
-  size_t size = 0;
-  int fh;
-  int ret = 0;
-  char *buffer = NULL;
-
-  fh = nxt_file_open(nxt,src,NXT_OREAD,&size);
-  if (fh>=0) {
-    FILE *output = NULL;
-    if (strcmp(dest,"-")==0) output = stdout;
-    else {
-      output = fopen(dest,"w");
-      if (output==NULL) {
-        fprintf(stderr,"Error: %s\n",strerror(errno));
-        return -1;
-      }
-    }
-    if (size>0) {
-      buffer = malloc(size);
-      size = nxt_file_read(nxt,fh,buffer,size);
-      if (size>=0) {
-        int rest;
-        rest = size;
-        do {
-          int written;
-          written = fwrite(buffer,1,rest,output);
-          if (written<=0) {
-            perror(dest);
-            ret = -1;
-          }
-          rest -= written;
-        } while (rest>0);
-      } else {
-        fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
-        ret = -1;
-      }
-    }
-    if (output!=stdout)
-      if (fclose(output)!=0) {
-        perror(dest);
-        ret = -1;
-      }
-  } else {
-    fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
-    ret = -1;
-  }
-
-  if (buffer!=NULL) free(buffer);
-  if (fh>=0) nxt_file_close(nxt,fh);
-  return ret;
-}
-
-/**
- * Download a file src from NXT brick to file dest on host filesystem
- *  @param nxt NXT handle
- *  @param src filename on host
- *  @param dest file on NXT
- *  @param oflag open flags for nxt_file_open
- *  @return Success?
- */
-
-int nxt_upload(nxt_t *nxt,char *src,char *dest,int oflag) {
-  char *buf = malloc(BUFSIZE);
-  size_t size = 0;
-  int ret = 0;
-  FILE *input;
-
-  if (strcmp(src,"-")==0) input = stdin;
-  else {
-    input = fopen(src,"r");
-    if (input==NULL) {
-      fprintf(stderr,"Error: %s\n",strerror(errno));
-      return -1;
-    }
-  }
-
-  while (!feof(input)) {
-    size += fread(buf+size,1,BUFSIZE,input);
-    buf = realloc(buf,size+BUFSIZE);
-  }
-
-  int handle = nxt_file_open(nxt,dest,oflag,size);
-  if (handle>=0) {
-    nxt_file_write(nxt,handle,buf,size);
-    nxt_file_close(nxt,handle);
-  }
-  else {
-    fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
-    ret = -1;
-  }
-
-  free(buf);
-  return ret;
 }

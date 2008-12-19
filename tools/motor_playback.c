@@ -100,7 +100,6 @@ int main(int argc,char *argv[]) {
   if (nxt_read_recorded_file(&numvalues,&times,&rotations,stdin)!=0)
     return 1;
 
-  nxt_init();
   nxt_t *nxt = nxt_open(name);
   if (nxt==NULL) {
     fprintf(stderr,"Could not find NXT\n");

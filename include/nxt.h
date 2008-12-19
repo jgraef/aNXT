@@ -177,7 +177,7 @@
 #define NXT_JPEG 1
 #define NXT_PNG  2
 
-#define nxt_open(name) nxt_open_net(name,"localhost",13370,NULL)
+#define nxt_open(name) nxt_open_net(name,"localhost",NXTNET_DEFAULT_PORT,NULL)
 
 typedef enum {
   NXT_CON_USB,
@@ -194,7 +194,10 @@ typedef struct {
   int nxtid;
 } nxt_t;
 
-void nxt_init();
+void nxt_wait_after_direct_command(void);
+void nxt_wait_after_communication_command(void);
+void nxt_wait_extra_long_after_communication_command(void);
+
 nxt_t *nxt_open_net(char *name,const char *hostname,int port,const char *password);
 void nxt_close(nxt_t *nxt);
 size_t nxt_scan(char *names[],size_t max);
@@ -239,7 +242,7 @@ ssize_t nxt_lsxchg(nxt_t *nxt,int port,size_t tx,size_t rx,void *buf);
 int nxt_mod_first(nxt_t *nxt,char *wildcard,char **modname,int *modid,size_t *modsz,size_t *iomapsz);
 int nxt_mod_next(nxt_t *nxt,int handle,char **modname,int *modid,size_t *modsz,size_t *iomapsz);
 int nxt_mod_close(nxt_t *nxt,int handle);
-ssize_t nxt_mod_read(nxt_t *nxt,int modid,void *buf,off_t offset,size_t size);
+ssize_t nxt_mod_read(nxt_t *nxt,int modid,void *buf,size_t offset,size_t size);
 ssize_t nxt_mod_write(nxt_t *nxt,int modid,const void *buf,off_t offset,size_t size);
 int nxt_mod_getid(nxt_t *nxt,char *file);
 int nxt_getvolume(nxt_t *nxt);
@@ -247,7 +250,6 @@ int nxt_setvolume(nxt_t *nxt,int volume);
 int nxt_turnoff(nxt_t *nxt);
 int nxt_setbutton(nxt_t *nxt,int button);
 int nxt_screenshot(nxt_t *nxt,char buf[64][100]);
-int nxt_download(nxt_t *nxt,char *src,char *dest);
-int nxt_upload(nxt_t *nxt,char *src,char *dest,int oflag);
+
 #endif /* _NXT_H_ */
 

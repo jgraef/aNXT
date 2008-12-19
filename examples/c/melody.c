@@ -43,7 +43,6 @@ void playtone(int tone,int dur) {
 int main(int argc,char *argv[]) {
   int i;
 
-  nxt_init(); // Initializes libanxt
   nxt = nxt_open(NULL); // Opens a NXT handle. 'NULL' means that we do
                                // not care about which NXT to open (good if
                                // you have only one NXT)

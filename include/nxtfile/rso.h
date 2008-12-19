@@ -41,4 +41,4 @@ struct rso_sound {
 size_t rso_encode(void **ptr,unsigned int samplerate,size_t len,void *data);
 size_t rso_decode(void **ptr,void*rsodata,unsigned int *samplerate);
 
-#endif
+#endif /* _NXTFILE_RSO_H_ */

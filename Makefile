@@ -53,7 +53,14 @@ nvconfig.o: nvconfig.c
 ##### Make nxtd #####
 
 bin/nxtd: nxtd.c nxtd_usb_$(USB_MOD).c nxtd_bt_$(BT_MOD).c lib/libanxtnet.a
-	$(CC) $(CFLAGS) -o $@ nxtd.c nxtd_usb_$(USB_MOD).c nxtd_bt_$(BT_MOD).c -Llib/ -lusb -lbluetooth -lanxtnet -DNXTD_PIDFILE=\"$(NXTD_PIDFILE)\"
+	$(CC) $(CFLAGS) -o $@ $< -Llib/ -lanxtnet -lpthread \
+         -DNXTD_PIDFILE=\"$(NXTD_PIDFILE)\" \
+         nxtd_usb_$(USB_MOD).c \
+         nxtd_bt_$(BT_MOD).c \
+         -include nxtd_usb_$(USB_MOD).h \
+         -include nxtd_bt_$(BT_MOD).h \
+         `cat nxtd_usb_$(USB_MOD).libs` \
+         `cat nxtd_bt_$(BT_MOD).libs`
 
 ##### Make libanxtnet #####
 

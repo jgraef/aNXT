@@ -31,7 +31,6 @@ int main(int argc,char *argv[]) {
   int i;
   int sensor = NXT_SENSOR1; // Sensor port at which the light sensor is connected
 
-  nxt_init(); // Initializes libanxt
   nxt_t *nxt = nxt_open(NULL); // Opens a NXT handle. 'NULL' means that we do
                                // not care about which NXT to open (good if
                                // you have only one NXT)

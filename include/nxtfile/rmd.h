@@ -25,4 +25,4 @@
 
 size_t rmd_encode(void **ptr,size_t notes,void *src);
 
-#endif
+#endif /* _NXTFILE_RMD_H_ */

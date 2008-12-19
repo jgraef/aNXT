@@ -45,6 +45,10 @@ int nxt_str2mode(char *str);
 
 char *nxt_getType(int i);
 char *nxt_getMode(int i);
+
+int nxt_download(nxt_t *nxt,char *src,char *dest);
+int nxt_upload(nxt_t *nxt,char *src,char *dest,int oflag);
+
 #endif /* _NXT_TOOLS_H_ */
 
 

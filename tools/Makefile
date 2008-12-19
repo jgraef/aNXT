@@ -61,11 +61,11 @@ all: $(TOOLS)
 ../bin/nxt_list: list.c ../lib/libanxt.a ../lib/libanxttools.a
 	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
 
-../bin/nxt_upload: upload.c  ../lib/libanxt.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+../bin/nxt_upload: upload.c  ../lib/libanxt.a ../lib/libanxttools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
 
-../bin/nxt_download: download.c ../lib/libanxt.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+../bin/nxt_download: download.c ../lib/libanxt.a ../lib/libanxttools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
 
 ../bin/nxt_remove: remove.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
@@ -73,8 +73,8 @@ all: $(TOOLS)
 ../bin/nxt_beep: beep.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_motor: motor.c ../lib/libanxt.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+../bin/nxt_motor: motor.c ../lib/libanxt.a ../lib/libanxttools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
 
 ../bin/nxt_tacho: tacho.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
@@ -100,8 +100,8 @@ all: $(TOOLS)
 ../bin/nxt_delflash: delflash.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_up_run: up_run.c ../lib/libanxt.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+../bin/nxt_up_run: up_run.c ../lib/libanxt.a ../lib/libanxttools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
 
 ../bin/nxt_send: send.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
@@ -118,14 +118,14 @@ all: $(TOOLS)
 ../bin/nxt_setname: setname.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_screenshot: screenshot.c ../lib/libanxt.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS) -lgd #-lpng -ljpeg
+../bin/nxt_screenshot: screenshot.c  ../lib/libanxt.a ../lib/libanxttools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS) -lgd #-lpng -ljpeg
 
 ../bin/nxt_turnoff: turnoff.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_setbutton: setbutton.c ../lib/libanxt.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+../bin/nxt_setbutton: setbutton.c ../lib/libanxt.a ../lib/libanxttools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
 
 ../bin/nxt_motor_record: motor_record.c ../lib/libanxt.a ../lib/libanxttools.a
 	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
@@ -166,8 +166,8 @@ all: $(TOOLS)
 ../bin/nxt_reset_tacho: reset_tacho.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_motor_travel: motor_travel.c ../lib/libanxt.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+../bin/nxt_motor_travel: motor_travel.c ../lib/libanxt.a ../lib/libanxttools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
 
 ../bin/nxt_pilot: pilot.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< `sdl-config --cflags` `sdl-config --libs` -lSDL_image $(LIBS)

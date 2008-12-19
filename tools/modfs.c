@@ -127,17 +127,19 @@ static int nxtfs_error() {
  */
 static int nxtfs_open(const char *filename,struct fuse_file_info *fi) {
   size_t i;
+
   for (i=0;i<num_modules;i++) {
-    if (strcmp(filename,modules[i].name)==0) {
+    if (strcmp(filename+1,modules[i].name)==0) {
       fi->fh = i;
       return 0;
     }
   }
+
   return -ENOENT;
 }
 
 /**
- * Closes a file (inclusive flushing)
+ * Closes a file
  *  @param filename Filename
  *  @param fi File info
  *  @return Success?
@@ -154,12 +156,11 @@ static int nxtfs_close(const char *filename,struct fuse_file_info *fi) {
  *  @param offset Offset in file
  *  @param fi File info
  *  @return How many bytes read
+ *  @todo something does not work here
  */
 static int nxtfs_read(const char *filename,char *buf,size_t count,off_t offset,struct fuse_file_info *fi) {
-  memset(buf,0,count);
-  *((size_t*)buf) = count;
-  ssize_t size = count;//nxt_mod_read(nxt,modules[fi->fh].modid,buf,offset,count);
-  if (size<0) return nxtfs_error(size);
+  ssize_t size = nxt_mod_read(nxt,modules[fi->fh].modid,buf,offset,count);
+  if (size<0) return nxtfs_error();
   else return size;
 }
 
@@ -261,7 +262,6 @@ int main(int argc,char *argv[]) {
   memset(&options,0,sizeof(struct options));
   if (fuse_opt_parse(&args,&options,nxtfs_opts,NULL)==-1) return 1;
 
-  nxt_init();
   nxt = nxt_open(options.name);
   if (nxt!=NULL) {
     get_modules();

@@ -25,7 +25,7 @@
 
 #include "nxtfile/ric.h"
 
-#define MAKE_EVEN(x) (x) /*((x)+((x)%2))*/
+#define MAKE_EVEN(x) ((x)+((x)%2))
 
 /**
  * Converts a bitmap into a RIC file

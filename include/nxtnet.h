@@ -46,6 +46,8 @@
 #define NXTNET_ERROR_WROPWD  1
 #define NXTNET_ERROR_NOTIMPL 2
 
+#define NXTNET_DEFAULT_PORT 13370
+
 struct nxtnet_proto_packet {
   uint32_t sig;
   uint8_t cmd;
@@ -130,4 +132,4 @@ nxtnet_srv_t *nxtnet_srv_create(int port,const char *password,FILE *logfile,int 
 int nxtnet_srv_mainloop(nxtnet_srv_t *srv);
 void nxtnet_srv_destroy(nxtnet_srv_t *srv);
 
-#endif
+#endif /* _NXTNET_H_ */

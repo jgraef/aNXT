@@ -22,11 +22,33 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
+#include <stdarg.h>
+#include <pthread.h>
 
 #include "nxtd.h"
 
-char *pidfile;
-nxtnet_srv_t *server;
+static pthread_t scanner_tid;
+static char *pidfile;
+static nxtnet_srv_t *server;
+static FILE *logfd;
+
+/**
+ * Prints log message
+ *  @param fmt Format
+ *  @param ... Parameters
+ *  @see printf
+ */
+static void logmsg(const char *fmt,...) {
+  if (logfd!=NULL) {
+    va_list args;
+    va_start(args,fmt);
+    time_t timer = time(NULL);
+    struct tm *tm = localtime(&timer);
+    fprintf(logfd,"[%02d:%02d:%02d %04d/%02d/%02d] ",tm->tm_hour,tm->tm_min,tm->tm_sec,tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday);
+    vfprintf(logfd,fmt,args);
+    va_end(args);
+  }
+}
 
 /**
  * Registers a NXT in NXT list
@@ -36,79 +58,192 @@ nxtnet_srv_t *server;
 int nxtd_nxt_reg(struct nxtd_nxt *nxt) {
   size_t i;
 
-  for (i=0;i<NXT_MAXNUM;i++) {
-    if (nxts[i]==NULL) {
-      nxts[i] = nxt;
+  pthread_mutex_lock(&nxts.mutex);
+  nxt->i = nxts.i;
+  for (i=0;i<NXTD_MAXNUM;i++) {
+    if (nxts.list[i]==NULL) {
+      nxts.list[i] = nxt;
+      logmsg("Added %s (%d)\n",nxts.list[i]->name,i);
+      pthread_mutex_unlock(&nxts.mutex);
       return 0;
     }
   }
+  pthread_mutex_unlock(&nxts.mutex);
   return -1;
 }
 
-void nxtd_scan() {
-  nxtd_usb_scan();
-  nxtd_bt_scan();
-}
-
-void nxtd_listusb(void (*packer)(int nxtid,char *name)) {
+/**
+ * Finds NXT in NXT list
+ *  @param name NXT name
+ *  @return NXT handle
+ */
+struct nxtd_nxt *nxtd_nxt_find(const char *name,nxtd_conn_t conn_type) {
   size_t i;
-  for (i=0;i<NXT_MAXNUM;i++) {
-    if (nxts[i]!=NULL) {
-      if (nxts[i]->conn_type==CONN_USB) packer(i,nxts[i]->nxt_name);
-    }
-  }
-}
 
-void nxtd_listbt(void (*packer)(int nxtid,char *name,void *bt_addr)) {
-  size_t i;
-  for (i=0;i<NXT_MAXNUM;i++) {
-    if (nxts[i]!=NULL) {
-      if (nxts[i]->conn_type==CONN_BT) {
-        struct nxtd_nxt_bt *nxt = (struct nxtd_nxt_bt*)nxts[i];
-        packer(i,nxt->nxt.nxt_name,&(nxt->bt_addr));
+  pthread_mutex_lock(&nxts.mutex);
+  for (i=0;i<NXTD_MAXNUM;i++) {
+    if (nxts.list[i]!=NULL) {
+      if (strcmp(nxts.list[i]->name,name)==0 && nxts.list[i]->conn_type==conn_type) {
+        pthread_mutex_unlock(&nxts.mutex);
+        return nxts.list[i];
       }
     }
   }
+  pthread_mutex_unlock(&nxts.mutex);
+  return NULL;
 }
 
-ssize_t nxtd_send(int nxtid,const void *buf,size_t size) {
-  if (nxts[nxtid]!=NULL) {
-    if (nxts[nxtid]->conn_type==CONN_USB) return nxtd_usb_send((struct nxtd_nxt_usb*)nxts[nxtid],buf,size);
-    else if (nxts[nxtid]->conn_type==CONN_BT) return nxtd_bt_send((struct nxtd_nxt_bt*)nxts[nxtid],buf,size);
+/**
+ * Refresh NXT in list (that NXT is still there)
+ *  @param nxt NXT
+ */
+void nxtd_nxt_refresh(struct nxtd_nxt *nxt) {
+  pthread_mutex_lock(&nxts.mutex);
+  nxt->i++;
+  pthread_mutex_unlock(&nxts.mutex);
+}
+
+/**
+ * Scans for NXTs
+ */
+static void *nxtd_scanner(void *x) {
+  while (1) {
+    size_t i;
+
+    nxts.i++;
+
+    // Scan for NXTs
+    nxtd_usb_scan();
+    nxtd_bt_scan();
+
+    // Find NXTs that were turned off
+    pthread_mutex_lock(&nxts.mutex);
+
+    time_t now = time(NULL);
+    for (i=0;i<NXTD_MAXNUM;i++) {
+      if (nxts.list[i]!=NULL) {
+        if (nxts.list[i]->i<nxts.i) {
+          logmsg("Removed: %s (%d)\n",nxts.list[i]->name,i);
+          if (nxts.list[i]->conn_type==NXTD_USB) nxtd_usb_close((struct nxtd_nxt_usb*)nxts.list[i]);
+          else if (nxts.list[i]->conn_type==NXTD_BT) nxtd_bt_close((struct nxtd_nxt_bt*)nxts.list[i]);
+          nxts.list[i] = NULL;
+        }
+        else if (nxts.list[i]->conn_timeout!=0 && nxts.list[i]->conn_timeout<now) {
+          if (nxts.list[i]->conn_type==NXTD_USB) nxtd_usb_disconnect((struct nxtd_nxt_usb*)nxts.list[i]);
+          else if (nxts.list[i]->conn_type==NXTD_BT) nxtd_bt_disconnect((struct nxtd_nxt_bt*)nxts.list[i]);
+          logmsg("Timeout: %s (%d)\n",nxts.list[i]->name,i);
+        }
+      }
+    }
+    pthread_mutex_unlock(&nxts.mutex);
+
+    pthread_testcancel();
   }
-  else return 0;
 }
 
-ssize_t nxtd_recv(int nxtid,void *buf,size_t size) {
-  if (nxts[nxtid]!=NULL) {
-    if (nxts[nxtid]->conn_type==CONN_USB) return nxtd_usb_recv((struct nxtd_nxt_usb*)nxts[nxtid],buf,size);
-    else if (nxts[nxtid]->conn_type==CONN_BT) return nxtd_bt_recv((struct nxtd_nxt_bt*)nxts[nxtid],buf,size);
+/**
+ * Lists all NXTs that are connected via USB
+ *  @param packer Packer function
+ */
+static void nxtd_listusb(void (*packer)(int nxtid,char *name)) {
+  size_t i;
+  pthread_mutex_lock(&nxts.mutex);
+  for (i=0;i<NXTD_MAXNUM;i++) {
+    if (nxts.list[i]!=NULL) {
+      if (nxts.list[i]->conn_type==NXTD_USB) packer(i,nxts.list[i]->name);
+    }
   }
-  else return 0;
+  pthread_mutex_unlock(&nxts.mutex);
 }
 
-void usage(char *cmd,int r) {
+/**
+ * Lists all NXTs that are connected via BT
+ *  @param packer Packer function
+ */
+static void nxtd_listbt(void (*packer)(int nxtid,char *name,void *bt_addr)) {
+  size_t i;
+  pthread_mutex_lock(&nxts.mutex);
+  for (i=0;i<NXTD_MAXNUM;i++) {
+    if (nxts.list[i]!=NULL) {
+      if (nxts.list[i]->conn_type==NXTD_BT) {
+        struct nxtd_nxt_bt *nxt = (struct nxtd_nxt_bt*)nxts.list[i];
+        packer(i,nxt->nxt.name,&(nxt->bt_addr));
+      }
+    }
+  }
+  pthread_mutex_unlock(&nxts.mutex);
+}
+
+/**
+ * Sends data to NXT
+ *  @param nxtid NXT ID
+ *  @param buf Buffer
+ *  @param size How many bytes to send
+ *  @return How many bytes sent
+ */
+static ssize_t nxtd_send(int nxtid,const void *buf,size_t size) {
+  ssize_t ret = 0;
+  pthread_mutex_lock(&nxts.mutex);
+  if (nxts.list[nxtid]!=NULL) {
+    if (nxts.list[nxtid]->conn_type==NXTD_USB) ret = nxtd_usb_send((struct nxtd_nxt_usb*)nxts.list[nxtid],buf,size);
+    else if (nxts.list[nxtid]->conn_type==NXTD_BT) ret = nxtd_bt_send((struct nxtd_nxt_bt*)nxts.list[nxtid],buf,size);
+  }
+  pthread_mutex_unlock(&nxts.mutex);
+  return ret;
+}
+
+/**
+ * Receives data from NXT
+ *  @param nxtid NXT ID
+ *  @param buf Buffer
+ *  @param size How many bytes to receive
+ *  @return How many bytes received
+ */
+static ssize_t nxtd_recv(int nxtid,void *buf,size_t size) {
+  ssize_t ret = 0;
+  pthread_mutex_lock(&nxts.mutex);
+  if (nxts.list[nxtid]!=NULL) {
+    if (nxts.list[nxtid]->conn_type==NXTD_USB) ret = nxtd_usb_recv((struct nxtd_nxt_usb*)nxts.list[nxtid],buf,size);
+    else if (nxts.list[nxtid]->conn_type==NXTD_BT) ret = nxtd_bt_recv((struct nxtd_nxt_bt*)nxts.list[nxtid],buf,size);
+  }
+  pthread_mutex_unlock(&nxts.mutex);
+  return ret;
+}
+
+/**
+ * Displays program usage
+ *  @param cmd Program name
+ *  @param r Return value
+ */
+static void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;
   fprintf(out,"Usage: %s [OPTIONS]\n",cmd);
   fprintf(out,"A daemon for managing NXT connections\n");
   fprintf(out,"Options:\n");
   fprintf(out,"\t-h           Show help\n");
-  fprintf(out,"\t-p PORT      Set TCP port\n");
-  fprintf(out,"\t-l FILE      Set log file\n");
+  fprintf(out,"\t-p PORT      Set TCP port (Default: %d)\n",NXTNET_DEFAULT_PORT);
+  fprintf(out,"\t-l FILE      Set log file (Default: /var/log/nxtd.log)\n");
   fprintf(out,"\t-P PASSWORD  Set password\n");
+  fprintf(out,"\t-d           Run as daemon\n");
+  fprintf(out,"\t-i FILE      Set pid file (Default: /var/run/nxtd.pid)\n");
   fprintf(out,"\t-L           Use local mode\n");
   exit(r);
 }
 
-void quit() {
+/**
+ * Shuts nxtd down
+ */
+static void quit() {
   size_t i;
+
+  pthread_cancel(scanner_tid);
 
   nxtnet_srv_destroy(server);
 
-  for (i=0;i<NXT_MAXNUM;i++) {
-    if (nxts[i]!=NULL) {
-      if (nxts[i]->conn_type==CONN_USB) nxtd_usb_close((struct nxtd_nxt_usb*)nxts[i]);
-      else if (nxts[i]->conn_type==CONN_BT) nxtd_bt_close((struct nxtd_nxt_bt*)nxts[i]);
+  for (i=0;i<NXTD_MAXNUM;i++) {
+    if (nxts.list[i]!=NULL) {
+      if (nxts.list[i]->conn_type==NXTD_USB) nxtd_usb_close((struct nxtd_nxt_usb*)nxts.list[i]);
+      else if (nxts.list[i]->conn_type==NXTD_BT) nxtd_bt_close((struct nxtd_nxt_bt*)nxts.list[i]);
     }
   }
 
@@ -118,12 +253,16 @@ void quit() {
   unlink(pidfile);
 }
 
-/// @todo Disconnect NXTs after timeout
-/// @todo Own thread for scanning Bluetooth in background
+/**
+ * Runs nxtd
+ *  @param argc Number of arguments
+ *  @param argv Arguments
+ *  @return Program's return value
+ */
 int main(int argc,char *argv[]) {
-  int port = 13370;
-  char *logfile = "/tmp/nxtd.log";
-  FILE *logfd,*pidfd;
+  int port = NXTNET_DEFAULT_PORT;
+  char *logfile = "/var/log/nxtd.log";
+  FILE *pidfd;
   char *password = NULL;
   int c;
   int local = 0;
@@ -164,11 +303,19 @@ int main(int argc,char *argv[]) {
     }
   }
 
-  memset(nxts,0,sizeof(nxts));
-
+  // Initialze
+  if (run_as_daemon) daemon(0,0);
+  atexit(quit);
+  signal(SIGTERM,exit);
+  signal(SIGQUIT,exit);
+  signal(SIGINT,exit);
+  memset(nxts.list,0,sizeof(nxts.list));
+  nxts.i = 0;
+  pthread_mutex_init(&nxts.mutex,NULL);
   nxtd_usb_init();
   nxtd_bt_init();
 
+  // Write PID to file
   pidfd = fopen(pidfile,"w");
   if (pidfd) {
     fprintf(pidfd,"%d\n",getpid());
@@ -176,6 +323,7 @@ int main(int argc,char *argv[]) {
   }
   else perror("fopen");
 
+  // Open logfile
   if (strcmp(logfile,"-")==0) logfd = stdout;
   else logfd = fopen(logfile,"a");
   server = nxtnet_srv_create(port,password,logfd,local);
@@ -183,22 +331,15 @@ int main(int argc,char *argv[]) {
     perror("creating nxt daemon");
     return 1;
   }
+
+  // Spawn thread for scanning
+  pthread_create(&scanner_tid,NULL,nxtd_scanner,NULL);
+
+  // Start server
   server->ops.list_usb = nxtd_listusb;
   server->ops.list_bt = nxtd_listbt;
   server->ops.recv = nxtd_recv;
   server->ops.send = nxtd_send;
-  atexit(quit);
-
-  signal(SIGTERM,exit);
-  signal(SIGQUIT,exit);
-  signal(SIGINT,exit);
-
-  printf("Scanning for NXTs (this can take a while)...\n");
-  nxtd_scan();
-
-  printf("nxtd is running now\n");
-
-  if (run_as_daemon) daemon(0,0);
   nxtnet_srv_mainloop(server);
 
   return 0;

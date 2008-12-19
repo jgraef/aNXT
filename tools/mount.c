@@ -408,7 +408,6 @@ int main(int argc,char *argv[]) {
   memset(&options,0,sizeof(struct options));
   if (fuse_opt_parse(&args,&options,nxtfs_opts,NULL)==-1) return 1;
 
-  nxt_init();
   nxt = nxt_open(options.name);
   if (nxt!=NULL) {
 #ifdef FUSE_VERSION_2_5

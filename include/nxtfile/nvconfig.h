@@ -40,4 +40,4 @@ struct nvconfig {
 uint8_t nvconfig_set(unsigned int sleep,unsigned int volume);
 void nvconfig_get(uint8_t nvconfig,unsigned int *sleep,unsigned int *volume);
 
-#endif
+#endif /* _NXTFILE_NVCONFIG_H_ */

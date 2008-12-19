@@ -65,7 +65,6 @@ int main(int argc,char *argv[]) {
   char *name = NULL;
 
   // init NXT
-  nxt_init();
   nxt_t *nxt = nxt_open(name);
   if (nxt==NULL) {
     fprintf(stderr,"Could not find NXT\n");

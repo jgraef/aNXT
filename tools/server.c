@@ -668,7 +668,6 @@ int main(int argc,char *argv[]) {
   if (vflag)
     tty = fopen("/dev/tty","w");
 
-  nxt_init();
   nxt = nxt_open(name);
   if (nxt==NULL) {
     fprintf(stderr,"Could not find NXT\n");

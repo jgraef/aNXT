@@ -214,7 +214,6 @@ int main(int argc,char *argv[]) {
   ClearDisplay(display);
   SDL_Flip(display);
 
-  nxt_init();
   nxt_t *nxt = nxt_open(name);
   if (nxt==NULL) {
     fprintf(stderr,"Could not find NXT\n");
