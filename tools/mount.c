@@ -213,7 +213,6 @@ static int nxtfs_write(const char *filename,const char *buf,size_t count,off_t o
  *  @param offset Offset (ignored)
  *  @param fi File info
  *  @return Success?
- *  @todo File size isn't measured correctly (Here or in nxtfs_getattr)
  */
 static int nxtfs_readdir(const char *path,void *buf,fuse_fill_dir_t filler,off_t offset,struct fuse_file_info *fi) {
   if (strcmp(path,"/")!=0) return -ENOENT;
@@ -248,7 +247,6 @@ static int nxtfs_readdir(const char *path,void *buf,fuse_fill_dir_t filler,off_t
  *  @param filename Filename
  *  @param stbuf Stat buffer
  *  @return Success?
- *  @todo File size isn't measured correctly (Here or in nxtfs_readdir)
  */
 static int nxtfs_getattr(const char *filename,struct stat *stbuf) {
   if (strcmp(filename,"/")==0) {

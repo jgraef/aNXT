@@ -93,10 +93,7 @@ int main(int argc,char *argv[]) {
   }
   else {
     nxtnet_cli_t *cli = nxtnet_cli_connect("127.0.0.1",port,NULL);
-    if (cli!=NULL) {
-      printf("127.0.0.1\n");
-      nxtnet_scan(cli);
-    }
+    if (cli!=NULL) nxtnet_scan(cli);
     else fprintf(stderr,"nxt_scan: 127.0.0.1: %s",strerror(errno));
   }
 

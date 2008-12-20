@@ -143,7 +143,7 @@ int nxtd_bt_connect(struct nxtd_nxt_bt *nxt) {
     for (i=1;i<31;i++) {
       addr.rc_channel = i;
       if (connect(sock, (struct sockaddr *)&addr, sizeof(addr))==0) {
-        // make socket non-blocking
+        /// @todo make socket non-blocking
         /*int flags = fcntl(sock,F_GETFL,0);
         if (flags==-1) flags = 0;
         fcntl(sock,F_SETFL,flags|O_NONBLOCK);*/
@@ -168,6 +168,7 @@ int nxtd_bt_connect(struct nxtd_nxt_bt *nxt) {
 int nxtd_bt_disconnect(struct nxtd_nxt_bt *nxt) {
   if (nxt->connected) {
     close(nxt->bt_sock);
+    nxt->connected = 0;
     nxt->nxt.conn_timeout = 0;
   }
   return 0;

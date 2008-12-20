@@ -56,10 +56,12 @@ static format_t recognize_format(char *file) {
   return NONE;
 }
 
+/// @todo Implement
 static int mid2rmd(FILE *mid,FILE *rmd,int verbose) {
   return -1;
 }
 
+/// @todo Implement
 static int rmd2mid(FILE *rmd,FILE *mid,int verbose) {
   return -1;
 }
