@@ -24,23 +24,40 @@
 #include <usb.h>
 #include <pthread.h>
 
+/// Max. number of NXTs
 #define NXTD_MAXNUM 256
 
+/// Enumeration of connection types
 typedef enum {
+  /// Connection over Universal Serial Bus
   NXTD_USB,
+  /// Connection over Bluetooth
   NXTD_BT
 } nxtd_conn_t;
 
+/// Descriptor for NXTs
+///  @todo Save serial number too and send it to client. So that nxt_open can
+///        be used with serial number too
 struct nxtd_nxt {
+  /// The NXTs name
   char *name;
+  /// How the NXT is connected
   nxtd_conn_t conn_type;
+  /// Actuality counter. If this is smaller then nxts.i the NXT isn't connected
+  /// anymore
   unsigned int i;
+  /// UNIX timestamp when connection times out.
+  /// 0 if no connection timeout is set
   time_t conn_timeout;
 };
 
+/// List of NXTs
 struct {
+  /// Mutex for list
   pthread_mutex_t mutex;
+  /// List of NXTs
   struct nxtd_nxt *list[NXTD_MAXNUM];
+  /// Actuality counter
   unsigned int i;
 } nxts;
 

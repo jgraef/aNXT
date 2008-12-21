@@ -26,17 +26,27 @@
 
 #include "nxtd.h"
 
+/// Bluetooth device class for NXT - Byte 0
 #define NXT_BT_DEVCLASS_BYTE0 4
+/// Bluetooth device class for NXT - Byte 1
 #define NXT_BT_DEVCLASS_BYTE1 8
+/// Bluetooth device class for NXT - Byte 2
 #define NXT_BT_DEVCLASS_BYTE2 0
 
-#define NXT_BT_WAIT_TIMEOUT 5000 /* milliseconds */
-#define NXT_BT_IDLE_TIMEOUT 60   /* seconds */
+/// Wait timeout in milliseconds (for blocking operations)
+#define NXT_BT_WAIT_TIMEOUT 5000
+/// Idle timeout in seconds
+#define NXT_BT_IDLE_TIMEOUT 60
 
+/// Descriptor for Bluetooth NXTs
 struct nxtd_nxt_bt {
+  /// General NXT descriptor
   struct nxtd_nxt nxt;
+  /// Bluetooth socket
   int bt_sock;
+  /// Bluetooth address
   bdaddr_t bt_addr;
+  /// If NXT is connected
   int connected;
 };
 

@@ -26,6 +26,11 @@
 #include <errno.h>
 #include <string.h>
 
+/**
+ * Display usage
+ *  @param cmd Program's name
+ *  @param r Exit value
+ */
 void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;
   fprintf(out,"Usage: %s [OPTION]... [HOST]...\n",cmd);
@@ -36,6 +41,10 @@ void usage(char *cmd,int r) {
   exit(r);
 }
 
+/**
+ * Scans for NXTs
+ *  @param cli Client connection
+ */
 void nxtnet_scan(nxtnet_cli_t *cli) {
   size_t i;
 
@@ -56,6 +65,7 @@ void nxtnet_scan(nxtnet_cli_t *cli) {
   }
 }
 
+/// Main function
 int main(int argc,char *argv[]) {
   int c;
   int port = NXTNET_DEFAULT_PORT;

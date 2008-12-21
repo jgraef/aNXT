@@ -72,6 +72,11 @@ void nxtd_bt_close(struct nxtd_nxt_bt *nxt) {
   free(nxt);
 }
 
+/**
+ * Finds NXT with BT address
+ *  @param bdaddr BT address
+ *  @return NXT
+ */
 struct nxtd_nxt_bt *nxtd_bt_finddev(bdaddr_t *bdaddr) {
   struct nxtd_nxt_bt *nxt;
   size_t i;
