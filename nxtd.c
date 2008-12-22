@@ -27,10 +27,10 @@
 
 #include "nxtd.h"
 
-static pthread_t scanner_tid;
-static char *pidfile;
-static nxtnet_srv_t *server;
-static FILE *logfd;
+static pthread_t scanner_tid = -1;
+static char *pidfile = "/var/run/nxtd.pid";
+static nxtnet_srv_t *server = NULL;
+static FILE *logfd = NULL;
 
 /**
  * Prints log message
@@ -63,7 +63,7 @@ int nxtd_nxt_reg(struct nxtd_nxt *nxt) {
   for (i=0;i<NXTD_MAXNUM;i++) {
     if (nxts.list[i]==NULL) {
       nxts.list[i] = nxt;
-      logmsg("Added %s (%d)\n",nxts.list[i]->name,i);
+      logmsg("Added %s (%d;%s)\n",nxts.list[i]->name,i,nxts.list[i]->conn_type==NXTD_USB?"USB":"BT");
       pthread_mutex_unlock(&nxts.mutex);
       return 0;
     }
@@ -123,7 +123,7 @@ static void *nxtd_scanner(void *x) {
     for (i=0;i<NXTD_MAXNUM;i++) {
       if (nxts.list[i]!=NULL) {
         if (nxts.list[i]->i<nxts.i) {
-          logmsg("Removed: %s (%d)\n",nxts.list[i]->name,i);
+          logmsg("Removed: %s (%d;%s)\n",nxts.list[i]->name,i,nxts.list[i]->conn_type==NXTD_USB?"USB":"BT");
           if (nxts.list[i]->conn_type==NXTD_USB) nxtd_usb_close((struct nxtd_nxt_usb*)nxts.list[i]);
           else if (nxts.list[i]->conn_type==NXTD_BT) nxtd_bt_close((struct nxtd_nxt_bt*)nxts.list[i]);
           nxts.list[i] = NULL;
@@ -131,7 +131,7 @@ static void *nxtd_scanner(void *x) {
         else if (nxts.list[i]->conn_timeout!=0 && nxts.list[i]->conn_timeout<now) {
           if (nxts.list[i]->conn_type==NXTD_USB) nxtd_usb_disconnect((struct nxtd_nxt_usb*)nxts.list[i]);
           else if (nxts.list[i]->conn_type==NXTD_BT) nxtd_bt_disconnect((struct nxtd_nxt_bt*)nxts.list[i]);
-          logmsg("Timeout: %s (%d)\n",nxts.list[i]->name,i);
+          logmsg("Timeout: %s (%d;%s)\n",nxts.list[i]->name,i,nxts.list[i]->conn_type==NXTD_USB?"USB":"BT");
         }
       }
     }
@@ -236,9 +236,9 @@ static void usage(char *cmd,int r) {
 static void quit() {
   size_t i;
 
-  pthread_cancel(scanner_tid);
+  if (scanner_tid!=-1) pthread_cancel(scanner_tid);
 
-  nxtnet_srv_destroy(server);
+  if (server!=NULL) nxtnet_srv_destroy(server);
 
   for (i=0;i<NXTD_MAXNUM;i++) {
     if (nxts.list[i]!=NULL) {
@@ -267,7 +267,6 @@ int main(int argc,char *argv[]) {
   int c;
   int local = 0;
   int run_as_daemon = 0;
-  pidfile = "/var/run/nxtd.pid";
 
   while ((c = getopt(argc,argv,":hp:P:l:Ldi:"))!=-1) {
     switch (c) {

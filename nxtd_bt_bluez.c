@@ -149,9 +149,9 @@ int nxtd_bt_connect(struct nxtd_nxt_bt *nxt) {
       addr.rc_channel = i;
       if (connect(sock, (struct sockaddr *)&addr, sizeof(addr))==0) {
         /// @todo make socket non-blocking
-        /*int flags = fcntl(sock,F_GETFL,0);
+        int flags = fcntl(sock,F_GETFL,0);
         if (flags==-1) flags = 0;
-        fcntl(sock,F_SETFL,flags|O_NONBLOCK);*/
+        fcntl(sock,F_SETFL,flags|O_NONBLOCK);
 
         nxt->bt_sock = sock;
         nxt->connected = 1;
@@ -179,6 +179,34 @@ int nxtd_bt_disconnect(struct nxtd_nxt_bt *nxt) {
   return 0;
 }
 
+static uint64_t useconds(void) {
+  struct timeval current;
+  gettimeofday(&current,NULL);
+  return current.tv_sec*1000000+current.tv_usec;
+}
+
+static int write_timeout(int sock,const void *data,size_t size) {
+  uint64_t timeout = useconds()+NXT_BT_WAIT_TIMEOUT*1000;
+  size_t i = 0;
+  while (i<size && useconds()<timeout) {
+    int c = write(sock,data+i,size-i);
+    if (c>0) i += c;
+    usleep(1000);
+  }
+  return size;
+}
+
+static int read_timeout(int sock,void *data,size_t size) {
+  uint64_t timeout = useconds()+NXT_BT_WAIT_TIMEOUT*1000;
+  size_t i = 0;
+  while (i<size && useconds()<timeout) {
+    int c = read(sock,data+i,size-i);
+    if (c>0) i += c;
+    usleep(1000);
+  }
+  return size;
+}
+
 /**
  * Sends data over BT
  *  @param nxt NXT handle
@@ -190,8 +218,8 @@ ssize_t nxtd_bt_send(struct nxtd_nxt_bt *nxt,const void *data,size_t size) {
   nxtd_bt_connect(nxt);
   uint16_t sz = size;
   nxtd_bt_timeout(nxt);
-  if (write(nxt->bt_sock,&sz,sizeof(sz))<0) return 0;
-  return write(nxt->bt_sock,data,size);
+  if (write_timeout(nxt->bt_sock,&sz,sizeof(sz))<0) return 0;
+  return write_timeout(nxt->bt_sock,data,size);
 }
 
 /**
@@ -205,6 +233,6 @@ ssize_t nxtd_bt_recv(struct nxtd_nxt_bt *nxt,void *data,size_t size) {
   nxtd_bt_connect(nxt);
   uint16_t sz;
   nxtd_bt_timeout(nxt);
-  if (read(nxt->bt_sock,&sz,sizeof(sz))<0) return 0;
-  return read(nxt->bt_sock,data,sz);
+  if (read_timeout(nxt->bt_sock,&sz,sizeof(sz))<0) return 0;
+  return read_timeout(nxt->bt_sock,data,sz);
 }

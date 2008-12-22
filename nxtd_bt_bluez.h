@@ -34,7 +34,7 @@
 #define NXT_BT_DEVCLASS_BYTE2 0
 
 /// Wait timeout in milliseconds (for blocking operations)
-#define NXT_BT_WAIT_TIMEOUT 5000
+#define NXT_BT_WAIT_TIMEOUT 30000
 /// Idle timeout in seconds
 #define NXT_BT_IDLE_TIMEOUT 60
 

@@ -176,7 +176,7 @@ int nxtd_usb_disconnect(struct nxtd_nxt_usb *nxt) {
  *  @return How many bytes sent
  */
 ssize_t nxtd_usb_send(struct nxtd_nxt_usb *nxt,const void *data,size_t size) {
-  if (nxt->usb_handle==NULL) nxtd_usb_connect(nxt);
+  nxtd_usb_connect(nxt);
 
   ssize_t send;
   size_t absolute = 0;
@@ -214,7 +214,7 @@ ssize_t nxtd_usb_send(struct nxtd_nxt_usb *nxt,const void *data,size_t size) {
  *  @return How many bytes received
  */
 ssize_t nxtd_usb_recv(struct nxtd_nxt_usb *nxt,void *data,size_t size) {
-  if (nxt->usb_handle==NULL) nxtd_usb_connect(nxt);
+  nxtd_usb_connect(nxt);
 
 #ifdef DEBUG
   int i;
