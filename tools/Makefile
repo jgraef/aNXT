@@ -42,7 +42,8 @@ TOOLS = ../bin/nxt_info \
 	../bin/nxt_pilot \
 	../bin/nxt_reset_tacho \
 	../bin/nxt_motor_travel \
-	../bin/anxt-config
+	../bin/anxt-config \
+	../bin/nxt_joystick
 
 all: $(TOOLS)
 
@@ -175,6 +176,9 @@ all: $(TOOLS)
 ../bin/anxt-config: anxt-config-creator.sh ../Makefile.config
 	sh anxt-config-creator.sh > $@
 	chmod 755 $@
+
+../bin/nxt_joystick: joystick.c ../lib/libanxt.a
+	$(CC) $(CFLAGS) -o $@ $< `sdl-config --cflags` `sdl-config --libs` $(LIBS)
 
 clean:
 	rm -f $(TOOLS)
