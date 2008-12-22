@@ -1,0 +1,136 @@
+.\" This manpage is free software; the Free Software Foundation
+.\" gives unlimited permission to copy, distribute and modify it.
+.\" 
+.\"
+.\" Process this file with
+.\" groff -man -Tascii nxt_motor_travel.1
+.\"
+.TH NXT_MOTOR_TRAVEL 1 "JUNE 2008" Linux "User Manuals"
+.SH NAME
+nxt_motor_travel \- Control/synchronise two LEGO mindstorms NXT motors
+.SH SYNOPSIS
+.B nxt_motor_travel [
+.I options
+.B ]
+.SH DESCRIPTION
+Control/synchronise LEGO mindstorms NXT motors.
+.br
+This is usefull when the two motors are used for mobile wheeldriven robots.
+.br
+When both motors run similar, the synchronisation will take effekt. 
+In case one motor would be slowed down by a force, the second motor 
+will move similar. This makes it more easy to keep direction, when
+driving forward. 
+.br
+When synchronisation is in effect, the motors have deliver more power as 
+without synchronisation. 
+.br
+There is also a 
+.I turnratio
+setting, to drive curves. If turnratio is not zero, there will be no
+synchronisation effect, when one motor would be slowed down.
+.br
+Using nxt_travel is not exactly the same as using
+.I nxt_motor
+with the 
+.I -y 
+(synchronisation) option. 
+.br
+nxt_travel is similar to using
+.I nxt_motor
+with the
+.I "-y -b"
+(synchronisation and brake/block) options.
+.br
+When used without arguments, 
+.I nxt_motor_travel 
+will run infinite with a low power setting. 
+It is possible to set the power, set a rotation limit, brake or block the motor 
+with commandline arguments.
+.SH AVAILABILITY 
+Linux
+.SH OPTIONS
+.IP -b
+Brake (block) motors.
+.IP "-m motors"
+Valid 
+.I motors
+values are: AB, AC, BC for motors at two of the ports A, B or C. 
+The default value is BC.
+.IP "-n nxtname"
+Use the NXT with name 
+.I "nxtname" 
+\&. The default is the first found brick. 
+.sp
+Additionally, the bluetooth address of the NXT brick can be used as
+.I nxtname
+\&. You can get the bluetooth address and name of your USB connected
+NXT brick by using
+.I nxt_info(1)
+.IP "-p power"
+The 
+.I power
+setting controls the power/speed of the motor. The default valid is 50, which
+means, that the motor is barly moving in curves.
+.IP "-r rotation"
+The 
+.I rotation
+setting limits the movement of the motor. If the tacho value of the motor ( see
+.I nxt_tacho(1)
+) reaches 
+.I rotation
+the motor is stopped (or depending on the options blocked).
+.br
+The default 
+.I rotation
+is 0, which means unlimited movement.
+.IP -s
+Stop (coast) motor. Same as -p 0
+.IT "-t turnratio"
+Set turnratio. 
+.br
+The turnratio defines the curve radius. 
+The default 0 means no curve. The -100/100 turnratio means, that one motor
+is moving forward and the the other motor is moving backward in the same
+way.
+.IP -i
+Idle motor
+.SH EXIT STATUS
+.LP
+The following exit values shall be returned:
+.TP 7
+\ 0
+Successful completion.
+.TP 7
+>0
+A error occured. If the error is caused by a problem of the NXT brick itself, 
+a matching errorstring to the exit value can be displayed with the 
+.I nxt_error(1) 
+command.
+.sp
+.SH EXAMPLES
+nxt_motor_travel -n 01:23:45:67:89:ab -p 55
+.LP
+Connect to the NXT brick with bluetooth address "01:23:45:67:89:ab" via 
+bluetooth and rotate motors BC with power 55.
+.SH CAVEATS
+You can not get automatically access to the NXT brick.
+
+Either you need access rights to the NXT usb device. Use root rights or see  
+.I nxt_udev(8) 
+for more information.
+
+Or you need to pair the bluetooth devices of the host computer and the 
+NXT brick. There are several programs to do this, one is 
+"kbluetoothd".
+.SH AUTHOR
+Janosch Graef
+.\" man page author: J. "MUFTI" Scheurich (IITS Universitaet Stuttgart)
+.SH "SEE ALSO"
+.BR libanxt (3), 
+.BR nxt_motor(1),
+.BR nxt_tacho (1),
+.BR nxt_error (1),
+.BR nxt_udev (8),
+.BR nxt_info (1)
+
