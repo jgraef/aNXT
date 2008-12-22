@@ -68,6 +68,9 @@
 ///  @todo Assign a correct port
 #define NXTNET_DEFAULT_PORT 13370
 
+/// Timeout in select() in seconds
+#define NXTNET_SELECT_TIMEOUT 10
+
 /// Packet
 struct nxtnet_proto_packet {
   /// Signature (must be NXTNET_PROTO_SIG)

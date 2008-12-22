@@ -426,6 +426,7 @@ int nxtnet_srv_mainloop(nxtnet_srv_t *srv) {
   fd_set fds_read;
   int fds_max = srv->sock;
   int i;
+  struct timeval timeout;
 
   if (listen(srv->sock,NXTNET_SRV_LISTEN_MAX)==-1) return;
 
@@ -435,8 +436,10 @@ int nxtnet_srv_mainloop(nxtnet_srv_t *srv) {
 
   while (1) {
     fds_read = fds_master;
-    if (select(fds_max+1,&fds_read,NULL,NULL,NULL)==-1) {
-        perror("select of server socket");
+    timeout.tv_sec = NXTNET_SELECT_TIMEOUT;
+    timeout.tv_usec = 0;
+    if (select(fds_max+1,&fds_read,NULL,NULL,&timeout)==-1) {
+      perror("select of server socket");
     }
     for (i=0;i<=fds_max;i++) {
       if (FD_ISSET(i,&fds_read)) {
@@ -459,6 +462,7 @@ int nxtnet_srv_mainloop(nxtnet_srv_t *srv) {
           if (packet==NULL) { // client disconnected/error
             nxtnet_srv_log(srv,"Client sock %d hang up\n",i);
             close(i);
+            FD_CLR(i,&fds_master);
             if (i==fds_max) fds_max--;
           }
           else {
