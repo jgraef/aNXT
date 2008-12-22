@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <stdint.h>
+#include <unistd.h>
 #include <nxt.h>
 #include <SDL.h>
 #include <SDL_image.h>
@@ -10,6 +11,18 @@
 #include "pilot_exit.xpm"
 #include "pilot_left.xpm"
 #include "pilot_right.xpm"
+
+static void usage(char *cmd,int r) {
+  FILE *out = r==0?stdout:stderr;
+  fprintf(out,"Usage: %s [OPTIONS]\n",cmd);
+  fprintf(out,"Control the NXT UI without touching it\n");
+  fprintf(out,"Options:\n");
+  fprintf(out,"\t-h           Show help\n");
+  fprintf(out,"\t-n NXTNAME   Name of NXT (Default: first found) or bluetooth address\n");
+  fprintf(out,"\t-f           Force. Don't ask anything\n");
+  fprintf(out,"\t-d DURATION  Duration (Default: 200ms)\n");
+  exit(r);
+}
 
 static SDL_Surface *load_display(nxt_t *nxt) {
   static char screen[64][100];
@@ -62,13 +75,44 @@ int main(int argc,char *argv[]) {
     .w = 100,
     .h = 64,
   };
+  int c;
   char *name = NULL;
+  int force = 0;
+
+  while ((c = getopt(argc,argv,":hn:f"))!=-1) {
+    switch (c) {
+      case 'h':
+        usage(argv[0],0);
+        break;
+      case 'f':
+        force = 1;
+        break;
+      case 'n':
+        name = optarg;
+        break;
+      case ':':
+        fprintf(stderr,"Option -%c requires an operand\n",optopt);
+        usage(argv[0],1);
+        break;
+      case '?':
+        fprintf(stderr,"Unrecognized option: -%c\n", optopt);
+        usage(argv[0],1);
+        break;
+    }
+  }
 
   // init NXT
   nxt_t *nxt = nxt_open(name);
   if (nxt==NULL) {
     fprintf(stderr,"Could not find NXT\n");
     return 1;
+  }
+  if (nxt_getcontype(nxt)==NXT_CON_BT && !force) {
+    fprintf(stderr,"Warning! Using NXT Pilot over Bluetooth can make trouble. Are you sure to continue (y/n)[n]: ");
+    if (fgetc(stdin)!='y') {
+      nxt_close(nxt);
+      return 0;
+    }
   }
 
   // init window
@@ -99,6 +143,7 @@ int main(int argc,char *argv[]) {
   SDL_BlitSurface(exit,NULL,screen,&rect_exit);
 
   int done = 0;
+  unsigned int pause = nxt_getcontype(nxt)==NXT_CON_BT?500:100;
   while (!done) {
     while (SDL_PollEvent(&event)) {
       switch(event.type) {
@@ -125,9 +170,10 @@ int main(int argc,char *argv[]) {
     if (display!=NULL) {
       SDL_BlitSurface(display,NULL,screen,&rect_display);
       SDL_UpdateRect(screen,0,0,0,0);
-      SDL_Delay(100);
       SDL_FreeSurface(display);
     }
+
+    SDL_Delay(pause);
   }
 
   // free images

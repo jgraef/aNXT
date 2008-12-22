@@ -125,6 +125,7 @@ int main(int argc,char *argv[]) {
   char *unit = NULL;
   int sensor = -1;
   int fullscreen = 0;
+  int force = 0;
   int done = 0;
   unsigned int x = 0;
   struct screen screen = {
@@ -134,7 +135,7 @@ int main(int argc,char *argv[]) {
   };
   SDL_Surface *display;
 
-  while ((c = getopt(argc,argv,":hs:m:t:n:rx:fv"))!=-1) {
+  while ((c = getopt(argc,argv,":hs:m:t:n:rx:Ffv"))!=-1) {
     switch(c) {
       case 'h':
         usage(argv[0],0);
@@ -175,8 +176,11 @@ int main(int argc,char *argv[]) {
           usage(argv[0],1);
         }
         break;
-      case 'f':
+      case 'F':
         fullscreen = 1;
+        break;
+      case 'f':
+        force = 1;
         break;
       case ':':
         fprintf(stderr,"Option -%c requires an operand\n",optopt);
@@ -201,6 +205,19 @@ int main(int argc,char *argv[]) {
     else unit = "";
   }
 
+  nxt_t *nxt = nxt_open(name);
+  if (nxt==NULL) {
+    fprintf(stderr,"Could not find NXT\n");
+    return 1;
+  }
+  if (nxt_getcontype(nxt)==NXT_CON_BT && !force) {
+    fprintf(stderr,"Warning! Using NXT Sensor Graph over Bluetooth can make trouble. Are you sure to continue (y/n)[n]: ");
+    if (fgetc(stdin)!='y') {
+      nxt_close(nxt);
+      return 0;
+    }
+  }
+
   if (SDL_Init(SDL_INIT_VIDEO)<0) {
     fprintf(stderr,"Could not initialize SDL: %s\n",SDL_GetError());
     return 1;
@@ -209,22 +226,18 @@ int main(int argc,char *argv[]) {
   display = SDL_SetVideoMode(screen.width,screen.height,screen.depth,SDL_SWSURFACE|(fullscreen?SDL_FULLSCREEN:0));
   if (display==NULL) {
     fprintf(stderr,"Could not set video mode: %s\n",SDL_GetError());
+    nxt_close(nxt);
     return 1;
   }
   ClearDisplay(display);
   SDL_WM_SetCaption("NXT Sensor Graph","NXT Sensor Grap");
   SDL_Flip(display);
 
-  nxt_t *nxt = nxt_open(name);
-  if (nxt==NULL) {
-    fprintf(stderr,"Could not find NXT\n");
-    return 1;
-  }
-
   nxt_setsensormode(nxt,sensor,type,NXT_SENSOR_MODE_RAW);
   SDL_Delay(20);
 
   int lasty = 0;
+  unsigned int pause = nxt_getcontype(nxt)==NXT_CON_BT?500:50;
   while (!done) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -251,11 +264,14 @@ int main(int argc,char *argv[]) {
       }
       else DrawPixel(display,x,y,0,0,0);
     }
-    else fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
+    else {
+      fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
+      done = 1;
+    }
     x++;
     lasty = y;
     SDL_Flip(display);
-    SDL_Delay(10);
+    SDL_Delay(pause);
   }
 
   if (reset) nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);

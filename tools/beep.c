@@ -25,7 +25,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-void usage(char *cmd,int r) {
+static void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;
   fprintf(out,"Usage: %s [OPTIONS]\n",cmd);
   fprintf(out,"Play sound on the NXT brick\n");
@@ -65,7 +65,7 @@ int main(int argc,char *argv[]) {
         else dur = newdur;
         break;
       case 'n':
-        name = strdup(optarg);
+        name = optarg;
         break;
       case ':':
         fprintf(stderr,"Option -%c requires an operand\n",optopt);
@@ -87,7 +87,6 @@ int main(int argc,char *argv[]) {
   nxt_beep(nxt,freq,dur);
 
   int ret = nxt_error(nxt);
-  if (name!=NULL) free(name);
   nxt_close(nxt);
 
   return ret;
