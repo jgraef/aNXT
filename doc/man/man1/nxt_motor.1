@@ -62,10 +62,13 @@ Stop (coast) motor. Same as -p 0
 .IP -y
 Synchronise motor with another motor.
 .br
-Be carefull when using motor synchronisation. 
+Be carefull when using motor synchronisation without using the brake
+.I -b
+setting.
 .br
-Useing motor synchronisation without a slowing external force on the motors
-can easily result in a wild oscillating movement of the motors.
+Useing motor synchronisation without the brake setting and without a slowing 
+external force on the motors can easily result in a wild oscillating movement 
+of the motors.
 .IP -i
 Idle motor
 .SH EXIT STATUS
