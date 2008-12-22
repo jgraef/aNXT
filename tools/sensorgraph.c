@@ -212,6 +212,7 @@ int main(int argc,char *argv[]) {
     return 1;
   }
   ClearDisplay(display);
+  SDL_WM_SetCaption("NXT Sensor Graph","NXT Sensor Grap");
   SDL_Flip(display);
 
   nxt_t *nxt = nxt_open(name);
@@ -221,6 +222,7 @@ int main(int argc,char *argv[]) {
   }
 
   nxt_setsensormode(nxt,sensor,type,NXT_SENSOR_MODE_RAW);
+  SDL_Delay(20);
 
   int lasty = 0;
   while (!done) {

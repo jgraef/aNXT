@@ -126,7 +126,7 @@ int main(int argc,char *argv[]) {
   }
 
   nxt_setsensormode(nxt,sensor,type,mode);
-  usleep(100000);
+  usleep(200000);
   val = nxt_getsensorval(nxt,sensor);
   if (reset) nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
 
