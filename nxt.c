@@ -42,15 +42,23 @@
 
 #define FLAGSET(val,flag) (((val)&(flag))==(flag))
 
+/// Packet type
 typedef enum {
+  /// Invalid packet type
   NXT_TYPE_NONE = -1,
-  NXT_TYPE_DIRECT_RESP = 0x00, // Direct command telegram, response required
-  NXT_TYPE_SYSTEM_RESP = 0x01, // System command telegram, response required
-  NXT_TYPE_REPLY       = 0x02, // Reply telegram
-  NXT_TYPE_DIRECT_NORE = 0x80, // Direct command telegram, no response
-  NXT_TYPE_SYSTEM_NORE = 0x81  // System command telegram, no response
+  /// Direct command telegram, response required
+  NXT_TYPE_DIRECT_RESP = 0x00,
+  /// System command telegram, response required
+  NXT_TYPE_SYSTEM_RESP = 0x01,
+  /// Reply telegram
+  NXT_TYPE_REPLY       = 0x02,
+  /// Direct command telegram, no response
+  NXT_TYPE_DIRECT_NORE = 0x80,
+  /// System command telegram, no response
+  NXT_TYPE_SYSTEM_NORE = 0x81
 } nxt_type_t;
 
+/// Packet command
 typedef enum {
   NXT_CMD_NONE = -1
 } nxt_cmd_t;
@@ -815,7 +823,7 @@ char *nxt_getcurprog(nxt_t *nxt) {
 }
 
 /**
- * Gets device infos
+ * Gets device information
  *  @param nxt NXT handle
  *  @param nxt_name Reference to store NXT name as string
  *  @param bt_addr Reference to store Bluetooth address
