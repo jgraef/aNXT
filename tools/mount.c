@@ -25,6 +25,7 @@
 #include <stddef.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <nxttools.h>
 
 #ifdef FUSE_VERSION_2_5
 # define FUSE_USE_VERSION 25
@@ -36,7 +37,15 @@
 
 #include <nxt.h>
 
+/// Data needed to add a file to a directory
+struct nxtfs_dir_file {
+  /// Fuse filler function
+  fuse_fill_dir_t filler;
+  /// Directory buffer
+  void *buf;
+};
 
+/// Opened file
 typedef struct {
   char *filename;
   char *buf;
@@ -44,6 +53,7 @@ typedef struct {
   int dirty;
 } nxt_file_t;
 
+/// Filesystem options
 struct options {
   char* name;
 } options;
@@ -206,6 +216,23 @@ static int nxtfs_write(const char *filename,const char *buf,size_t count,off_t o
 }
 
 /**
+ * Adds file to directory
+ *  @param filename Filename
+ *  @param filesize Filesize
+ *  @param vdata Void pointer to dir_file data
+ */
+static void nxtfs_dir_file_add(char *filename,size_t filesize,void *vdata) {
+  struct nxtfs_dir_file *data = (struct nxtfs_dir_file*)vdata;
+  struct stat stbuf;
+
+  memset(&stbuf,0,sizeof(stbuf));
+  stbuf.st_mode = S_IFREG|0777;
+  stbuf.st_size = filesize;
+  stbuf.st_nlink = 1;
+  data->filler(data->buf,filename,&stbuf,0);
+}
+
+/**
  * Reads directory
  *  @param path Path (should always be /)
  *  @param buf Buffer
@@ -215,31 +242,18 @@ static int nxtfs_write(const char *filename,const char *buf,size_t count,off_t o
  *  @return Success?
  */
 static int nxtfs_readdir(const char *path,void *buf,fuse_fill_dir_t filler,off_t offset,struct fuse_file_info *fi) {
-  if (strcmp(path,"/")!=0) return -ENOENT;
+  if (strcmp(path,"/")==0) {
+    struct nxtfs_dir_file data = {
+      .filler = filler,
+      .buf = buf
+    };
 
-  char *filename;
-  int fh,lastfh;
-  struct stat stbuf;
-  memset(&stbuf,0,sizeof(stbuf));
-  stbuf.st_mode = S_IFREG|0777;
+    filler(buf,".",NULL,0);
+    filler(buf,"..",NULL,0);
 
-  filler(buf,".",NULL,0);
-  filler(buf,"..",NULL,0);
-
-  fh = nxt_findfirst(nxt,"*.*",&filename,(size_t*)&(stbuf.st_size));
-  if (fh!=-1) {
-    filler(buf,filename,&stbuf,0);
-    free(filename);
-    lastfh = fh;
-    while ((fh = nxt_findnext(nxt,lastfh,&filename,(size_t*)&(stbuf.st_size)))!=-1) {
-      nxt_file_close(nxt,lastfh);
-      filler(buf,filename,&stbuf,0);
-      free(filename);
-      lastfh = fh;
-    }
-    nxt_file_close(nxt,lastfh);
+    return nxt_list(nxt,"*.*",nxtfs_dir_file_add,&data)==0?0:nxtfs_error();
   }
-  return 0;
+  else return -ENOENT;
 }
 
 /**
@@ -262,22 +276,21 @@ static int nxtfs_getattr(const char *filename,struct stat *stbuf) {
       stbuf->st_nlink = 1;
       return 0;
     }
-    else return -ENOENT;
+    else return nxtfs_error();
   }
 }
 
 /**
  * Makes a new node (only regular files)
- *  @param fn Filename
+ *  @param filename Filename
  *  @param mode Mode
  *  @param dev Device (ignored)
  *  @return Success?
  */
-static int nxtfs_mknod(const char *fn,mode_t mode,dev_t dev) {
+static int nxtfs_mknod(const char *filename,mode_t mode,dev_t dev) {
   if (mode&S_IFREG) {
-    char *filename = ((char*)fn)+1;
     int fh;
-    if ((fh = nxt_file_open(nxt,filename,NXT_OWLINE,1))!=-1) {
+    if ((fh = nxt_file_open(nxt,((char*)filename)+1,NXT_OWLINE,1))!=-1) {
       nxt_file_write(nxt,fh,"\0",1);
       nxt_file_close(nxt,fh);
       return 0;

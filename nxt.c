@@ -30,8 +30,8 @@
 
 #include "nxt.h"
 
-#define nxt_con_send(nxt)      nxtnet_cli_send((nxt)->cli,(nxt)->nxtid,(nxt)->buffer,(nxt)->ptr-(nxt)->buffer)
-#define nxt_con_recv(nxt,size) nxtnet_cli_recv((nxt)->cli,(nxt)->nxtid,(nxt)->buffer,size)
+//#define nxt_con_send(nxt)      nxtnet_cli_send((nxt)->cli,(nxt)->nxtid,(nxt)->buffer,(nxt)->ptr-(nxt)->buffer)
+//#define nxt_con_recv(nxt,size) nxtnet_cli_recv((nxt)->cli,(nxt)->nxtid,(nxt)->buffer,size)
 
 #define test(func)             { if ((func)==NXT_FAIL) return NXT_FAIL; }
 
@@ -62,6 +62,29 @@ typedef enum {
 typedef enum {
   NXT_CMD_NONE = -1
 } nxt_cmd_t;
+
+/**
+ * Send data
+ *  @param nxt NXT handle
+ *  @return How many bytes sent
+ */
+static __inline__ ssize_t nxt_con_send(nxt_t *nxt) {
+  ssize_t ret = nxtnet_cli_send(nxt->cli,nxt->nxtid,nxt->buffer,nxt->ptr-nxt->buffer);
+  if (ret==-1) nxt->error = NXT_ERR_CONNECTION;
+  return ret;
+}
+
+/**
+ * Receive data
+ *  @param nxt NXT handle
+ *  @param size How many bytes to receive
+ *  @return How many bytes received
+ */
+static __inline__ ssize_t nxt_con_recv(nxt_t *nxt,size_t size) {
+  ssize_t ret = nxtnet_cli_recv(nxt->cli,nxt->nxtid,nxt->buffer,size);
+  if (ret==-1) nxt->error = NXT_ERR_CONNECTION;
+  return ret;
+}
 
 /// Functions for packing packages
 static void nxt_packbyte(nxt_t *nxt,uint8_t val) {
@@ -111,8 +134,9 @@ static int nxt_unpackstart(nxt_t *nxt,nxt_cmd_t cmd) {
   }
 }
 static int nxt_unpackerror(nxt_t *nxt) {
-  nxt->error = *(nxt->ptr)++;
-  return nxt->error;
+  int error = (*(nxt->ptr)++)&0xFF;
+  if (error!=0) nxt->error = error;
+  return error;
 }
 static void *nxt_unpackmem(nxt_t *nxt,size_t len) {
   void *ret = nxt->ptr;
@@ -230,7 +254,7 @@ void nxt_close(nxt_t *nxt) {
  *  @return Error number
  */
 int nxt_error(nxt_t *nxt) {
-  return nxt->error&0xFF;
+  return nxt->error;
 }
 
 /**
@@ -239,6 +263,7 @@ int nxt_error(nxt_t *nxt) {
  *  @return Error string
  */
 char *nxt_strerror(unsigned int error) {
+  // NXT error strings
   char *errstrings1[] = {
     "No more handles",
     "No space",
@@ -275,9 +300,13 @@ char *nxt_strerror(unsigned int error) {
   char *errstrings4[] = {
     "No active program",
     "Illegal size specified",
-    "Illegal mailbox quue ID specified",
+    "Illegal mailbox queue ID specified",
     "Attempted to access invalid field of a structure",
     "Bad input or output specified"
+  };
+  // aNXT error strings
+  char *errstrings5[] = {
+    "Connection error",
   };
 
   if (error==0) return "Success";
@@ -289,6 +318,7 @@ char *nxt_strerror(unsigned int error) {
   else if (error>0xEB && error<0xF1) return errstrings4[error-0xEC];
   else if (error==0xFB) return "Insufficient memory available";
   else if (error==0xFF) return "Bad arguments";
+  else if (error>=0x100 && error<0x101) return errstrings5[error-0x100];
   else return "Unknown Error";
 }
 

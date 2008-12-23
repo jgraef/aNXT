@@ -32,7 +32,7 @@ struct nxtd_nxt_usb {
 int nxtd_usb_init();
 void nxtd_usb_shutdown();
 void nxtd_usb_close(struct nxtd_nxt_usb *nxt);
-void nxtd_usb_scan();
+int nxtd_usb_scan();
 int nxtd_usb_connect(struct nxtd_nxt_usb *nxt);
 int nxtd_usb_disconnect(struct nxtd_nxt_usb *nxt);
 ssize_t nxtd_usb_send(struct nxtd_nxt_usb *nxt,const void *data,size_t size);

@@ -44,27 +44,24 @@ void nxt_print_file(char *filename,size_t filesize,void *data) {
 int nxt_list(nxt_t *nxt,char *wildcard,nxt_list_one_file_callback callback,void *data) {
   char *filename;
   size_t filesize;
-  int fh,lastfh;
+  int fh,valid_fh;
   char *wild = wildcard;
 
   if (wildcard==NULL)
     wild = "*.*";
 
-  fh = nxt_findfirst(nxt,wild,&filename,&filesize);
-  if (fh!=NXT_FAIL) {
-    callback(filename,filesize,data);
-    free(filename);
-    lastfh = fh;
-    while ((fh = nxt_findnext(nxt,lastfh,&filename,&filesize))!=NXT_FAIL) {
-      nxt_file_close(nxt,lastfh);
+  if ((fh = nxt_findfirst(nxt,wild,&filename,&filesize))!=NXT_FAIL) {
+    do {
+      valid_fh = fh;
+      //printf("fh=%d\n",fh);
       callback(filename,filesize,data);
-      free(filename);
-      lastfh = fh;
     }
+    while ((fh = nxt_findnext(nxt,fh,&filename,&filesize))!=NXT_FAIL);
+    nxt_file_close(nxt,valid_fh);
   }
+
   if (nxt_error(nxt)==NXT_ERR_FILE_NOT_FOUND) {
     nxt_reset_error(nxt);
-    nxt_file_close(nxt,fh);
     return 0;
   } else {
     fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));

@@ -26,7 +26,7 @@
 
 #define ERROR() fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
 
-void usage(char *cmd,int r) {
+static void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;
   fprintf(out,"Usage: %s [OPTION]...\n",cmd);
   fprintf(out,"Show information about NXT\n");
@@ -49,7 +49,7 @@ int main(int argc,char *argv[]) {
         usage(argv[0],0);
         break;
       case 'n':
-        name = strdup(optarg);
+        name = optarg;
         break;
       case ':':
         fprintf(stderr,"Option -%c requires an operand\n",optopt);
@@ -80,8 +80,10 @@ int main(int argc,char *argv[]) {
   if ((battery = nxt_getbattery(nxt))==-1) ERROR();
   if ((devinfo = nxt_getdevinfo(nxt,&nxt_name,bt_addr,&bt_strength,&free_flash))==-1) ERROR();
   if ((ver = nxt_getver(nxt,&firmmaj,&firmmin,&protomaj,&protomin))==-1) ERROR();
+  if ((nxt_name = nxt_getname(nxt))==NULL) ERROR();
 
-  printf("Name:               %s\n",nxt_name);
+  if (nxt_name) printf("Name:               %s\n",nxt_name);
+  printf("Connected type:     %s\n",nxt_getcontype(nxt)==NXT_CON_USB?"USB":"Bluetooth");
   if (battery>=0) printf("Battery:            %dmV\n",battery);
   if (volume>=0) printf("Volume:             %d\n",volume);
   if (devinfo>=0) {
@@ -95,8 +97,6 @@ int main(int argc,char *argv[]) {
   }
 
   int ret = nxt_error(nxt);
-  free(nxt_name);
-  if (name!=NULL) free(name);
   nxt_close(nxt);
 
   return ret;

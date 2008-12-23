@@ -59,7 +59,6 @@ int nxtd_nxt_reg(struct nxtd_nxt *nxt) {
   size_t i;
 
   pthread_mutex_lock(&nxts.mutex);
-  nxt->i = nxts.i;
   for (i=0;i<NXTD_MAXNUM;i++) {
     if (nxts.list[i]==NULL) {
       nxts.list[i] = nxt;
@@ -70,6 +69,14 @@ int nxtd_nxt_reg(struct nxtd_nxt *nxt) {
   }
   pthread_mutex_unlock(&nxts.mutex);
   return -1;
+}
+
+void nxtd_nxt_remove(int nxtid) {
+  if (nxts.list[nxtid]==NULL) return;
+  logmsg("Removing %s (%d;%s)\n",nxts.list[nxtid]->name,nxtid,nxts.list[nxtid]->conn_type==NXTD_USB?"USB":"BT");
+  if (nxts.list[nxtid]->conn_type==NXTD_USB) nxtd_usb_close((struct nxtd_nxt_usb*)nxts.list[nxtid]);
+  else if (nxts.list[nxtid]->conn_type==NXTD_BT) nxtd_bt_close((struct nxtd_nxt_bt*)nxts.list[nxtid]);
+  nxts.list[nxtid] = 0;
 }
 
 /**
@@ -94,51 +101,50 @@ struct nxtd_nxt *nxtd_nxt_find(const char *name,nxtd_conn_t conn_type) {
 }
 
 /**
- * Refresh NXT in list (that NXT is still there)
- *  @param nxt NXT
- */
-void nxtd_nxt_refresh(struct nxtd_nxt *nxt) {
-  pthread_mutex_lock(&nxts.mutex);
-  nxt->i++;
-  pthread_mutex_unlock(&nxts.mutex);
-}
-
-/**
  * Scans for NXTs
  */
 static void *nxtd_scanner(void *x) {
   while (1) {
     size_t i;
 
-    nxts.i++;
-
     // Scan for NXTs
-    nxtd_usb_scan();
-    nxtd_bt_scan();
+    int usb = nxtd_usb_scan();
+    int bt = nxtd_bt_scan();
 
-    // Find NXTs that were turned off
-    pthread_mutex_lock(&nxts.mutex);
-
+    // Find NXTs that have timed out
+    /*pthread_mutex_lock(&nxts.mutex);
     time_t now = time(NULL);
     for (i=0;i<NXTD_MAXNUM;i++) {
       if (nxts.list[i]!=NULL) {
-        if (nxts.list[i]->i<nxts.i) {
-          logmsg("Removed: %s (%d;%s)\n",nxts.list[i]->name,i,nxts.list[i]->conn_type==NXTD_USB?"USB":"BT");
-          if (nxts.list[i]->conn_type==NXTD_USB) nxtd_usb_close((struct nxtd_nxt_usb*)nxts.list[i]);
-          else if (nxts.list[i]->conn_type==NXTD_BT) nxtd_bt_close((struct nxtd_nxt_bt*)nxts.list[i]);
-          nxts.list[i] = NULL;
-        }
-        else if (nxts.list[i]->conn_timeout!=0 && nxts.list[i]->conn_timeout<now) {
+        if (nxts.list[i]->conn_timeout!=0 && nxts.list[i]->conn_timeout<now) {
           if (nxts.list[i]->conn_type==NXTD_USB) nxtd_usb_disconnect((struct nxtd_nxt_usb*)nxts.list[i]);
           else if (nxts.list[i]->conn_type==NXTD_BT) nxtd_bt_disconnect((struct nxtd_nxt_bt*)nxts.list[i]);
           logmsg("Timeout: %s (%d;%s)\n",nxts.list[i]->name,i,nxts.list[i]->conn_type==NXTD_USB?"USB":"BT");
         }
       }
     }
-    pthread_mutex_unlock(&nxts.mutex);
+    pthread_mutex_unlock(&nxts.mutex);*/
 
     pthread_testcancel();
   }
+}
+
+/**
+ * Sends KEEPALIVE to NXT. To check that NXT is still there
+ *  @param nxt NXT
+ *  @return 0=NXT still there; -1=NXT gone
+ */
+static int nxtd_keepalive(struct nxtd_nxt *nxt) {
+  char buf[] = { 0x00,0x0D,0,0,0,0,0 };
+  if (nxt->conn_type==NXTD_USB) {
+    if (nxtd_usb_send((struct nxtd_nxt_usb*)nxt,buf,2)!=2) return -1;
+    if (nxtd_usb_recv((struct nxtd_nxt_usb*)nxt,buf,7)!=7) return -1;
+  }
+  else if (nxt->conn_type==NXTD_BT) {
+    if (nxtd_bt_send((struct nxtd_nxt_bt*)nxt,buf,2)!=2) return -1;
+    if (nxtd_bt_recv((struct nxtd_nxt_bt*)nxt,buf,7)!=7) return -1;
+  }
+  return 0;//buf[2]==0?0:-1;
 }
 
 /**
@@ -150,7 +156,10 @@ static void nxtd_listusb(void (*packer)(int nxtid,char *name)) {
   pthread_mutex_lock(&nxts.mutex);
   for (i=0;i<NXTD_MAXNUM;i++) {
     if (nxts.list[i]!=NULL) {
-      if (nxts.list[i]->conn_type==NXTD_USB) packer(i,nxts.list[i]->name);
+      if (nxts.list[i]->conn_type==NXTD_USB) {
+        if (nxtd_keepalive(nxts.list[i])==0) packer(i,nxts.list[i]->name);
+        else nxtd_nxt_remove(i);
+      }
     }
   }
   pthread_mutex_unlock(&nxts.mutex);
@@ -166,8 +175,11 @@ static void nxtd_listbt(void (*packer)(int nxtid,char *name,void *bt_addr)) {
   for (i=0;i<NXTD_MAXNUM;i++) {
     if (nxts.list[i]!=NULL) {
       if (nxts.list[i]->conn_type==NXTD_BT) {
-        struct nxtd_nxt_bt *nxt = (struct nxtd_nxt_bt*)nxts.list[i];
-        packer(i,nxt->nxt.name,&(nxt->bt_addr));
+        if (nxtd_keepalive(nxts.list[i])==0) {
+          struct nxtd_nxt_bt *nxt = (struct nxtd_nxt_bt*)nxts.list[i];
+          packer(i,nxt->nxt.name,&(nxt->bt_addr));
+        }
+        else nxtd_nxt_remove(i);
       }
     }
   }
@@ -182,13 +194,14 @@ static void nxtd_listbt(void (*packer)(int nxtid,char *name,void *bt_addr)) {
  *  @return How many bytes sent
  */
 static ssize_t nxtd_send(int nxtid,const void *buf,size_t size) {
-  ssize_t ret = 0;
+  ssize_t ret = -1;
   pthread_mutex_lock(&nxts.mutex);
   if (nxts.list[nxtid]!=NULL) {
     if (nxts.list[nxtid]->conn_type==NXTD_USB) ret = nxtd_usb_send((struct nxtd_nxt_usb*)nxts.list[nxtid],buf,size);
     else if (nxts.list[nxtid]->conn_type==NXTD_BT) ret = nxtd_bt_send((struct nxtd_nxt_bt*)nxts.list[nxtid],buf,size);
   }
   pthread_mutex_unlock(&nxts.mutex);
+  if (ret!=size) nxtd_nxt_remove(nxtid);
   return ret;
 }
 
@@ -207,6 +220,7 @@ static ssize_t nxtd_recv(int nxtid,void *buf,size_t size) {
     else if (nxts.list[nxtid]->conn_type==NXTD_BT) ret = nxtd_bt_recv((struct nxtd_nxt_bt*)nxts.list[nxtid],buf,size);
   }
   pthread_mutex_unlock(&nxts.mutex);
+  if (ret!=size) nxtd_nxt_remove(nxtid);
   return ret;
 }
 
@@ -309,10 +323,11 @@ int main(int argc,char *argv[]) {
   signal(SIGQUIT,exit);
   signal(SIGINT,exit);
   memset(nxts.list,0,sizeof(nxts.list));
-  nxts.i = 0;
   pthread_mutex_init(&nxts.mutex,NULL);
-  nxtd_usb_init();
-  nxtd_bt_init();
+  if (nxtd_usb_init()==-1 || nxtd_bt_init()==-1) {
+    fprintf(stderr,"Could not initialize USB and/or Bluetooth\n");
+    return 1;
+  }
 
   // Write PID to file
   pidfd = fopen(pidfile,"w");

@@ -30,9 +30,9 @@
 #define NXT_USB_PRODUCTID     0x0002
 #define NXT_USB_OUT_ENDPOINT  0x01
 #define NXT_USB_IN_ENDPOINT   0x82
-#define NXT_USB_WAIT_TIMEOUT  1000 /* milliseconds */
 #define NXT_USB_INTERFACE     0
 #define NXT_USB_CONFIG        1
+#define NXT_USB_WAIT_TIMEOUT  1000 /* milliseconds */
 #define NXT_USB_IDLE_TIMEOUT  30   /* seconds */
 
 struct nxtd_nxt_usb {
@@ -44,7 +44,7 @@ struct nxtd_nxt_usb {
 int nxtd_usb_init();
 void nxtd_usb_shutdown();
 void nxtd_usb_close(struct nxtd_nxt_usb *nxt);
-void nxtd_usb_scan();
+int nxtd_usb_scan();
 int nxtd_usb_connect(struct nxtd_nxt_usb *nxt);
 int nxtd_usb_disconnect(struct nxtd_nxt_usb *nxt);
 ssize_t nxtd_usb_send(struct nxtd_nxt_usb *nxt,const void *data,size_t size);

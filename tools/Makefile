@@ -143,8 +143,8 @@ all: $(TOOLS)
 ../bin/nxt_scan: scan.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_mount: mount.c ../lib/libanxt.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS) `pkg-config fuse --cflags --libs`
+../bin/nxt_mount: mount.c ../lib/libanxt.a ../lib/libanxttools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS) `pkg-config fuse --cflags --libs`
 
 ../bin/nxt_ricc: ricc.c ../lib/libanxt.a  ../lib/libanxtfile.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS) ../lib/libanxtfile.a -lgd

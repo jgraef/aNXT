@@ -104,8 +104,9 @@ struct nxtd_nxt_usb *nxtd_usb_finddev(struct usb_device *dev) {
 
 /**
  * Scans for NXTs on USB
+ *  @return Success?
  */
-void nxtd_usb_scan() {
+int nxtd_usb_scan() {
   struct usb_bus *bus;
   struct usb_device *dev;
   struct usb_dev_handle *handle;
@@ -115,8 +116,7 @@ void nxtd_usb_scan() {
   usb_find_devices();
   for (bus = usb_busses; bus; bus = bus->next) {
     for (dev = bus->devices; dev; dev = dev->next) {
-      if (nxt = nxtd_usb_finddev(dev)) nxtd_nxt_refresh((struct nxtd_nxt*)nxt);
-      else if (dev->descriptor.idVendor==NXT_USB_VENDORID && dev->descriptor.idProduct==NXT_USB_PRODUCTID) {
+      if (nxtd_usb_finddev(dev)==NULL && dev->descriptor.idVendor==NXT_USB_VENDORID && dev->descriptor.idProduct==NXT_USB_PRODUCTID) {
         handle = nxtd_usb_opendev(dev);
         if (handle!=NULL) {
           char *name = nxtd_usb_getname(handle);
@@ -134,6 +134,8 @@ void nxtd_usb_scan() {
       }
     }
   }
+
+  return 0;
 }
 
 /**

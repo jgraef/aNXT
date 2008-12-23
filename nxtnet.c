@@ -222,10 +222,9 @@ ssize_t nxtnet_cli_send(nxtnet_cli_t *cli,int nxtid,const void *buf,size_t size)
 
   if (nxtnet_recv(cli->sock,cli->buf,NXTNET_PROTO_DIR_SC|NXTNET_PROTO_CMD_SEND)!=NULL) {
     struct nxtnet_proto_send_sc *send_sc = (struct nxtnet_proto_send_sc*)cli->buf->data;
-
     return ntohl(send_sc->size);
   }
-  else return 0;
+  else return -1;
 }
 
 ssize_t nxtnet_cli_recv(nxtnet_cli_t *cli,int nxtid,void *buf,size_t size) {
@@ -244,12 +243,11 @@ ssize_t nxtnet_cli_recv(nxtnet_cli_t *cli,int nxtid,void *buf,size_t size) {
 
   if (nxtnet_recv(cli->sock,cli->buf,NXTNET_PROTO_DIR_SC|NXTNET_PROTO_CMD_SEND)!=NULL) {
     struct nxtnet_proto_recv_sc *recv_sc = (struct nxtnet_proto_recv_sc*)cli->buf->data;
-
     size = ntohl(recv_sc->size);
     memcpy(buf,recv_sc->data,size);
     return size;
   }
-  else return 0;
+  else return -1;
 }
 
 /**

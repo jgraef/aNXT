@@ -43,9 +43,6 @@ struct nxtd_nxt {
   char *name;
   /// How the NXT is connected
   nxtd_conn_t conn_type;
-  /// Actuality counter. If this is smaller then nxts.i the NXT isn't connected
-  /// anymore
-  unsigned int i;
   /// UNIX timestamp when connection times out.
   /// 0 if no connection timeout is set
   time_t conn_timeout;
@@ -57,12 +54,9 @@ struct {
   pthread_mutex_t mutex;
   /// List of NXTs
   struct nxtd_nxt *list[NXTD_MAXNUM];
-  /// Actuality counter
-  unsigned int i;
 } nxts;
 
 int nxtd_nxt_reg(struct nxtd_nxt *nxt);
 struct nxtd_nxt *nxtd_nxt_find(const char *name,nxtd_conn_t conn_type);
-void nxtd_nxt_refresh(struct nxtd_nxt *nxt);
 
 #endif /* _NXTD_H_ */

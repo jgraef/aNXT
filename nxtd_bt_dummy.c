@@ -31,7 +31,8 @@ void nxtd_bt_shutdown() {
 }
 void nxtd_bt_close(struct nxtd_nxt_bt *nxt) {
 }
-void nxtd_bt_scan() {
+int nxtd_bt_scan() {
+  return 0;
 }
 int nxtd_bt_connect(struct nxtd_nxt_bt *nxt) {
   return 0;

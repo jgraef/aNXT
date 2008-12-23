@@ -29,7 +29,8 @@ void nxtd_usb_shutdown() {
 }
 void nxtd_usb_close(struct nxtd_nxt_usb *nxt) {
 }
-void nxtd_usb_scan() {
+int nxtd_usb_scan() {
+  return 0;
 }
 int nxtd_usb_connect(struct nxtd_nxt_usb *nxt) {
   return 0;

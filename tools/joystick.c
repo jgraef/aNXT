@@ -145,7 +145,6 @@ int main(int argc,char *argv[]) {
   atexit(quit);
 
   // run mappings
-  unsigned int pause = nxt_getcontype(nxt)==NXT_CON_BT?300:20;
   while (1) {
     SDL_JoystickUpdate();
 
@@ -160,7 +159,7 @@ int main(int argc,char *argv[]) {
       }
     }
 
-    SDL_Delay(pause);
+    SDL_Delay(10);
   }
 
   return nxt_error(nxt);

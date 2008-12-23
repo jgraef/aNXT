@@ -26,6 +26,7 @@
 #include <bluetooth/rfcomm.h>
 #include <fcntl.h>
 #include <time.h>
+#include <pthread.h>
 
 #include "nxtd.h"
 #include "nxtd_bt_bluez.h"
@@ -35,6 +36,11 @@
 #else
   #define nxtd_bt_timeout(n) (n)->nxt.conn_timeout = 0;
 #endif
+
+static struct {
+  int dev_id;
+  int sock;
+} bt_adapter;
 
 /**
  * Identifies a NXT over Bluetooth
@@ -53,6 +59,8 @@ static int nxt_bt_identify(uint8_t class[3],int sock) {
  *  @return Success
  */
 int nxtd_bt_init() {
+  if ((bt_adapter.dev_id = hci_get_route(NULL))<0) return -1;
+  if ((bt_adapter.sock = hci_open_dev(bt_adapter.dev_id))<0) return -1;
   return 0;
 }
 
@@ -60,6 +68,7 @@ int nxtd_bt_init() {
  * Shuts down Bluetooth
  */
 void nxtd_bt_shutdown() {
+  close(bt_adapter.sock);
 }
 
 /**
@@ -81,20 +90,27 @@ struct nxtd_nxt_bt *nxtd_bt_finddev(bdaddr_t *bdaddr) {
   struct nxtd_nxt_bt *nxt;
   size_t i;
 
+  pthread_mutex_lock(&nxts.mutex);
   for (i=0;i<NXTD_MAXNUM;i++) {
     if (nxts.list[i]!=NULL && nxts.list[i]->conn_type==NXTD_BT) {
       nxt = (struct nxtd_nxt_bt*)nxts.list[i];
-      if (bacmp(&(nxt->bt_addr),bdaddr)==0) return nxt;
+      if (bacmp(&(nxt->bt_addr),bdaddr)==0) {
+        pthread_mutex_unlock(&nxts.mutex);
+        return nxt;
+      }
     }
   }
+  pthread_mutex_unlock(&nxts.mutex);
 
   return NULL;
 }
 
 /**
  * Scans for NXTs on BT
+ *  @return Success?
+ *  @todo Maybe this makes trouble with parallel send/recv
  */
-void nxtd_bt_scan() {
+int nxtd_bt_scan() {
   inquiry_info *ii;
   char bt_name[248]= { 0 };
   int dev_id,sock,max_rsp,num_rsp,i;
@@ -103,31 +119,34 @@ void nxtd_bt_scan() {
 
   bacpy(&bt_addr,BDADDR_ANY);
 
-  if ((dev_id = hci_get_route(NULL))<0) return;
-  if ((sock = hci_open_dev(dev_id))<0) return;
-
   max_rsp = 255;
   ii = malloc(max_rsp*sizeof(inquiry_info));
-  num_rsp = hci_inquiry(dev_id,8,max_rsp,NULL,&ii,IREQ_CACHE_FLUSH);
+  num_rsp = hci_inquiry(bt_adapter.dev_id,8,max_rsp,NULL,&ii,0); // IREQ_CACHE_FLUSH
+  if (num_rsp<0) {
+    free(ii);
+    return -1;
+  }
 
   for (i=0;i<num_rsp;i++) {
     memset(bt_name,0,sizeof(bt_name));
-    if (hci_read_remote_name(sock,&(ii+i)->bdaddr,sizeof(bt_name),bt_name,NXT_BT_WAIT_TIMEOUT)==0) {
-      if (nxt = nxtd_bt_finddev(&(ii+i)->bdaddr)) nxtd_nxt_refresh((struct nxtd_nxt*)nxt);
-      else if (nxt_bt_identify((ii+i)->dev_class,sock)) {
+    if (nxtd_bt_finddev(&(ii+i)->bdaddr)==NULL && hci_read_remote_name(bt_adapter.sock,&(ii+i)->bdaddr,sizeof(bt_name),bt_name,NXT_BT_WAIT_TIMEOUT)==0) {
+      if (nxt_bt_identify((ii+i)->dev_class,bt_adapter.sock)) {
         nxt = malloc(sizeof(struct nxtd_nxt_bt));
         memset(nxt,0,sizeof(struct nxtd_nxt_bt));
         nxt->nxt.name = strdup(bt_name);
         nxt->nxt.conn_type = NXTD_BT;
-        nxt->nxt.conn_timeout = 0;
         bacpy(&(nxt->bt_addr),&(ii+i)->bdaddr);
         nxtd_nxt_reg((struct nxtd_nxt*)nxt);
       }
     }
+    else {
+      free(ii);
+      return -1;
+    }
   }
 
-  close(sock);
   free(ii);
+  return 0;
 }
 
 /**

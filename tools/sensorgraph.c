@@ -122,10 +122,8 @@ int main(int argc,char *argv[]) {
   int mode = NXT_SENSOR_MODE_RAW;
   int reset = 0;
   int c,newsensor,newtype,newmode;
-  char *unit = NULL;
   int sensor = -1;
   int fullscreen = 0;
-  int force = 0;
   int done = 0;
   unsigned int x = 0;
   struct screen screen = {
@@ -135,7 +133,7 @@ int main(int argc,char *argv[]) {
   };
   SDL_Surface *display;
 
-  while ((c = getopt(argc,argv,":hs:m:t:n:rx:Ffv"))!=-1) {
+  while ((c = getopt(argc,argv,":hs:m:t:n:rx:fv"))!=-1) {
     switch(c) {
       case 'h':
         usage(argv[0],0);
@@ -176,11 +174,8 @@ int main(int argc,char *argv[]) {
           usage(argv[0],1);
         }
         break;
-      case 'F':
-        fullscreen = 1;
-        break;
       case 'f':
-        force = 1;
+        fullscreen = 1;
         break;
       case ':':
         fprintf(stderr,"Option -%c requires an operand\n",optopt);
@@ -198,24 +193,11 @@ int main(int argc,char *argv[]) {
     else if (type==NXT_SENSOR_TYPE_SOUND_DB || type==NXT_SENSOR_TYPE_SOUND_DBA) sensor = 1;
     else sensor = 0;
   }
-  if (unit==NULL) {
-    if (mode==NXT_SENSOR_MODE_CELSIUS) unit = "°C";
-    else if (mode==NXT_SENSOR_MODE_FAHRENHEIT) unit = "°F";
-    else if (mode==NXT_SENSOR_MODE_PERCENT) unit = "%";
-    else unit = "";
-  }
 
   nxt_t *nxt = nxt_open(name);
   if (nxt==NULL) {
     fprintf(stderr,"Could not find NXT\n");
     return 1;
-  }
-  if (nxt_getcontype(nxt)==NXT_CON_BT && !force) {
-    fprintf(stderr,"Warning! Using NXT Sensor Graph over Bluetooth can make trouble. Are you sure to continue (y/n)[n]: ");
-    if (fgetc(stdin)!='y') {
-      nxt_close(nxt);
-      return 0;
-    }
   }
 
   if (SDL_Init(SDL_INIT_VIDEO)<0) {
@@ -234,10 +216,9 @@ int main(int argc,char *argv[]) {
   SDL_Flip(display);
 
   nxt_setsensormode(nxt,sensor,type,NXT_SENSOR_MODE_RAW);
-  SDL_Delay(20);
+  SDL_Delay(500);
 
   int lasty = 0;
-  unsigned int pause = nxt_getcontype(nxt)==NXT_CON_BT?500:50;
   while (!done) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -271,7 +252,7 @@ int main(int argc,char *argv[]) {
     x++;
     lasty = y;
     SDL_Flip(display);
-    SDL_Delay(pause);
+    SDL_Delay(10);
   }
 
   if (reset) nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);

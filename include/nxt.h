@@ -98,7 +98,7 @@
 
 #define NXT_CON_BUFFERSIZE 64
 
-// error numbers
+// NXT error numbers
 #define NXT_ERR_SUCCESS                          0x00
 #define NXT_ERR_TRANSACTION_IN_PROGRESS          0x20
 #define NXT_ERR_MAILBOX_EMPTY                    0x40
@@ -136,6 +136,8 @@
 #define NXT_ERR_BAD_INPUT_OUTPUT                 0xF0
 #define NXT_ERR_INSUFFICIENT_MEMORY              0xFB
 #define NXT_ERR_BAD_ARGUMENTS                    0xFF
+// aNXT error numbers
+#define NXT_ERR_CONNECTION                       0x0100
 
 #define NXT_COMMUNICATION_COMMAND_LATENCY   60000 /* microseconds */
 #define NXT_DIRECT_COMMAND_LATENCY           6000 /* microseconds */
