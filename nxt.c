@@ -711,6 +711,10 @@ int nxt_getsensorval(nxt_t *nxt,int sensor) {
       if (cali) return (unsigned int)nxt_unpackword(nxt); // calibrated
       else return scaled;
     }
+    else {
+      nxt_wait_after_direct_command();
+      return nxt_getsensorval(nxt,sensor);
+    }
   }
   return NXT_FAIL;
 }

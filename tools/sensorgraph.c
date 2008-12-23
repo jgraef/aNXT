@@ -216,7 +216,6 @@ int main(int argc,char *argv[]) {
   SDL_Flip(display);
 
   nxt_setsensormode(nxt,sensor,type,NXT_SENSOR_MODE_RAW);
-  SDL_Delay(500);
 
   int lasty = 0;
   while (!done) {
