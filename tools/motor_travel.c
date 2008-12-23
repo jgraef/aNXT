@@ -134,8 +134,8 @@ int main(int argc,char *argv[]) {
   rotation1 = rot;
   rotation2 = rot;
 
-  nxt_motor(nxt,motor1,rotation1,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?:NXT_REGMODE_IDLE,turnratio);
-  nxt_motor(nxt,motor2,rotation2,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?:NXT_REGMODE_IDLE,turnratio);
+  nxt_motor(nxt,motor1,rotation1,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?0:NXT_REGMODE_IDLE,turnratio);
+  nxt_motor(nxt,motor2,rotation2,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?0:NXT_REGMODE_IDLE,turnratio);
 
   nxt_resettacho(nxt,motor1,1);
   nxt_resettacho(nxt,motor2,1);
