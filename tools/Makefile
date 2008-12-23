@@ -43,7 +43,8 @@ TOOLS = ../bin/nxt_info \
 	../bin/nxt_reset_tacho \
 	../bin/nxt_motor_travel \
 	../bin/anxt-config \
-	../bin/nxt_joystick
+	../bin/nxt_joystick \
+	../bin/nxt_joystick_travel
 
 all: $(TOOLS)
 
@@ -178,6 +179,9 @@ all: $(TOOLS)
 	chmod 755 $@
 
 ../bin/nxt_joystick: joystick.c ../lib/libanxt.a
+	$(CC) $(CFLAGS) -o $@ $< `sdl-config --cflags` `sdl-config --libs` $(LIBS)
+
+../bin/nxt_joystick_travel: joystick_travel.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< `sdl-config --cflags` `sdl-config --libs` $(LIBS)
 
 clean:
