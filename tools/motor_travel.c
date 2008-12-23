@@ -58,8 +58,6 @@ int main(int argc,char *argv[]) {
   int c,newmotor,newpower,newrot,newturnratio;
   int motor1 = 1;
   int motor2 = 2;
-  char motor1string[2];
-  char motor2string[2];
   int mode = 0;
   int regmode = 0;
   int runstate = 0;
@@ -74,22 +72,16 @@ int main(int argc,char *argv[]) {
           fprintf(stderr,"Invalid motors: %s\n",optarg);          
           usage(argv[0],1);
         }
-        motor1string[0] = optarg[0];
-        motor1string[1] = 0;
-        newmotor = nxt_str2motorport(motor1string);
-        if (newmotor==-1) {
+        motor1 = nxt_str2motorport1(optarg);
+        if (motor1==-1) {
           fprintf(stderr,"Invalid motor 1: %s\n",optarg);
           usage(argv[0],1);
         }
-        else motor1 = newmotor;
-        motor2string[0] = optarg[1];
-        motor2string[1] = 0;
-        newmotor = nxt_str2motorport(motor2string);
-        if (newmotor==-1) {
+        motor2 = nxt_str2motorport2(optarg);
+        if (motor2==-1) {
           fprintf(stderr,"Invalid motor 2: %s\n",optarg);
           usage(argv[0],1);
         }
-        else motor2 = newmotor;
         break;
       case 'p':
         newpower = atoi(optarg);

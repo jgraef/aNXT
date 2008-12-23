@@ -377,6 +377,42 @@ int nxt_str2motorport(char *str) {
 }
 
 /**
+ * Gets number of motor port from a string like "BC"
+ *  @param str string of motor
+ *  @param index number of motor
+ *  @return number of first motor port or -1 on failure
+ */
+int nxt_str2motorport_index(char *str, int index) {
+  int motor;
+  char string[2];
+  if ((index<strlen(str)) && (index > 0)) {
+    string[0] = str[index];
+    string[1] = 0;
+    return nxt_str2motorport(string);
+  }
+  else motor = -1;
+  return motor;
+}
+
+/**
+ * Gets number of first motor port from a string like "BC"
+ *  @param str string of motor
+ *  @return number of first motor port or -1 on failure
+ */
+int nxt_str2motorport1(char *str) {
+  return nxt_str2motorport_index(str, 1);
+}
+
+/**
+ * Gets number of second motor port from a string like "BC"
+ *  @param str string of motor
+ *  @return number of second motor port or -1 on failure
+ */
+int nxt_str2motorport2(char *str) {
+  return nxt_str2motorport_index(str, 2);
+}
+
+/**
  * Gets number of button from a string like "enter"
  *  @param str string of button
  *  @return number of button or 0 on failure

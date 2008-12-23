@@ -38,6 +38,8 @@ void nxt_motor_playback(nxt_t *nxt,int motor,int power,int numvalues,double *tim
 int nxt_read_recorded_file(int *numvalues,double **times,int **rotations,FILE *file);
 
 int nxt_str2motorport(char *str);
+int nxt_str2motorport1(char *str);
+int nxt_str2motorport2(char *str);
 int nxt_str2btn(char *str);
 int nxt_str2fmt(char *str);
 int nxt_str2type(char *str);
