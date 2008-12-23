@@ -135,12 +135,10 @@ int main(int argc,char *argv[]) {
   rotation2 = rot;
 
   nxt_motor(nxt,motor1,rotation1,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?:NXT_REGMODE_IDLE,turnratio);
-  nxt_motor(nxt,motor2,rotation2,0,mode,regmode,turnratio);
+  nxt_motor(nxt,motor2,rotation2,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?:NXT_REGMODE_IDLE,turnratio);
 
   nxt_resettacho(nxt,motor1,1);
   nxt_resettacho(nxt,motor2,1);
-  nxt_resettacho(nxt,motor1,0);
-  nxt_resettacho(nxt,motor2,0);
 
   if (idle) {
     mode = brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0);

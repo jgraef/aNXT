@@ -98,10 +98,14 @@ static int brake;              /*              option b */
 static int stop;               /*              option s */
 static int syncro;             /*              option y */
 static int idle;               /*              option i */
-static int turnratio;          /* argument for option t */
 
 /* nxt_motor_record arguments */
 static double time;            /* argument for option t */
+
+/* nxt_motor_travel arguments */
+static int motor1;             /* argument for option m */
+static int motor2;             /* argument for option m */
+static int turnratio;          /* argument for option t */
 
 /* nxt_pollcmd arguments */
 static int buffer = NXT_BUFFER_POLL; /* argument for option b */
@@ -142,9 +146,12 @@ static void reset_options(void)
   brake = 0;
   syncro = 0;
   idle = 0;
-  turnratio = 0;
 
   time = 10;
+
+  motor1 = 1;
+  motor2 = 2;
+  turnratio = 0;
 
   force = 0;
   oflag = 0;
@@ -231,6 +238,8 @@ static void handle_argument(char option, char* argument)
 
      case 'm':
        motor = nxt_str2motorport(argument);
+       motor1 = nxt_str2motorport1(argument);
+       motor2 = nxt_str2motorport2(argument);
        mailbox = atoi(argument)-1;
        mode = nxt_str2mode(argument);
        break;
@@ -448,6 +457,28 @@ static void handle_commmands(char *command, char *fifo_out, char *fifo_err)
       } else
         fprintf(tty,"Error: motor_record need result file as first argument\n");
 
+    } else if (strcmp(command,"motor_travel")==0) {
+      int rotation1 = 0;
+      int rotation2 = 0;
+      int regmode = 0;
+      int synchronise = 1;
+
+      nxt_motor(nxt,motor1,rotation1,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?:NXT_REGMODE_IDLE,turnratio);
+      nxt_motor(nxt,motor2,rotation2,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?:NXT_REGMODE_IDLE,turnratio);
+
+      nxt_resettacho(nxt,motor1,1);
+      nxt_resettacho(nxt,motor2,1);
+
+      if (idle) {
+        mode = brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0);
+        regmode = NXT_REGMODE_IDLE;
+      } else {
+        mode = NXT_MOTORON|(brake||(synchronise && (turnratio == 0))?NXT_BRAKE:0)|NXT_REGULATED;
+       regmode = synchronise && (power != 0)?NXT_REGMODE_MOTOR_SYNC:NXT_REGMODE_MOTOR_SPEED;
+      }
+ 
+      nxt_motor(nxt,motor1,rotation1,brake?0:power,mode,regmode,turnratio);
+      nxt_motor(nxt,motor2,rotation2,brake?0:power,mode,regmode,turnratio);
     } else if (strcmp(command,"pollcmd")==0) {
       void *cmd;
       ssize_t size;
