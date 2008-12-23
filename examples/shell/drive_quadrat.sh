@@ -13,7 +13,7 @@ for i in 1 2 3 4; do
    $DIR/../../bin/nxt_motor_travel -p 40
    sleep 3
    $DIR/../../bin/nxt_motor_travel -p 75 -t 100
-   sleep 0.458
+   sleep 0.45
 done
 $DIR/../../bin/nxt_motor_travel -p 0
 
