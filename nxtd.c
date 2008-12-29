@@ -240,7 +240,7 @@ static void usage(char *cmd,int r) {
   fprintf(out,"\t-P PASSWORD  Set password\n");
   fprintf(out,"\t-d           Run as daemon\n");
   fprintf(out,"\t-i FILE      Set pid file (Default: /var/run/nxtd.pid)\n");
-  fprintf(out,"\t-L           Use local mode\n");
+  fprintf(out,"\t-N           Use network mode (Default: local mode)\n");
   exit(r);
 }
 
@@ -279,10 +279,10 @@ int main(int argc,char *argv[]) {
   FILE *pidfd;
   char *password = NULL;
   int c;
-  int local = 0;
+  int local = 1;
   int run_as_daemon = 0;
 
-  while ((c = getopt(argc,argv,":hp:P:l:Ldi:"))!=-1) {
+  while ((c = getopt(argc,argv,":hp:P:l:Ndi:"))!=-1) {
     switch (c) {
       case 'h':
         usage(argv[0],0);
@@ -296,8 +296,8 @@ int main(int argc,char *argv[]) {
       case 'l':
         logfile = optarg;
         break;
-      case 'L':
-        local = 1;
+      case 'N':
+        local = 0;
         break;
       case 'd':
         run_as_daemon = 1;
