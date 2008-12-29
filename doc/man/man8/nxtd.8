@@ -1,0 +1,137 @@
+.\" This manpage is free software; the Free Software Foundation
+.\" gives unlimited permission to copy, distribute and modify it.
+.\"
+.\" Process this file with
+.\" groff -man -Tascii nxtd.1
+.\"
+.TH NXTD 8 "SEPTEMBER 2008" Linux "User Manuals"
+.SH NAME
+nxtd \- start nxt demon
+.SH SYNOPSIS
+.B nxtd [
+.I options
+.B ]
+.I 
+.SH DESCRIPTION
+Start nxt demon for the "a NXt Toolkit" (aNXT) software.
+.br
+Currently, each usage of the aNXT software beside file converts 
+and adminstration commands requires a running nxtd demon.
+.br
+When started in network mode, each computer on a network is able to 
+control a NXT brick connected via USB or bluetooth to the computer running
+nxtd.
+.br
+.SH AVAILABILITY 
+Linux
+.SH OPTIONS
+.IP "-p port"
+Set the TCP port.
+.br
+The default port number is 13370.
+.IP "-l logfile"
+Set the log file.
+.br
+Messages about found NXT bricks and the transfer from/to a NXT bricks are
+written to the log file. The default log file is /var/log/nxtd.log. If
+the log file can not be opened, the log messages are written to the standard
+output.
+.IP "-P password"
+Set a password. 
+.br
+This password is only usefull when connecting from a network,
+cause this password is visible to local users via the 
+.I ps
+command.
+.IP "-d"
+Run as daemon.
+.br
+This is implemented via a call of daemon(0,0). See
+.I "daemon(3)"
+for more information.
+.IP "-i pidfile"
+Set pid file.
+.br
+The pid file stores the process number of the nxtd process as a string.
+This is usefull for stopping/restarting the nxtd process.
+.br
+The default pid file is /var/run/nxtd.pid.
+.IP "-N"
+Use network mode.
+.br
+Enable the connect to network clients. The default is the local mode, which
+disables the connect to network clients.
+.SH CAVEATS
+It is not possible to set a password for local users, 
+cause the password is visible to local users via the
+.I ps
+command.
+.SH "SEE ALSO"
+ps (1), 
+.BR
+daemon(3),
+.BR
+nxt_beep(1),
+.BR
+nxt_calibrate(1),
+.BR
+nxt_delflash(1),
+.BR
+nxt_download(1),
+.BR
+nxt_error(1),
+.BR
+nxt_getprog(1),
+.BR
+nxt_info(1),
+.BR
+nxt_list(1),
+.BR
+nxt_lsmod(1),
+.BR
+nxt_motor(1),
+.BR
+nxt_motor_playback(1),
+.BR
+nxt_motor_record(1),
+.BR
+nxt_motor_travel(1),
+.BR
+nxt_pilot(1),
+.BR
+nxt_pollcmd(1),
+.BR
+nxt_recv(1),
+.BR
+nxt_remove(1),
+.BR
+nxt_resetbt(1),
+.BR
+nxt_run(1),
+.BR
+nxt_scan(1),
+.BR
+nxt_send(1),
+.BR
+nxt_sensor(1),
+.BR
+nxt_sensorus(1),
+.BR
+nxt_server(1),
+.BR
+nxt_setbutton(1),
+.BR
+nxt_setname(1),
+.BR
+nxt_stop(1),
+.BR
+nxt_tacho(1),
+.BR
+nxt_turnoff(1),
+.BR
+nxt_up_run(1),
+.BR
+nxt_upload(1)
+
+
+
