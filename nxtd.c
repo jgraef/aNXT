@@ -335,11 +335,16 @@ int main(int argc,char *argv[]) {
     fprintf(pidfd,"%d\n",getpid());
     fclose(pidfd);
   }
-  else perror("fopen");
+  else perror(pidfile);
 
   // Open logfile
   if (strcmp(logfile,"-")==0) logfd = stdout;
   else logfd = fopen(logfile,"a");
+  if (logfd == 0) {
+    perror(logfile);
+    printf("using standart output as logfile\n");
+    logfd = stdout;
+  }
   server = nxtnet_srv_create(port,password,logfd,local);
   if (server==NULL) {
     perror("creating nxt daemon");
