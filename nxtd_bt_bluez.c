@@ -234,7 +234,7 @@ static int read_timeout(int sock,void *data,size_t size) {
  *  @return How many bytes sent
  */
 ssize_t nxtd_bt_send(struct nxtd_nxt_bt *nxt,const void *data,size_t size) {
-  nxtd_bt_connect(nxt);
+  if (nxtd_bt_connect(nxt) == -1) return 0;
   uint16_t sz = size;
   nxtd_bt_timeout(nxt);
   if (write_timeout(nxt->bt_sock,&sz,sizeof(sz))<0) return 0;
@@ -249,7 +249,7 @@ ssize_t nxtd_bt_send(struct nxtd_nxt_bt *nxt,const void *data,size_t size) {
  *  @return How many bytes received
  */
 ssize_t nxtd_bt_recv(struct nxtd_nxt_bt *nxt,void *data,size_t size) {
-  nxtd_bt_connect(nxt);
+  if (nxtd_bt_connect(nxt) == -1) return 0;
   uint16_t sz;
   nxtd_bt_timeout(nxt);
   if (read_timeout(nxt->bt_sock,&sz,sizeof(sz))<0) return 0;
