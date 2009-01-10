@@ -1,7 +1,29 @@
+/*
+    pilot.c
+    aNXT - a NXt Toolkit
+    Libraries and tools for LEGO Mindstorms NXT robots
+    Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include <nxt.h>
+#include <nxtdisplay.h>
+
 #include <sys/types.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <nxt.h>
 #include <SDL.h>
 #include <SDL_image.h>
 
@@ -11,6 +33,8 @@
 #include "pilot_exit.xpm"
 #include "pilot_left.xpm"
 #include "pilot_right.xpm"
+
+#define in_rect(rect,mouse) ((mouse).x>=(rect).x && (mouse).x<(rect).x+(rect).w && (mouse).y>=(rect).y && (mouse).y<(rect).y+(rect).h)
 
 static void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;
@@ -24,27 +48,24 @@ static void usage(char *cmd,int r) {
   exit(r);
 }
 
-static SDL_Surface *load_display(nxt_t *nxt) {
-  static char screen[64][100];
+static SDL_Surface *load_display(nxt_display_t *display) {
   uint32_t image[70][100];
   size_t x,y;
 
-  for (y=0;y<64;y++) {
-    for (x=0;x<100;x++) image[y][x] = screen[y][x]?0x000000FF:0xFFFFFFFF;
-  }
+  if (nxt_display_refresh(display)==0) {
+    for (y=0;y<64;y++) {
+      for (x=0;x<100;x++) image[y][x] = display->buffer[y][x]==NXT_DISPLAY_COLOR_BLACK?0x000000FF:0xFFFFFFFF;
+    }
 
-  if (nxt_screenshot(nxt,screen)==0) {
     return SDL_CreateRGBSurfaceFrom(image,100,64,32,400,0xFF000000,0x00FF0000,0x0000FF00,0x000000FF);
   }
   else return NULL;
 }
 
-#define in_rect(rect,mouse) ((mouse).x>=(rect).x && (mouse).x<(rect).x+(rect).w && (mouse).y>=(rect).y && (mouse).y<(rect).y+(rect).h)
-
 int main(int argc,char *argv[]) {
   SDL_Event event;
   SDL_Surface *screen;
-  SDL_Surface *bg,*left,*enter,*right,*exit,*display;
+  SDL_Surface *bg,*left,*enter,*right,*exit,*display_surface;
   SDL_Rect rect_left = {
     .x = 51,
     .y = 172,
@@ -114,6 +135,12 @@ int main(int argc,char *argv[]) {
       return 0;
     }
   }
+  nxt_display_t *display = nxt_display_open(nxt);
+  if (display==NULL) {
+    fprintf(stderr,"Could not open display\n");
+    nxt_close(nxt);
+    return 1;
+  }
 
   // init window
   if (SDL_Init(SDL_INIT_VIDEO)==-1) {
@@ -166,11 +193,11 @@ int main(int argc,char *argv[]) {
       }
     }
 
-    display = load_display(nxt);
+    display_surface = load_display(display);
     if (display!=NULL) {
-      SDL_BlitSurface(display,NULL,screen,&rect_display);
+      SDL_BlitSurface(display_surface,NULL,screen,&rect_display);
       SDL_UpdateRect(screen,0,0,0,0);
-      SDL_FreeSurface(display);
+      SDL_FreeSurface(display_surface);
     }
 
     SDL_Delay(pause);
@@ -184,6 +211,11 @@ int main(int argc,char *argv[]) {
   SDL_FreeSurface(exit);
 
   // close nxt
+  int ret = nxt_error(nxt);
+  nxt_display_flush(display,1);
+  nxt_display_close(display);
   nxt_close(nxt);
+
+  return ret;
 }
 

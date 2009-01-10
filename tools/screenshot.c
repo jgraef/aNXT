@@ -19,13 +19,15 @@
 */
 
 #include <nxt.h>
+#include <nxttools.h>
+#include <nxtdisplay.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <unistd.h>
 #include <gd.h>
-#include <nxttools.h>
 
 void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;
@@ -55,7 +57,7 @@ int main(int argc,char *argv[]) {
         usage(argv[0],0);
         break;
       case 'n':
-        name = strdup(optarg);
+        name = optarg;
         break;
       case 'f':
         newfmt = nxt_str2fmt(optarg);
@@ -66,7 +68,7 @@ int main(int argc,char *argv[]) {
         else format = newfmt;
         break;
       case 'o':
-        file = strdup(optarg);
+        file = optarg;
         break;
       case 't':
         transparency = 1;
@@ -87,8 +89,14 @@ int main(int argc,char *argv[]) {
     fprintf(stderr,"Could not find NXT\n");
     return 1;
   }
+  nxt_display_t *display = nxt_display_open(nxt);
+  if (display==NULL) {
+    fprintf(stderr,"Could not open display\n");
+    nxt_close(nxt);
+    return 1;
+  }
 
-  if (nxt_screenshot(nxt,screen)==0) {
+  if (nxt_display_refresh(display)==0) {
     gdImagePtr im;
     int black,white;
     im = gdImageCreate(100,64);
@@ -96,7 +104,7 @@ int main(int argc,char *argv[]) {
     white = gdImageColorAllocate(im,255,255,255);
     if (transparency) gdImageColorTransparent(im,white);
     for (y=0;y<64;y++) {
-      for (x=0;x<100;x++) gdImageSetPixel(im,x,y,screen[y][x]?black:white);
+      for (x=0;x<100;x++) gdImageSetPixel(im,x,y,display->buffer[y][x]==NXT_DISPLAY_COLOR_BLACK?black:white);
     }
     FILE *out = fopen(file!=NULL?file:(format==NXT_JPEG?"display.jpg":"display.png"),"w");
     if (format==NXT_JPEG) gdImageJpeg(im,out,-1);
@@ -106,7 +114,8 @@ int main(int argc,char *argv[]) {
   }
 
   int ret = nxt_error(nxt);
-  if (name!=NULL) free(name);
+  nxt_display_flush(display,1);
+  nxt_display_close(display);
   nxt_close(nxt);
 
   return ret;

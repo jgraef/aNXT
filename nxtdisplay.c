@@ -67,7 +67,9 @@ int nxt_display_refresh(nxt_display_t *display) {
   if ((display->modid = nxt_mod_getid(display->nxt,NXT_DISPLAY_MODFILE))!=-1) {
     nxt_mod_read(display->nxt,display->modid,screen,NXT_DISPLAY_BITMAP,NXT_DISPLAY_BUFSIZE);
     for (y=0;y<64;y++) {
-      for (x=0;x<100;x++) display->buffer[y][x] = screen[y/8][x]&(1<<(y%8));
+      for (x=0;x<100;x++) {
+        display->buffer[y][x] = screen[y/8][x]&(1<<(y%8))?NXT_DISPLAY_COLOR_BLACK:NXT_DISPLAY_COLOR_WHITE;
+      }
     }
     return 0;
   }
