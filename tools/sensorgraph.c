@@ -61,7 +61,7 @@ int str2resolution(struct screen *screen,const char *str) {
   else if (ret>2) return 0;
 }
 
-void DrawPixel(SDL_Surface *screen,int x,int y,uint8_t r,uint8_t g,uint8_t b) {
+static void DrawPixel(SDL_Surface *screen,int x,int y,uint8_t r,uint8_t g,uint8_t b) {
     uint32_t color = SDL_MapRGB(screen->format,r,g,b);
 
     if (SDL_MUSTLOCK(screen)) {
@@ -107,7 +107,7 @@ void DrawPixel(SDL_Surface *screen,int x,int y,uint8_t r,uint8_t g,uint8_t b) {
     if (SDL_MUSTLOCK(screen)) SDL_UnlockSurface(screen);
 }
 
-void ClearDisplay(SDL_Surface *display) {
+static void ClearDisplay(SDL_Surface *display) {
   SDL_Rect dst;
   dst.x = 0;
   dst.y = 0;

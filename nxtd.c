@@ -317,15 +317,18 @@ int main(int argc,char *argv[]) {
   }
 
   // Initialze
-  if (run_as_daemon) daemon(0,0);
   atexit(quit);
   signal(SIGTERM,exit);
   signal(SIGQUIT,exit);
   signal(SIGINT,exit);
   memset(nxts.list,0,sizeof(nxts.list));
   pthread_mutex_init(&nxts.mutex,NULL);
-  if (nxtd_usb_init()==-1 || nxtd_bt_init()==-1) {
-    fprintf(stderr,"Could not initialize USB and/or Bluetooth\n");
+  if (nxtd_usb_init()==-1) {
+    fprintf(stderr,"Could not initialize USB\n");
+    return 1;
+  }
+  if (nxtd_bt_init()==-1) {
+    fprintf(stderr,"Could not initialize Bluetooth\n");
     return 1;
   }
 
@@ -350,6 +353,9 @@ int main(int argc,char *argv[]) {
     perror("creating nxt daemon");
     return 1;
   }
+
+  // daemonize
+  if (run_as_daemon) daemon(0,0);
 
   // Spawn thread for scanning
   pthread_create(&scanner_tid,NULL,nxtd_scanner,NULL);
