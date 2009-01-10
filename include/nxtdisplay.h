@@ -47,7 +47,7 @@ int nxt_display_refresh(nxt_display_t *display);
 int nxt_display_flush(nxt_display_t *display,int notdirty);
 void nxt_display_line(nxt_display_t *display,nxt_display_color_t color,int x1,int y1,int x2,int y2);
 void nxt_display_polygon(nxt_display_t *display,nxt_display_color_t color,int points,...);
-int nxt_display_text(nxt_display_t *display,nxt_display_color_t color,int x1,int y1,const char *text);
+int nxt_display_text_ext(nxt_display_t *display,nxt_display_color_t color,int *x1,int *y1,const char *text,int beep);
 
 static __inline__ void nxt_display_point(nxt_display_t *display,nxt_display_color_t color,int x,int y) {
   display->buffer[y][x] = color;
@@ -57,4 +57,10 @@ static __inline__ void nxt_display_point(nxt_display_t *display,nxt_display_colo
 static __inline__ void nxt_display_clear(nxt_display_t *display,nxt_display_color_t color) {
   memset(display->buffer,color,sizeof(display->buffer));
   display->dirty = 1;
+}
+
+static __inline__ int nxt_display_text(nxt_display_t *display,nxt_display_color_t color,int x,int y,const char *text) {
+  int x2 = x;
+  int y2 = y;
+  return nxt_display_text_ext(display,color,&(x2),&(y2),text,0);
 }

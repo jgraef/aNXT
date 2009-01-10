@@ -45,7 +45,8 @@ TOOLS = ../bin/nxt_info \
 	../bin/anxt-config \
 	../bin/nxt_joystick \
 	../bin/nxt_joystick_travel \
-	../bin/nxt_graphic_test
+	../bin/nxt_graphic_test \
+	../bin/nxt_echo
 
 all: $(TOOLS)
 
@@ -187,6 +188,9 @@ all: $(TOOLS)
 
 ../bin/nxt_graphic_test: graphic_test.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< `sdl-config --cflags` `sdl-config --libs` $(LIBS)
+
+../bin/nxt_echo: echo.c ../lib/libanxt.a
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
 clean:
 	rm -f $(TOOLS)

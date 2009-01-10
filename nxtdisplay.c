@@ -168,42 +168,47 @@ void nxt_display_polygon(nxt_display_t *display,nxt_display_color_t color,int po
  * Draw text
  *  @param display Display
  *  @param color Color (text)
- *  @param x1 Start position X (upper left corner)
- *  @param y1 Start position Y (upper left corner)
+ *  @param x1 Reference for start position X (upper left corner)
+ *  @param y1 Reference for start position Y (upper left corner)
  *  @param text Text to draw
+ *  @param beep Whether to beep when a '\a' appears
+ *  @return How many characters written
  */
-int nxt_display_text(nxt_display_t *display,nxt_display_color_t color,int x1,int y1,const char *text) {
+int nxt_display_text_ext(nxt_display_t *display,nxt_display_color_t color,int *x1,int *y1,const char *text,int beep) {
   int i,x,y;
 
   for (i=0;text[i];i++) {
     switch (text[i]) {
+      case '\a':
+        if (beep) nxt_beep(display->nxt,440,150);
+        break;
       case '\n':
-        x1 = 0;
-        y1 += nxt_display_font.height+nxt_display_font.vspace;
-        if (y1+nxt_display_font.width+nxt_display_font.vspace>=NXT_DISPLAY_HEIGHT) break;
+        *x1 = 0;
+        *y1 += nxt_display_font.height+nxt_display_font.vspace;
+        if (*y1+nxt_display_font.width+nxt_display_font.vspace>=NXT_DISPLAY_HEIGHT) break;
         break;
       case '\r':
-        x1 = 0;
+        *x1 = 0;
         break;
       case '\b':
-        x1 -= max(0,nxt_display_font.width+nxt_display_font.hspace);
+        *x1 -= max(0,nxt_display_font.width+nxt_display_font.hspace);
         break;
       case '\f':
         nxt_display_clear(display,color==NXT_DISPLAY_COLOR_WHITE?NXT_DISPLAY_COLOR_BLACK:NXT_DISPLAY_COLOR_WHITE);
-        x1 = 0;
-        y1 = 0;
+        *x1 = 0;
+        *y1 = 0;
         break;
       default:
         for (y=0;y<nxt_display_font.height;y++) {
           for (x=0;x<nxt_display_font.width;x++) {
-            if (nxt_display_font.bitmaps[text[i]][y][x]) nxt_display_point(display,color,x1+x,y1+y);
+            if (nxt_display_font.bitmaps[text[i]][y][x]) nxt_display_point(display,color,*x1+x,*y1+y);
           }
         }
-        x1 += nxt_display_font.width+nxt_display_font.hspace;
-        if (x1+nxt_display_font.width+nxt_display_font.hspace>=NXT_DISPLAY_WIDTH) {
-          x1 = 0;
-          y1 += nxt_display_font.height+nxt_display_font.vspace;
-          if (y1+nxt_display_font.width+nxt_display_font.vspace>=NXT_DISPLAY_HEIGHT) break;
+        *x1 += nxt_display_font.width+nxt_display_font.hspace;
+        if (*x1+nxt_display_font.width+nxt_display_font.hspace>=NXT_DISPLAY_WIDTH) {
+          *x1 = 0;
+          *y1 += nxt_display_font.height+nxt_display_font.vspace;
+          if (*y1+nxt_display_font.width+nxt_display_font.vspace>=NXT_DISPLAY_HEIGHT) break;
         }
         break;
     }
