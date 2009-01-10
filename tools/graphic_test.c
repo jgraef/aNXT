@@ -139,8 +139,6 @@ int main(int argc,char *argv[]) {
     return 1;
   }
   SDL_WM_SetCaption("NXT Graphic Test","NXT Graphic Test");
-
-  // load current screen
   ClearDisplay(screen);
 
   // run
