@@ -108,7 +108,6 @@ struct nxtd_nxt_bt *nxtd_bt_finddev(bdaddr_t *bdaddr) {
 /**
  * Scans for NXTs on BT
  *  @return Success?
- *  @todo Maybe this makes trouble with parallel send/recv
  */
 int nxtd_bt_scan() {
   inquiry_info *ii;
@@ -167,7 +166,6 @@ int nxtd_bt_connect(struct nxtd_nxt_bt *nxt) {
     for (i=1;i<31;i++) {
       addr.rc_channel = i;
       if (connect(sock, (struct sockaddr *)&addr, sizeof(addr))==0) {
-        /// @todo make socket non-blocking
         int flags = fcntl(sock,F_GETFL,0);
         if (flags==-1) flags = 0;
         fcntl(sock,F_SETFL,flags|O_NONBLOCK);
