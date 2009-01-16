@@ -52,4 +52,5 @@ int main() {
   puts("#endif /*_FONT_H_*/");
 
   gdImageDestroy(im);
+  return 0;
 }
