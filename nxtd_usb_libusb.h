@@ -32,7 +32,7 @@
 #define NXT_USB_IN_ENDPOINT   0x82
 #define NXT_USB_INTERFACE     0
 #define NXT_USB_CONFIG        1
-#define NXT_USB_WAIT_TIMEOUT  2000 /* milliseconds */
+#define NXT_USB_WAIT_TIMEOUT  1000 /* milliseconds */
 #define NXT_USB_IDLE_TIMEOUT  30   /* seconds */
 
 struct nxtd_nxt_usb {

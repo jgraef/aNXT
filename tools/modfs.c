@@ -70,10 +70,25 @@ static nxt_t *nxt;
 static size_t num_modules = 0;
 static module_t modules[256];
 
+#include <stdarg.h>
+#include <stdio.h>
+static void debug(const char *fmt,...) {
+  //char *path;
+  va_list args;
+
+  va_start(args,fmt);
+  //asprintf(&path,"/proc/%d/fd/0",fuse_get_context()->pid);
+  FILE *fd = fopen("/home/janosch/Desktop/libnxt/modfs.log","a");
+  if (fd!=NULL) {
+    vfprintf(fd,fmt,args);
+    fclose(fd);
+  }
+  //free(path);
+  va_end(args);
+}
+
 // NXT operations
 static int get_modules() {
-  char *modname;
-  size_t modsz,iomapsz,i;
   int handle,modid,last;
   handle = nxt_mod_first(nxt,"*.mod",&(modules[num_modules].name),&(modules[num_modules].modid),&(modules[num_modules].mod_size),&(modules[num_modules].iomap_size));
   if (handle!=NXT_FAIL) {
@@ -86,9 +101,25 @@ static int get_modules() {
     }
   }
 
+  /*int modid,valid_modid;
+
+  if ((modid = nxt_mod_first(nxt,"*.mod",&(modules[num_modules].name)
+                                     ,&(modules[num_modules].modid)
+                                     ,&(modules[num_modules].mod_size)
+                                     ,&(modules[num_modules].iomap_size)))!=NXT_FAIL) {
+    do {
+      valid_modid = modid;
+    }
+    while ((modid = nxt_mod_next(nxt,modid,&(modules[num_modules].name)
+                                    ,&(modules[num_modules].modid)
+                                    ,&(modules[num_modules].mod_size)
+                                    ,&(modules[num_modules].iomap_size)))!=NXT_FAIL);
+    nxt_file_close(nxt,valid_modid);
+  }*/
+
   if (nxt_error(nxt)==NXT_ERR_MODULE_NOT_FOUND) {
     nxt_reset_error(nxt);
-    nxt_mod_close(nxt,last);
+    //nxt_mod_close(nxt,last);
     return 0;
   }
   else return -1;
@@ -126,6 +157,7 @@ static int nxtfs_error() {
  *  @return Success?
  */
 static int nxtfs_open(const char *filename,struct fuse_file_info *fi) {
+  debug("nxtfs_open(%s,0x%x)\n",filename,fi);
   size_t i;
 
   for (i=0;i<num_modules;i++) {
@@ -159,6 +191,8 @@ static int nxtfs_close(const char *filename,struct fuse_file_info *fi) {
  *  @todo something does not work here
  */
 static int nxtfs_read(const char *filename,char *buf,size_t count,off_t offset,struct fuse_file_info *fi) {
+  debug("nxtfs_read(%s,0x%x,%d,%d,0x%x)\n",filename,buf,count,(int)offset,fi);
+  if (count>modules[fi->fh].iomap_size) count = modules[fi->fh].iomap_size;
   ssize_t size = nxt_mod_read(nxt,modules[fi->fh].modid,buf,offset,count);
   if (size<0) return nxtfs_error();
   else return size;
@@ -174,6 +208,8 @@ static int nxtfs_read(const char *filename,char *buf,size_t count,off_t offset,s
  *  @return How many bytes written
  */
 static int nxtfs_write(const char *filename,const char *buf,size_t count,off_t offset,struct fuse_file_info *fi) {
+  debug("nxtfs_write(%s,0x%x,%d,%d,0x%x)\n",filename,buf,count,offset,fi);
+  if (count>modules[fi->fh].iomap_size) count = modules[fi->fh].iomap_size;
   ssize_t size = nxt_mod_write(nxt,modules[fi->fh].modid,buf,offset,count);
   if (size<0) return nxtfs_error(size);
   else return size;

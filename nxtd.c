@@ -31,6 +31,8 @@ static pthread_t scanner_tid = -1;
 static char *pidfile = "/var/run/nxtd.pid";
 static nxtnet_srv_t *server = NULL;
 static FILE *logfd = NULL;
+static int use_usb = 1;
+static int use_bt = 1;
 
 /**
  * Prints log message
@@ -108,8 +110,12 @@ static void *nxtd_scanner(void *x) {
     size_t i;
 
     // Scan for NXTs
-    int usb = nxtd_usb_scan();
-    int bt = nxtd_bt_scan();
+    if (use_usb) {
+      nxtd_usb_scan();
+    }
+    if (use_bt) {
+      nxtd_bt_scan();
+    }
 
     // Find NXTs that have timed out
     /*pthread_mutex_lock(&nxts.mutex);
@@ -144,7 +150,7 @@ static int nxtd_keepalive(struct nxtd_nxt *nxt) {
     if (nxtd_bt_send((struct nxtd_nxt_bt*)nxt,buf,2)!=2) return -1;
     if (nxtd_bt_recv((struct nxtd_nxt_bt*)nxt,buf,7)!=7) return -1;
   }
-  return 0;//buf[2]==0?0:-1;
+  return buf[2]==0?0:-1;
 }
 
 /**
@@ -153,6 +159,7 @@ static int nxtd_keepalive(struct nxtd_nxt *nxt) {
  */
 static void nxtd_listusb(void (*packer)(int nxtid,char *name)) {
   size_t i;
+  if (!use_usb) return;
   pthread_mutex_lock(&nxts.mutex);
   for (i=0;i<NXTD_MAXNUM;i++) {
     if (nxts.list[i]!=NULL) {
@@ -171,6 +178,7 @@ static void nxtd_listusb(void (*packer)(int nxtid,char *name)) {
  */
 static void nxtd_listbt(void (*packer)(int nxtid,char *name,void *bt_addr)) {
   size_t i;
+  if (!use_bt) return;
   pthread_mutex_lock(&nxts.mutex);
   for (i=0;i<NXTD_MAXNUM;i++) {
     if (nxts.list[i]!=NULL) {
@@ -241,6 +249,8 @@ static void usage(char *cmd,int r) {
   fprintf(out,"\t-d           Run as daemon\n");
   fprintf(out,"\t-i FILE      Set pid file (Default: /var/run/nxtd.pid)\n");
   fprintf(out,"\t-N           Use network mode (Default: local mode)\n");
+  fprintf(out,"\t-U           Disable USB\n");
+  fprintf(out,"\t-B           Disable Bluetooth\n");
   exit(r);
 }
 
@@ -282,7 +292,7 @@ int main(int argc,char *argv[]) {
   int local = 1;
   int run_as_daemon = 0;
 
-  while ((c = getopt(argc,argv,":hp:P:l:Ndi:"))!=-1) {
+  while ((c = getopt(argc,argv,":hp:P:l:Ndi:UB"))!=-1) {
     switch (c) {
       case 'h':
         usage(argv[0],0);
@@ -305,6 +315,12 @@ int main(int argc,char *argv[]) {
       case 'i':
         pidfile = optarg;
         break;
+      case 'U':
+        use_usb = 0;
+        break;
+      case 'B':
+        use_bt = 0;
+        break;
       case ':':
         fprintf(stderr,"Option -%c requires an operand\n",optopt);
         usage(argv[0],1);
@@ -323,12 +339,20 @@ int main(int argc,char *argv[]) {
   signal(SIGINT,exit);
   memset(nxts.list,0,sizeof(nxts.list));
   pthread_mutex_init(&nxts.mutex,NULL);
-  if (nxtd_usb_init()==-1) {
-    fprintf(stderr,"Could not initialize USB\n");
-    return 1;
+  if (use_usb) {
+    if (nxtd_usb_init()==-1) {
+      fprintf(stderr,"Could not initialize USB\n");
+      use_usb = 0;
+    }
   }
-  if (nxtd_bt_init()==-1) {
-    fprintf(stderr,"Could not initialize Bluetooth\n");
+  if (use_bt) {
+    if (nxtd_bt_init()==-1) {
+      fprintf(stderr,"Could not initialize Bluetooth.\n");
+      use_bt = 0;
+    }
+  }
+  if (use_usb==0 && use_bt==0) {
+    fprintf(stderr,"Neither USB nor Bluetooth available\n");
     return 1;
   }
 

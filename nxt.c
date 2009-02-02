@@ -1297,7 +1297,7 @@ ssize_t nxt_mod_read(nxt_t *nxt,int modid,void *buf,size_t offset,size_t size) {
   int len = 0;
   for (i=0;i<size/50;i++) {
     partlen = nxt_mod_read_low(nxt,modid,buf,offset,50);
-    if (partlen==-1) return NXT_FAIL;
+    if (partlen==-1) return -1;
     buf += partlen;
     len += partlen;
     offset += partlen;
