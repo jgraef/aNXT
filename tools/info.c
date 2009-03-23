@@ -83,7 +83,7 @@ int main(int argc,char *argv[]) {
   if ((nxt_name = nxt_getname(nxt))==NULL) ERROR();
 
   if (nxt_name) printf("Name:               %s\n",nxt_name);
-  printf("Connected type:     %s\n",nxt_getcontype(nxt)==NXT_CON_USB?"USB":"Bluetooth");
+  printf("Connection type:    %s\n",nxt_getcontype(nxt)==NXT_CON_USB?"USB":"Bluetooth");
   if (battery>=0) printf("Battery:            %dmV\n",battery);
   if (volume>=0) printf("Volume:             %d\n",volume);
   if (devinfo>=0) {

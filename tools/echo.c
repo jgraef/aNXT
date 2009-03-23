@@ -30,7 +30,7 @@
 static void usage(char *prog,int ret) {
   FILE *stream = ret==0?stdout:stderr;
   fprintf(stream,"Usage: %s [OPTION]... [STRING]...\n",prog);
-  fprintf(stream,"Echo the STRING(s) to standard output\n");
+  fprintf(stream,"Echo the STRING(s) to NXT display\n");
   fprintf(stream,"\t-n NXTNAME   Name of NXT (Default: first found) or bluetooth address\n");
   fprintf(stream,"\t-p POSITION  Position to start writing at. Eg: 5x20 (Default: 0x0)\n");
   fprintf(stream,"\t-e           Enable interpretation of backslash escapes\n");
