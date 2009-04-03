@@ -104,7 +104,7 @@ int main(int argc,char *argv[]) {
     white = gdImageColorAllocate(im,255,255,255);
     if (transparency) gdImageColorTransparent(im,white);
     for (y=0;y<64;y++) {
-      for (x=0;x<100;x++) gdImageSetPixel(im,x,y,display->buffer[y][x]==NXT_DISPLAY_COLOR_BLACK?black:white);
+      for (x=0;x<100;x++) gdImageSetPixel(im,x,y,display->buffer[y][x]==NXT_DISPLAY_BLACK?black:white);
     }
     FILE *out = fopen(file!=NULL?file:(format==NXT_JPEG?"display.jpg":"display.png"),"w");
     if (format==NXT_JPEG) gdImageJpeg(im,out,-1);

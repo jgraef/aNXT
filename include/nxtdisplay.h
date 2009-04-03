@@ -29,23 +29,24 @@
 #define nxt_display_triangle(display,color,x1,y1,x2,y2,x3,y3) nxt_display_polygon(display,color,x1,y1,x2,y2,x3,y3)
 #define nxt_display_rectangle(display,color,x1,y1,x2,y2)      nxt_display_polygon(display,color,x1,y1,x1,y2,x2,y1,x2,y2)
 
+typedef enum {
+  NXT_DISPLAY_WHITE = 0,
+  NXT_DISPLAY_BLACK = 1
+} nxt_display_color_t;
+
 typedef struct {
   nxt_t *nxt;
-  char buffer[NXT_DISPLAY_HEIGHT][NXT_DISPLAY_WIDTH];
+  nxt_display_color_t buffer[NXT_DISPLAY_HEIGHT][NXT_DISPLAY_WIDTH];
   int modid;
   int dirty;
 } nxt_display_t;
-
-typedef enum {
-  NXT_DISPLAY_COLOR_WHITE = 0,
-  NXT_DISPLAY_COLOR_BLACK = 1
-} nxt_display_color_t;
 
 nxt_display_t *nxt_display_open(nxt_t *nxt);
 void nxt_display_close(nxt_display_t *display);
 int nxt_display_refresh(nxt_display_t *display);
 int nxt_display_flush(nxt_display_t *display,int notdirty);
 void nxt_display_line(nxt_display_t *display,nxt_display_color_t color,int x1,int y1,int x2,int y2);
+void nxt_display_circle(nxt_display_t *display,nxt_display_color_t color,int x0,int y0,int radius);
 void nxt_display_polygon(nxt_display_t *display,nxt_display_color_t color,int points,...);
 int nxt_display_text_ext(nxt_display_t *display,nxt_display_color_t color,int *x1,int *y1,const char *text,int beep);
 
@@ -62,5 +63,5 @@ static __inline__ void nxt_display_clear(nxt_display_t *display,nxt_display_colo
 static __inline__ int nxt_display_text(nxt_display_t *display,nxt_display_color_t color,int x,int y,const char *text) {
   int x2 = x;
   int y2 = y;
-  return nxt_display_text_ext(display,color,&(x2),&(y2),text,0);
+  return nxt_display_text_ext(display,color,&x,&y,text,0);
 }

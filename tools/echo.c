@@ -128,8 +128,8 @@ int main(int argc,char *argv[]) {
     if (escape) string = escape_string(argv[c]);
     else string = argv[c];
 
-    nxt_display_text_ext(display,NXT_DISPLAY_COLOR_BLACK,&x,&y,string,1);
-    if (c<argc-1) nxt_display_text_ext(display,NXT_DISPLAY_COLOR_BLACK,&x,&y," ",0);
+    nxt_display_text_ext(display,NXT_DISPLAY_BLACK,&x,&y,string,1);
+    if (c<argc-1) nxt_display_text_ext(display,NXT_DISPLAY_BLACK,&x,&y," ",0);
 
     if (escape) free(string);
   }

@@ -36,10 +36,12 @@ int main() {
   puts("  .vspace = 0,");
   puts("  .bitmaps = {");
 
+  // blank characters
   for (c=0;c<0x20;c++) {
     printf("    { /* 0x%02x     */ {0,0,0,0,0},{0,0,0,0,0},{0,0,0,0,0},{0,0,0,0,0},{0,0,0,0,0},{0,0,0,0,0},{0,0,0,0,0},{0,0,0,0,0} },\n",c);
   }
 
+  // graphical characters
   for (y=0;y<6;y++) {
     for (x=0;x<16;x++) {
       getbitmap(im,c++,x*5,y*8);

@@ -41,7 +41,7 @@ nxt_display_t *nxt_display_open(nxt_t *nxt) {
     display = malloc(sizeof(nxt_display_t));
     display->nxt = nxt;
     display->modid = modid;
-    nxt_display_clear(display,NXT_DISPLAY_COLOR_WHITE);
+    nxt_display_clear(display,NXT_DISPLAY_WHITE);
   }
 
   return display;
@@ -68,7 +68,7 @@ int nxt_display_refresh(nxt_display_t *display) {
     nxt_mod_read(display->nxt,display->modid,screen,NXT_DISPLAY_BITMAP,NXT_DISPLAY_BUFSIZE);
     for (y=0;y<64;y++) {
       for (x=0;x<100;x++) {
-        display->buffer[y][x] = screen[y/8][x]&(1<<(y%8))?NXT_DISPLAY_COLOR_BLACK:NXT_DISPLAY_COLOR_WHITE;
+        display->buffer[y][x] = screen[y/8][x]&(1<<(y%8))?NXT_DISPLAY_BLACK:NXT_DISPLAY_WHITE;
       }
     }
     return 0;
@@ -110,28 +110,107 @@ int nxt_display_flush(nxt_display_t *display,int notdirty) {
  *  @param y1 Point 1 - Y
  *  @param x2 Point 2 - X
  *  @param y2 Point 2 - Y
+ *  @see Bresenham's Line Algorithm
  */
-void nxt_display_line(nxt_display_t *display,nxt_display_color_t color,int x1,int y1,int x2,int y2) {
-  int x,y,ynext;
-  float m;
-
-  if (x1==x2) {
-    for (y=y1;y<=y2;y++) nxt_display_point(display,color,x1,y);
+void nxt_display_line(nxt_display_t *display,nxt_display_color_t color,int x0, int y0, int x1, int y1) {
+  int Dx = x1 - x0;
+  int Dy = y1 - y0;
+  int steep = (abs(Dy) >= abs(Dx));
+  if (steep) {
+     int tmp = x0;
+     x0 = y0;
+     y0 = tmp;
+     tmp = x1;
+     x1 = y1;
+     y1 = tmp;
+     // recompute Dx, Dy after swap
+     Dx = x1 - x0;
+     Dy = y1 - y0;
   }
-  else if (y1==y2) {
-    for (x=x1;x<=x2;x++) nxt_display_point(display,color,x,y1);
+  int xstep = 1;
+  if (Dx < 0) {
+     xstep = -1;
+     Dx = -Dx;
   }
-  else {
-    m = ((float)(y2-y1))/((float)(x2-x1));
-
-    for (x=min(x1,x2);x<max(x1,x2);x++) {
-      for (y=(int)((x-x1)*m+y1);y<(int)((x-x1+(m>0.?1:-1))*m+y1);y++) {
-        nxt_display_point(display,color,x,y);
-      }
-      if (y==(int)((x-x1)*m+y1)) nxt_display_point(display,color,x,y);
+  int ystep = 1;
+  if (Dy < 0) {
+     ystep = -1;
+     Dy = -Dy;
+  }
+  int TwoDy = 2*Dy;
+  int TwoDyTwoDx = TwoDy - 2*Dx; // 2*Dy - 2*Dx
+  int E = TwoDy - Dx; //2*Dy - Dx
+  int y = y0;
+  int xDraw, yDraw;
+  int x;
+  for (x = x0; x != x1; x += xstep) {
+    if (steep) {
+      xDraw = y;
+      yDraw = x;
+    }
+    else {
+      xDraw = x;
+      yDraw = y;
+    }
+    // plot
+    nxt_display_point(display,color,xDraw, yDraw);
+    // next
+    if (E > 0) {
+      E += TwoDyTwoDx; //E += 2*Dy - 2*Dx;
+      y = y + ystep;
+    }
+    else {
+      E += TwoDy; //E += 2*Dy;
     }
   }
 }
+
+/**
+ * Draws a circle onto display
+ *  @param display NXT Display
+ *  @param color Color
+ *  @param x0 Midpoint X
+ *  @param y0 Midpoint Y
+ *  @param radius Circle radius
+ *  @see Midpoint circle algorithm
+ */
+void nxt_display_circle(nxt_display_t *display,nxt_display_color_t color,int x0,int y0,int radius) {
+  int f = 1-radius;
+  int ddF_x = 1;
+  int ddF_y = -2*radius;
+  int x = 0;
+  int y = radius;
+
+  nxt_display_point(display,color,x0,y0+radius);
+  nxt_display_point(display,color,x0,y0-radius);
+  nxt_display_point(display,color,x0+radius,y0);
+  nxt_display_point(display,color,x0-radius,y0);
+
+  while(x<y) {
+    //assert(ddF_x==2*x+1);
+    //assert(ddF_y==-2*y);
+    //assert(f == x*x + y*y - radius*radius + 2*x - y + 1);
+
+    if (f>=0) {
+      y--;
+      ddF_y += 2;
+      f += ddF_y;
+    }
+    x++;
+    ddF_x += 2;
+    f += ddF_x;
+
+    nxt_display_point(display,color,x0+x,y0+y);
+    nxt_display_point(display,color,x0-x,y0+y);
+    nxt_display_point(display,color,x0+x,y0-y);
+    nxt_display_point(display,color,x0-x,y0-y);
+    nxt_display_point(display,color,x0+y,y0+x);
+    nxt_display_point(display,color,x0-y,y0+x);
+    nxt_display_point(display,color,x0+y,y0-x);
+    nxt_display_point(display,color,x0-y,y0-x);
+  }
+}
+
 
 /**
  * Draws polygon
@@ -196,7 +275,7 @@ int nxt_display_text_ext(nxt_display_t *display,nxt_display_color_t color,int *x
         *x1 -= max(0,nxt_display_font.width+nxt_display_font.hspace);
         break;
       case '\f':
-        nxt_display_clear(display,color==NXT_DISPLAY_COLOR_WHITE?NXT_DISPLAY_COLOR_BLACK:NXT_DISPLAY_COLOR_WHITE);
+        nxt_display_clear(display,color==NXT_DISPLAY_WHITE?NXT_DISPLAY_BLACK:NXT_DISPLAY_WHITE);
         *x1 = 0;
         *y1 = 0;
         break;

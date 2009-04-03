@@ -165,7 +165,7 @@ int main(int argc,char *argv[]) {
       DrawPixel(screen,x+1,y,0,0,0);
       DrawPixel(screen,x,y+1,0,0,0);
       DrawPixel(screen,x+1,y+1,0,0,0);
-      nxt_display_point(display,NXT_DISPLAY_COLOR_BLACK,x/2,y/2);
+      nxt_display_point(display,NXT_DISPLAY_BLACK,x/2,y/2);
     }
 
     if (i%100==0) nxt_display_flush(display,1);

@@ -54,7 +54,7 @@ static SDL_Surface *load_display(nxt_display_t *display) {
 
   if (nxt_display_refresh(display)==0) {
     for (y=0;y<64;y++) {
-      for (x=0;x<100;x++) image[y][x] = display->buffer[y][x]==NXT_DISPLAY_COLOR_BLACK?0x000000FF:0xFFFFFFFF;
+      for (x=0;x<100;x++) image[y][x] = display->buffer[y][x]==NXT_DISPLAY_BLACK?0x000000FF:0xFFFFFFFF;
     }
 
     return SDL_CreateRGBSurfaceFrom(image,100,64,32,400,0xFF000000,0x00FF0000,0x0000FF00,0x000000FF);
