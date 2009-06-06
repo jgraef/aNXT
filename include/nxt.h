@@ -200,7 +200,7 @@ void nxt_wait_after_direct_command(void);
 void nxt_wait_after_communication_command(void);
 void nxt_wait_extra_long_after_communication_command(void);
 
-nxt_t *nxt_open_net(char *name,const char *hostname,int port,const char *password);
+nxt_t *nxt_open_net(const char *name,const char *hostname,int port,const char *password);
 void nxt_close(nxt_t *nxt);
 int nxt_error(nxt_t *nxt);
 char *nxt_strerror(unsigned int error);

@@ -184,7 +184,7 @@ void nxt_wait_extra_long_after_communication_command(void)
  *  @return NXT handle
  *  @note You can pass a NULL pointer as name if you wish to use the first NXT found
  */
-nxt_t *nxt_open_net(char *name,const char *hostname,int port,const char *password) {
+nxt_t *nxt_open_net(const char *name,const char *hostname,int port,const char *password) {
   size_t i,num_nxts;
   nxtnet_cli_t *cli;
   nxt_t *nxt;
