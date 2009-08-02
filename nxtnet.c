@@ -383,7 +383,7 @@ static void nxtnet_srv_send(nxtnet_srv_t *srv,struct nxtnet_proto_packet *packet
   size_t size = ntohl(send_cs->size);
   int nxtid = ntohl(send_cs->nxtid);
 
-  nxtnet_srv_log(srv,"Sending %u bytes to NXT %u\n",size,nxtid);
+  nxtnet_srv_log(srv,"Sending %u bytes to NXT %u: %02x %02x\n",size,nxtid,send_cs->data[0],send_cs->data[1]);
 
   if (srv->ops.send!=NULL) {
     size = srv->ops.send(nxtid,send_cs->data,size);

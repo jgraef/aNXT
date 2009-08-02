@@ -88,12 +88,22 @@ int main(int argc,char *argv[]) {
   nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
   usleep(60000);
   dist = nxt_us_getdist(nxt,port);
-  if (reset) nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
-  if (dist<0) fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
+  if (reset) {
+    nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
+  }
+  if (dist<0) {
+    fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
+  }
   else {
-    if (verbose) printf("Sensor %d: ",port+1);
-    if (dist==0xFF) printf("?\n");
-    else printf("%d%s\n",dist,verbose?"cm":"");
+    if (verbose) {
+      printf("Sensor %d: ",port+1);
+    }
+    if (dist==0xFF) {
+      printf("?\n");
+    }
+    else {
+      printf("%d%s\n",dist,verbose?"cm":"");
+    }
   }
 
   int ret = nxt_error(nxt);

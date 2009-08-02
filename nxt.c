@@ -30,9 +30,6 @@
 
 #include "nxt.h"
 
-//#define nxt_con_send(nxt)      nxtnet_cli_send((nxt)->cli,(nxt)->nxtid,(nxt)->buffer,(nxt)->ptr-(nxt)->buffer)
-//#define nxt_con_recv(nxt,size) nxtnet_cli_recv((nxt)->cli,(nxt)->nxtid,(nxt)->buffer,size)
-
 #define test(func)             { if ((func)==NXT_FAIL) return NXT_FAIL; }
 
 #define set_word(buf,word)     { ((unsigned char*)(buf))[0] = ((uint16_t)(word))%0x100; ((unsigned char*)(buf))[1] = ((uint16_t)(word))/0x100; }
@@ -1103,8 +1100,9 @@ int nxt_deluserflash(nxt_t *nxt) {
 ssize_t nxt_lsstatus(nxt_t *nxt,int port) {
   if (!VALID_SENSOR(port)) return NXT_FAIL;
   nxt_packstart(nxt,0x0E);
+  nxt_packbyte(nxt,port);
   test(nxt_con_send(nxt));
-  test(nxt_con_recv(nxt,5));
+  test(nxt_con_recv(nxt,4));
   test(nxt_unpackstart(nxt,0x0E));
   return nxt_unpackerror(nxt)==0?nxt_unpackbyte(nxt):NXT_FAIL;
 }
@@ -1165,13 +1163,23 @@ ssize_t nxt_lsread(nxt_t *nxt,int port,void **ptr) {
  *  @param buf Buffer
  */
 ssize_t nxt_lsxchg(nxt_t *nxt,int port,size_t tx,size_t rx,void *buf) {
-  if (!VALID_SENSOR(port)) return NXT_FAIL;
   size_t size;
   void *rbuf;
-  if (nxt_lswrite(nxt,port,tx,rx,buf)==NXT_FAIL) return NXT_FAIL;
-  time_t start = time(NULL);
-  time_t timeout = 2;
+  time_t start,timeout;
+
+  if (!VALID_SENSOR(port)) {
+    return NXT_FAIL;
+  }
+
+  if (nxt_lswrite(nxt,port,tx,rx,buf)==NXT_FAIL) {
+    return NXT_FAIL;
+  }
+
+  start = time(NULL);
+  timeout = 2;
+
   while (nxt_lsstatus(nxt,port)<=0 && time(NULL)<start+timeout);
+
   if ((size = nxt_lsread(nxt,port,&rbuf))==rx) {
     memcpy(buf,rbuf,size);
     return size;
