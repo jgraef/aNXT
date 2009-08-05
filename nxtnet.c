@@ -501,7 +501,6 @@ void nxtnet_srv_destroy(nxtnet_srv_t *srv) {
   int i;
 
   nxtnet_srv_log(srv,"Shutting server down\n");
-  if (srv->log!=NULL) fclose(srv->log);
   for (i=0;i<NXTNET_SRV_MAXSOCKS;i++) {
     if (srv->clients[i]>0) close(srv->clients[i]);
   }
