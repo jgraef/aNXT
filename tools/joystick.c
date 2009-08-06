@@ -49,7 +49,7 @@ static void usage(char *cmd,int r) {
   fprintf(out,"\t-m MAPPING   Map a axis to a motor\n");
   fprintf(out,"MAPPING format:\n");
   fprintf(out,"\tMOTOR=AXIS*SCALING\n");
-  fprintf(out,"\tExample: A=0*327.67\n");
+  fprintf(out,"\tExample: A=0*0.00305\n");
   fprintf(out,"\tThis will map axis 0 (0..32767) to motor A (0..100)\n");
   exit(r);
 }
@@ -129,15 +129,15 @@ int main(int argc,char *argv[]) {
     return 1;
   }
   num_joysticks = SDL_NumJoysticks();
-  if (num_joysticks<joystick) {
-    fprintf(stderr,"Joystick #%u doesn't exist\n",joystick);
-    return 1;
-  }
   if (joystick==-1) {
     for (i=0;i<num_joysticks;i++) {
       printf("#%u:\t%s\n",i,SDL_JoystickName(i));
     }
     return 0;
+  }
+  if (joystick>=num_joysticks) {
+    fprintf(stderr,"Joystick #%u doesn't exist\n",joystick);
+    return 1;
   }
   joy = SDL_JoystickOpen(joystick);
   SDL_JoystickEventState(SDL_IGNORE);
@@ -153,7 +153,6 @@ int main(int argc,char *argv[]) {
         int axis = SDL_JoystickGetAxis(joy,mappings[i].axis);
         if (axis!=-1) {
           int power = (int)((float)axis*mappings[i].factor);
-          fflush(stdout);
           nxt_setmotorrotation(nxt,mappings[i].motor,0,power);
         }
       }
