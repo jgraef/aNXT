@@ -179,6 +179,12 @@
 #define NXT_JPEG 1
 #define NXT_PNG  2
 
+// Common I2C registers
+#define NXT_I2C_REG_VERSION  0x00
+#define NXT_I2C_REG_VENDORID 0x08
+#define NXT_I2C_REG_DEVICEID 0x10
+#define NXT_I2C_REG_CMD      0x41
+
 #define nxt_open(name) nxt_open_net(name,"localhost",NXTNET_DEFAULT_PORT,NULL)
 
 typedef enum {
@@ -195,6 +201,16 @@ typedef struct {
   nxtnet_cli_t *cli;
   int nxtid;
 } nxt_t;
+
+struct nxt_sensor_values {
+  int is_calibrated;
+  int type;
+  int mode;
+  int raw;
+  int normalized;
+  int scaled;
+  int calibrated;
+};
 
 void nxt_wait_after_direct_command(void);
 void nxt_wait_after_communication_command(void);
@@ -217,6 +233,7 @@ int nxt_setname(nxt_t *nxt,char *name);
 int nxt_getver(nxt_t *nxt,int *firmmaj,int *firmmin,int *protomaj,int *protomin);
 int nxt_setsensormode(nxt_t *nxt,int sensor,int type,int mode);
 int nxt_getsensorval(nxt_t *nxt,int sensor);
+int nxt_getsensorvals(nxt_t *nxt,int sensor,struct nxt_sensor_values *values);
 int nxt_resetsensor(nxt_t *nxt,int sensor);
 int nxt_getbattery(nxt_t *nxt);
 int nxt_motor(nxt_t *nxt,int motor,unsigned int rotation,int power,int mode,int regmode, int turnratio);
@@ -238,8 +255,13 @@ ssize_t nxt_pollcmd(nxt_t *nxt,void **ptr,int buffer);
 int nxt_deluserflash(nxt_t *nxt);
 ssize_t nxt_lsstatus(nxt_t *nxt,int port);
 int nxt_lswrite(nxt_t *nxt,int port,size_t tx,size_t rx,void *data);
-ssize_t nxt_lsread(nxt_t *nxt,int port,void **ptr);
-ssize_t nxt_lsxchg(nxt_t *nxt,int port,size_t tx,size_t rx,void *buf);
+ssize_t nxt_lsread(nxt_t *nxt,int port,size_t bufsize,void *buf);
+ssize_t nxt_i2c_regr(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *buf);
+ssize_t nxt_i2c_regw(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *buf);
+int nxt_i2c_cmd(nxt_t *nxt,int port,int addr,int cmd);
+const char *nxt_i2c_get_version(nxt_t *nxt,int port,int addr);
+const char *nxt_i2c_get_vendorid(nxt_t *nxt,int port,int addr);
+const char *nxt_i2c_get_deviceid(nxt_t *nxt,int port,int addr);
 int nxt_mod_first(nxt_t *nxt,char *wildcard,char **modname,int *modid,size_t *modsz,size_t *iomapsz);
 int nxt_mod_next(nxt_t *nxt,int handle,char **modname,int *modid,size_t *modsz,size_t *iomapsz);
 int nxt_mod_close(nxt_t *nxt,int handle);

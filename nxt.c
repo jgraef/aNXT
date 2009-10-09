@@ -684,12 +684,30 @@ int nxt_setsensormode(nxt_t *nxt,int sensor,int type,int mode) {
 }
 
 /**
- * Gets value of sensor
+ * Gets values of sensor
  *  @param nxt NXT handle
  *  @param sensor Sensor (0,1,2,3)
  *  @return Sensor value
  */
 int nxt_getsensorval(nxt_t *nxt,int sensor) {
+  struct nxt_sensor_values values;
+  if (nxt_getsensorvals(nxt,sensor,&values)==0) {
+    return values.is_calibrated?values.calibrated:values.scaled;
+  }
+  else {
+    return -1;
+  }
+}
+
+/**
+ * Gets values of sensor
+ *  @param nxt NXT handle
+ *  @param sensor Sensor (0,1,2,3)
+ *  @param values Pointer to structure for storing sensor values
+ *  @return 0 = Success
+ *         -1 = Failure
+ */
+int nxt_getsensorvals(nxt_t *nxt,int sensor,struct nxt_sensor_values *values) {
   if (!VALID_SENSOR(sensor)) return NXT_FAIL;
   nxt_packstart(nxt,0x07);
   nxt_packbyte(nxt,sensor);
@@ -699,18 +717,20 @@ int nxt_getsensorval(nxt_t *nxt,int sensor) {
   if (nxt_unpackerror(nxt)==0) {
     nxt_unpackbyte(nxt); // sensor port
     if (nxt_unpackbyte(nxt)) {
-      int cali = nxt_unpackbyte(nxt);
-      nxt_unpackbyte(nxt); // type
-      nxt_unpackbyte(nxt); // mode
-      nxt_unpackword(nxt); // raw
-      nxt_unpackword(nxt); // type dependent
-      int scaled = (unsigned int)nxt_unpackword(nxt); // mode dependent
-      if (cali) return (unsigned int)nxt_unpackword(nxt); // calibrated
-      else return scaled;
+      if (values!=NULL) {
+        values->is_calibrated = nxt_unpackbyte(nxt);
+        values->type = (int)nxt_unpackbyte(nxt); // type
+        values->mode = (int)nxt_unpackbyte(nxt); // mode
+        values->raw = (int)nxt_unpackword(nxt); // raw
+        values->normalized = (int)nxt_unpackword(nxt); // type dependent
+        values->scaled = (int)nxt_unpackword(nxt); // mode dependent
+        values->calibrated = (int)nxt_unpackword(nxt); // calibrated
+        return 0;
+      }
     }
     else {
       nxt_wait_after_direct_command();
-      return nxt_getsensorval(nxt,sensor);
+      return nxt_getsensorvals(nxt,sensor,values);
     }
   }
   return NXT_FAIL;
@@ -1134,57 +1154,153 @@ int nxt_lswrite(nxt_t *nxt,int port,size_t tx,size_t rx,void *data) {
  * Reads LS data
  *  @param nxt NXT handle
  *  @param port Sensor port
- *  @param ptr Reference for buffer
+ *  @param bufsize Size of buffer
+ *  @param buf Buffer for received data
  *  @return How many bytes read
- *  @note The pointer 'ptr' can and should be passed to free()
  */
-ssize_t nxt_lsread(nxt_t *nxt,int port,void **ptr) {
+ssize_t nxt_lsread(nxt_t *nxt,int port,size_t bufsize,void *buf) {
   if (!VALID_SENSOR(port)) return NXT_FAIL;
-  if (ptr==NULL) return NXT_FAIL;
+  if (buf==NULL) return NXT_FAIL;
   nxt_packstart(nxt,0x10);
   nxt_packbyte(nxt,port);
   test(nxt_con_send(nxt));
   test(nxt_con_recv(nxt,20));
   test(nxt_unpackstart(nxt,0x10));
   if (nxt_unpackerror(nxt)==0) {
-    size_t size = nxt_unpackbyte(nxt);
-    if (ptr!=NULL) *ptr = memcpy(malloc(size),nxt_unpackmem(nxt,size),size);
-    return size;
+    ssize_t size = nxt_unpackbyte(nxt);
+    void *data = nxt_unpackmem(nxt,size);
+    memcpy(buf,data,bufsize);
+    return size<bufsize?size:bufsize;
   }
   else return NXT_FAIL;
 }
 
 /**
- * Exchanges LS data
+ * Read I2C register
  *  @param nxt NXT handle
  *  @param port Sensor port
- *  @param tx How many bytes to send
- *  @param rx How many bytes to receive
- *  @param buf Buffer
+ *  @param addr I2C address
+ *  @param reg1 First register
+ *  @param nreg Number of registers
+ *  @param buf Buffer for read data
+ *  @return How many bytes read
  */
-ssize_t nxt_lsxchg(nxt_t *nxt,int port,size_t tx,size_t rx,void *buf) {
-  size_t size;
-  void *rbuf;
-  time_t start,timeout;
+ssize_t nxt_i2c_regr(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *buf) {
+  time_t timeout;
+  char cmd[3] = {
+    addr,
+    reg1
+  };
 
-  if (!VALID_SENSOR(port)) {
-    return NXT_FAIL;
+  if (nreg>16) {
+    nreg = 16;
   }
 
-  if (nxt_lswrite(nxt,port,tx,rx,buf)==NXT_FAIL) {
-    return NXT_FAIL;
+  nxt_lswrite(nxt,port,2,nreg,cmd);
+
+  // wait for data
+  timeout = time(NULL)+2;
+  while (nxt_lsstatus(nxt,port)<((ssize_t)nreg) && time(NULL)<timeout);
+
+  return nxt_lsread(nxt,port,nreg,buf);
+}
+
+/**
+ * Write I2C register
+ *  @param nxt NXT handle
+ *  @param port Sensor port
+ *  @param addr I2C address
+ *  @param reg1 First register
+ *  @param nreg Number of registers
+ *  @param buf Data to write to registers
+ *  @return How many bytes written
+ */
+ssize_t nxt_i2c_regw(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *buf) {
+  char cmd[16] = {
+    addr,
+    reg1
+  };
+
+  if (nreg>14) {
+    nreg = 14;
   }
 
-  start = time(NULL);
-  timeout = 2;
+  memcpy(cmd+2,buf,nreg);
+  return nxt_lswrite(nxt,port,nreg+2,0,cmd);
+}
 
-  while (nxt_lsstatus(nxt,port)<=0 && time(NULL)<start+timeout);
+/**
+ * Sends command to I2C sensor
+ *  @param nxt NXT handle
+ *  @param port Sensor port
+ *  @param addr I2C address
+ *  @param cmd Command
+ */
+int nxt_i2c_cmd(nxt_t *nxt,int port,int addr,int cmd) {
+  char buf[3] = {
+    addr,
+    NXT_I2C_REG_CMD,
+    cmd
+  };
 
-  if ((size = nxt_lsread(nxt,port,&rbuf))==rx) {
-    memcpy(buf,rbuf,size);
-    return size;
+  return nxt_lswrite(nxt,port,3,0,buf)==3?0:-1;
+}
+
+/**
+ * Gets version from I2C sensor
+ *  @param nxt NXT handle
+ *  @param port Sensor port
+ *  @param addr I2C address
+ *  @return Version
+ */
+const char *nxt_i2c_get_version(nxt_t *nxt,int port,int addr) {
+  static char buf[9];
+
+  if (nxt_i2c_regr(nxt,port,addr,NXT_I2C_REG_VERSION,8,buf)==8) {
+    buf[8] = 0;
+    return buf;
   }
-  else return NXT_FAIL;
+  else {
+    return NULL;
+  }
+}
+
+/**
+ * Gets vendor ID from I2C sensor
+ *  @param nxt NXT handle
+ *  @param port Sensor port
+ *  @param addr I2C address
+ *  @return Vendor ID
+ */
+const char *nxt_i2c_get_vendorid(nxt_t *nxt,int port,int addr) {
+  static char buf[9];
+
+  if (nxt_i2c_regr(nxt,port,addr,NXT_I2C_REG_VENDORID,8,buf)==8) {
+    buf[8] = 0;
+    return buf;
+  }
+  else {
+    return NULL;
+  }
+}
+
+/**
+ * Gets device ID from I2C sensor
+ *  @param nxt NXT handle
+ *  @param port Sensor port
+ *  @param addr I2C address
+ *  @return Device ID
+ */
+const char *nxt_i2c_get_deviceid(nxt_t *nxt,int port,int addr) {
+  static char buf[9];
+
+  if (nxt_i2c_regr(nxt,port,addr,NXT_I2C_REG_DEVICEID,8,buf)==8) {
+    buf[8] = 0;
+    return buf;
+  }
+  else {
+    return NULL;
+  }
 }
 
 /**

@@ -23,35 +23,16 @@
 
 #include <nxt.h>
 
-/**
- * Gets distance from US Sensor (default mode)
- *  @param nxt NXT handle
- *  @param port Sensor port
- *  @return Distance
- */
-#define nxt_us_getdist(nxt,port) nxt_us_getmeasbyte(nxt,port,0)
+#define NXT_US_REG_MEASUREMENT_DATA 0x42
 
-char *nxt_us_getversion(nxt_t *nxt,int port);
-char *nxt_us_getproductid(nxt_t *nxt,int port);
-char *nxt_us_getsensortype(nxt_t *nxt,int port);
-int nxt_us_getfactoryzero(nxt_t *nxt,int port);
-int nxt_us_getfactoryscalefactor(nxt_t *nxt,int port);
-int nxt_us_getfactoryscaledivisor(nxt_t *nxt,int port);
-char *nxt_us_getmeasunits(nxt_t *nxt,int port);
-int nxt_us_getcontmeasinterval(nxt_t *nxt,int port);
-int nxt_us_getcmdstate(nxt_t *nxt,int port);
-int nxt_us_getmeasbyte(nxt_t *nxt,int port,int byte);
-int nxt_us_getactualzero(nxt_t *nxt,int port);
-int nxt_us_getactualscalefactor(nxt_t *nxt,int port);
-int nxt_us_getactualscaledivisor(nxt_t *nxt,int port);
-void nxt_us_off(nxt_t *nxt,int port);
-void nxt_us_singleshot(nxt_t *nxt,int port);
-void nxt_us_contmeas(nxt_t *nxt,int port);
-void nxt_us_eventmeas(nxt_t *nxt,int port);
-void nxt_us_warmreset(nxt_t *nxt,int port);
-void nxt_us_setcontmeasinterval(nxt_t *nxt,int port,int interval);
-void nxt_us_setactualzero(nxt_t *nxt,int port,int zero);
-void nxt_us_setactualscalefactor(nxt_t *nxt,int port,int factor);
-void nxt_us_setactualscaledivisor(nxt_t *nxt,int port,int divisor);
+#define nxt_us_getversion(nxt,port)  nxt_i2c_get_version(nxt,port,nxt_us_i2c_addr)
+#define nxt_us_getvendorid(nxt,port) nxt_i2c_get_vendorid(nxt,port,nxt_us_i2c_addr)
+#define nxt_us_getdeviceid(nxt,port) nxt_i2c_get_deviceid(nxt,port,nxt_us_i2c_addr)
+#define nxt_us_cmd(nxt,port,cmd)     nxt_i2c_cmd(nxt,port,nxt_us_i2c_addr,cmd)
+
+int nxt_us_i2c_addr;
+
+int nxt_us_get_measdata(nxt_t *nxt,int port,size_t m1,size_t nm,int *mbuf);
+int nxt_us_getdist(nxt_t *nxt,int port);
 
 #endif /* _NXT_I2C_US_H_ */

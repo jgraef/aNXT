@@ -1,5 +1,5 @@
 /*
-    nxtcam.c
+    cam.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -24,15 +24,25 @@
 #include <stdlib.h>
 #include <string.h>
 
+/// I2C Address
+int nxt_cam_i2c_addr = 0x02;
+
 /**
  * Reads version
  *  @param nxt NXT handle
  *  @param port Sensor port
  *  @return Version string
  */
-char *nxt_nxtcam_getversion(nxt_t *nxt,int port) {
-  static char buf[9] = {0x02,0x00,0x03};
+char *nxt_cam_getversion(nxt_t *nxt,int port) {
+  static char buf[9] = {
+    0,
+    NXT_CAM_REG_VERSION,
+    0x03
+  };
+
+  buf[0] = nxt_cam_i2c_addr;
   nxt_lsxchg(nxt,port,3,8,buf);
+
   buf[8] = 0;
   return buf;
 }
@@ -43,9 +53,16 @@ char *nxt_nxtcam_getversion(nxt_t *nxt,int port) {
  *  @param port Sensor port
  *  @return Product ID
  */
-char *nxt_nxtcam_getproductid(nxt_t *nxt,int port) {
-  static char buf[9] = {0x02,0x08,0x03};
+char *nxt_cam_getproductid(nxt_t *nxt,int port) {
+  static char buf[9] = {
+    0,
+    NXT_CAM_REG_PRODUCTID,
+    0x03
+  };
+
+  buf[0] = nxt_cam_i2c_addr;
   nxt_lsxchg(nxt,port,3,8,buf);
+
   buf[8] = 0;
   return buf;
 }
@@ -56,9 +73,16 @@ char *nxt_nxtcam_getproductid(nxt_t *nxt,int port) {
  *  @param port Sensor port
  *  @return Sensor Type
  */
-char *nxt_nxtcam_getsensortype(nxt_t *nxt,int port) {
-  static char buf[9] = {0x02,0x10,0x03};
+char *nxt_cam_getsensortype(nxt_t *nxt,int port) {
+  static char buf[9] = {
+    0,
+    NXT_CAM_REG_SENSORTYPE,
+    0x03
+  };
+
+  buf[0] = nxt_cam_i2c_addr;
   nxt_lsxchg(nxt,port,3,8,buf);
+
   buf[8] = 0;
   return buf;
 }
@@ -69,20 +93,31 @@ char *nxt_nxtcam_getsensortype(nxt_t *nxt,int port) {
  *  @param port Sensor port
  *  @param cmd Command
  */
-void nxt_nxtcam_command(nxt_t *nxt,int port,int cmd) {
-  char buf[3] = {0x02,0x41,cmd};
+void nxt_cam_command(nxt_t *nxt,int port,int cmd) {
+  char buf[3] = {
+    nxt_cam_i2c_addr,
+    NXT_CAM_REG_COMMAND,
+    cmd
+  };
+
   nxt_lswrite(nxt,port,3,0,buf);
 }
 
 /**
- * Checks if cam can see objects
+ * Returns number of objects camera can see
  *  @param nxt NXT handle
  *  @param port Sensor port
- *  @return If cam can see objects
+ *  @return Number of objects
  */
-int nxt_nxtcam_noobjects(nxt_t *nxt,int port) {
-  static char buf[3] = {0x02,0x42,0x03};
+int nxt_cam_num_objects(nxt_t *nxt,int port) {
+  char buf[3] = {
+    nxt_cam_i2c_addr,
+    NXT_CAM_REG_OBJCOUNT,
+    0x03
+  };
+
   nxt_lsxchg(nxt,port,3,1,buf);
+
   return buf[0];
 }
 
@@ -94,30 +129,44 @@ int nxt_nxtcam_noobjects(nxt_t *nxt,int port) {
  *  @param object Reference for object data
  *  @return Success
  */
-int nxt_nxtcam_getobject(nxt_t *nxt,int port,int obj,nxt_nxtcam_object_t *object) {
-  if (!VALID_OBJ(obj)) return NXT_FAIL;
-  char sbuf[3] = {0x02,0x43,0x03};
+int nxt_cam_getobject(nxt_t *nxt,int port,int obj,nxt_cam_object_t *object) {
+  char sbuf[3] = {
+    nxt_cam_i2c_addr,
+    NXT_CAM_REG_OBJDATA,
+    0x03
+  };
+  char buf[3];
+
+  if (!NXT_CAM_VALID_OBJ(obj)) {
+    return NXT_FAIL;
+  }
+
+  object->id = obj;
   sbuf[1] += obj*5;
-  static char buf[3];
+
   // color
   memcpy(buf,sbuf,3);
   nxt_lsxchg(nxt,port,3,1,buf);
   object->color = buf[0];
+
   // ul_x
   sbuf[1]++;
   memcpy(buf,sbuf,3);
   nxt_lsxchg(nxt,port,3,1,buf);
   object->ul_x = buf[0];
+
   // ul_y
   sbuf[1]++;
   memcpy(buf,sbuf,3);
   nxt_lsxchg(nxt,port,3,1,buf);
   object->ul_y = buf[0];
+
   // lr_x
   sbuf[1]++;
   memcpy(buf,sbuf,3);
   nxt_lsxchg(nxt,port,3,1,buf);
   object->lr_x = buf[0];
+
   // lr_y
   sbuf[1]++;
   memcpy(buf,sbuf,3);

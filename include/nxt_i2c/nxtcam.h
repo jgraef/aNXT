@@ -1,5 +1,5 @@
 /*
-    nxtcam.h
+    cam.h
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -18,59 +18,73 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _NXT_I2C_CAM_H_
-#define _NXT_I2C_CAM_H_
+#ifndef _NXT_I2C_NXTCAM_H_
+#define _NXT_I2C_NXTCAM_H_
 
 #include <nxt.h>
 
-#define VALID_OBJ(o) ((o)>=0 && (o)<=8)
+#define NXT_CAM_VALID_OBJ(o) ((o)>=0 && (o)<=8)
 
-/**
- * Enable/Disable tracking
- *  @param x Enable or Disable
- */
-#define nxt_nxtcam_tracking(x) nxt_nxtcam_command((x)?0x45:0x44)
+#define NXT_CAM_REG_VERSION    0x00
+#define NXT_CAM_REG_PRODUCTID  0x08
+#define NXT_CAM_REG_SENSORTYPE 0x10
+#define NXT_CAM_REG_COMMAND    0x41
+#define NXT_CAM_REG_OBJCOUNT   0x42
+#define NXT_CAM_REG_OBJDATA    0x43
 
-/**
- * Select line tracking mode
- */
-#define nxt_nxtcam_linetracking() nxt_nxtcam_command(0x4C)
-
-/**
- * Enable/Disable ADPA mode
- *  @param x Enable or Disable
- */
-#define nxt_nxtcam_adpa(x) nxt_nxtcam_command((x)?0x4E:0x4F)
-
-/**
- * Ping camera
- */
-#define nxt_nxtcam_ping() nxt_nxtcam_command(0x50)
-
-/**
- * Reset camera
- */
-#define nxt_nxtcam_reset() nxt_nxtcam_command(0x52)
-
-/**
- * Enable/Disable sorting by color
- *  @param x Enable or Disable
- */
-#define nxt_nxtcam_sort(x) nxt_nxtcam_command((x)?0x55:0x58)
+#define NXT_CAM_CMD_TRACKING_DISABLE    0x44
+#define NXT_CAM_CMD_TRACKING_ENABLE     0x45
+#define NXT_CAM_CMD_LINETRACKING_ENABLE 0x4C
+#define NXT_CAM_CMD_RESET               0x52
+#define NXT_CAM_CMD_COLORSORT_ENABLE    0x55
+#define NXT_CAM_CMD_COLORSORT_DISABLE   0x58
 
 typedef struct {
+  int id;
   int color;
   int ul_x;
   int ul_y;
   int lr_x;
   int lr_y;
-} nxt_nxtcam_object_t;
+} nxt_cam_object_t;
 
-char *nxt_nxtcam_getversion(nxt_t *nxt,int port);
-char *nxt_nxtcam_getproductid(nxt_t *nxt,int port);
-char *nxt_nxtcam_getsensortype(nxt_t *nxt,int port);
-void nxt_nxtcam_command(nxt_t *nxt,int port,int cmd);
-int nxt_nxtcam_noobjects(nxt_t *nxt,int port);
-int nxt_nxtcam_getobject(nxt_t *nxt,int port,int obj,nxt_nxtcam_object_t *object);
+int nxt_cam_i2c_addr;
 
-#endif /* _NXT_I2C_CAM_H_ */
+char *nxt_cam_getversion(nxt_t *nxt,int port);
+char *nxt_cam_getproductid(nxt_t *nxt,int port);
+char *nxt_cam_getsensortype(nxt_t *nxt,int port);
+void nxt_cam_command(nxt_t *nxt,int port,int cmd);
+int nxt_cam_noobjects(nxt_t *nxt,int port);
+int nxt_cam_getobject(nxt_t *nxt,int port,int obj,nxt_cam_object_t *object);
+
+/**
+ * Enable/Disable tracking
+ *  @param enable Enable or Disable
+ */
+static __inline__ void nxt_cam_tracking_enable(nxt_t *nxt,int port,int enable) {
+  nxt_cam_command(nxt,port,enable?NXT_CAM_CMD_TRACKING_ENABLE:NXT_CAM_CMD_TRACKING_DISABLE);
+}
+
+/**
+ * Select line tracking mode
+ */
+static __inline__ void nxt_cam_linetracking(nxt_t *nxt,int port) {
+  nxt_cam_command(nxt,port,NXT_CAM_CMD_LINETRACKING_ENABLE);
+}
+
+/**
+ * Reset camera
+ */
+static __inline__ void nxt_cam_reset(nxt_t *nxt,int port) {
+  nxt_cam_command(nxt,port,NXT_CAM_CMD_RESET);
+}
+
+/**
+ * Enable/Disable sorting by color
+ *  @param x Enable or Disable
+ */
+static __inline__ void nxt_cam_colorsort_enable(nxt_t *nxt,int port,int enable) {
+  nxt_cam_command(nxt,port,enable?NXT_CAM_CMD_COLORSORT_ENABLE:NXT_CAM_CMD_COLORSORT_DISABLE);
+}
+
+#endif /* _NXT_I2C_NXTCAM_H_ */

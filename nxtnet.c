@@ -67,6 +67,7 @@ static struct nxtnet_proto_packet *nxtnet_recv(int sock,struct nxtnet_proto_pack
 
   // Check header
   if (size>0 && packet_sig==NXTNET_PROTO_SIG && (cmd==0 || buf->cmd==cmd) && packet_size<=NXTNET_BUFSIZE) {
+
     // Receive whole packet
     size = 0;
     while (size<packet_size) size += recv(sock,buf+size,packet_size-size,0);
@@ -240,11 +241,13 @@ ssize_t nxtnet_cli_recv(nxtnet_cli_t *cli,int nxtid,void *buf,size_t size) {
   recv_cs->size = htonl(size);
 
   nxtnet_send(cli->sock,cli->buf);
-
   if (nxtnet_recv(cli->sock,cli->buf,NXTNET_PROTO_DIR_SC|NXTNET_PROTO_CMD_SEND)!=NULL) {
     struct nxtnet_proto_recv_sc *recv_sc = (struct nxtnet_proto_recv_sc*)cli->buf->data;
-    size = ntohl(recv_sc->size);
-    memcpy(buf,recv_sc->data,size);
+    ssize_t size = ntohl(recv_sc->size);
+
+    if (size>0) {
+      memcpy(buf,recv_sc->data,size);
+    }
     return size;
   }
   else return -1;
@@ -401,7 +404,7 @@ static void nxtnet_srv_send(nxtnet_srv_t *srv,struct nxtnet_proto_packet *packet
 static void nxtnet_srv_recv(nxtnet_srv_t *srv,struct nxtnet_proto_packet *packet) {
   struct nxtnet_proto_recv_cs *recv_cs = (struct nxtnet_proto_recv_cs*)packet->data;
   struct nxtnet_proto_recv_sc *recv_sc = (struct nxtnet_proto_recv_sc*)packet->data;
-  size_t size = ntohl(recv_cs->size);
+  ssize_t size = ntohl(recv_cs->size);
   int nxtid = ntohl(recv_cs->nxtid);
 
   nxtnet_srv_log(srv,"Receiving %u bytes from NXT %u\n",size,nxtid);
@@ -415,7 +418,7 @@ static void nxtnet_srv_recv(nxtnet_srv_t *srv,struct nxtnet_proto_packet *packet
   recv_sc->nxtid = htonl(nxtid);
   recv_sc->size = htonl(size);
   packet->cmd = NXTNET_PROTO_DIR_SC|NXTNET_PROTO_CMD_SEND;
-  packet->size = sizeof(struct nxtnet_proto_packet)+sizeof(struct nxtnet_proto_recv_sc)+size;
+  packet->size = sizeof(struct nxtnet_proto_packet)+sizeof(struct nxtnet_proto_recv_sc)+(size>0?size:0);
   packet->error = 0;
 }
 

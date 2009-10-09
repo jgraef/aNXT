@@ -3,7 +3,7 @@
 
 -include ../../Makefile.config
 
-all: blink melody sos
+all: blink melody sos psp
 
 blink: blink.c
 	$(CC) $(CFLAGS) -o $@ $^ -L../../lib $(LIBS)
@@ -14,6 +14,10 @@ melody: melody.c
 sos: sos.c
 	$(CC) $(CFLAGS) -o $@ $^ -L../../lib $(LIBS)
 
+psp: psp.c
+	$(CC) $(CFLAGS) -o $@ $^ -L../../lib $(LIBS) `sdl-config --cflags --libs` -lSDL_gfx
+
+
 clean:
-	rm -f blink melody sos
+	rm -f blink melody sos psp
 

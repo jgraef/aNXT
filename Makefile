@@ -9,7 +9,7 @@ all: lib/libanxt.a lib/libanxttools.a lib/libanxtfile.a lib/libanxtnet.a bin/nxt
 
 ##### Make libanxt #####
 
-lib/libanxt.a: nxt.o nxtdisplay.o us.o nxtcam.o
+lib/libanxt.a: nxt.o nxtdisplay.o us.o nxtcam.o psp.o accel.o hid.o
 	$(AR) rs $@ $^
 	$(CC) -shared -Wl,-soname,libanxt.so.1 -o lib/libanxt.so.1 $^ -lc
 
@@ -20,6 +20,15 @@ us.o: us.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 nxtcam.o: nxtcam.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+psp.o: psp.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+accel.o: accel.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+hid.o: hid.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 nxtdisplay.o: nxtdisplay.c nxtfont.h

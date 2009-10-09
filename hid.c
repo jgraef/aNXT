@@ -1,5 +1,5 @@
 /*
-    us.c
+    hid.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -18,40 +18,28 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stddef.h>
+#include <stdint.h>
 
 #include <nxt.h>
-#include <nxt_i2c/us.h>
+#include <nxt_i2c/hid.h>
 
-int nxt_us_i2c_addr = 0x02;
+/// I2C Address
+int nxt_hid_i2c_addr = 0x02;
 
-int nxt_us_get_measdata(nxt_t *nxt,int port,size_t m1,size_t nm,int *mbuf) {
-  char buf[8];
-  int i;
-
-  if (m1+nm>8) {
-    return -1;
-  }
-
-  if (nxt_i2c_regr(nxt,port,nxt_us_i2c_addr,NXT_US_REG_MEASUREMENT_DATA+m1,nm,buf)==nm) {
-    for (i=0;i<nm;i++) {
-      mbuf[i] = buf[i];
-    }
-
-    return nm;
-  }
-  else {
-    return -1;
-  }
+int nxt_hid_transmit(nxt_t *nxt,int port) {
+  return nxt_i2c_cmd(nxt,port,nxt_hid_i2c_addr,NXT_HID_CMD_TRANSMIT);
 }
 
-int nxt_us_getdist(nxt_t *nxt,int port) {
-  int dist;
+int nxt_hid_setmode(nxt_t *nxt,int port,int mode) {
+  return nxt_i2c_cmd(nxt,port,nxt_hid_i2c_addr,mode);
+}
 
-  if (nxt_us_get_measdata(nxt,port,0,1,&dist)==1) {
-    return dist;
-  }
-  else {
-    return -1;
-  }
+int nxt_hid_setmodifier(nxt_t *nxt,int port,int modifier) {
+  char m = modifier;
+  return nxt_i2c_regw(nxt,port,nxt_hid_i2c_addr,NXT_HID_REG_MODIFIER,1,&m);
+}
+
+int nxt_hid_setkey(nxt_t *nxt,int port,int key) {
+  char k = key;
+  return nxt_i2c_regw(nxt,port,nxt_hid_i2c_addr,NXT_HID_REG_KEYDATA,1,&k);
 }

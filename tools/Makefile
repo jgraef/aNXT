@@ -15,6 +15,7 @@ TOOLS = ../bin/nxt_info \
 	../bin/nxt_run \
 	../bin/nxt_pollcmd \
 	../bin/nxt_sensorus \
+	../bin/nxt_sensoraccel \
 	../bin/nxt_stop \
 	../bin/nxt_getprog \
 	../bin/nxt_delflash \
@@ -93,6 +94,9 @@ all: $(TOOLS)
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
 ../bin/nxt_sensorus: sensorus.c  ../lib/libanxt.a
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+
+../bin/nxt_sensoraccel: sensoraccel.c  ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
 ../bin/nxt_stop: stop.c ../lib/libanxt.a
