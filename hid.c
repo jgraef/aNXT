@@ -24,22 +24,29 @@
 #include <nxt_i2c/hid.h>
 
 /// I2C Address
-int nxt_hid_i2c_addr = 0x02;
+int nxt_hid_i2c_addr = 0x04;
 
-int nxt_hid_transmit(nxt_t *nxt,int port) {
-  return nxt_i2c_cmd(nxt,port,nxt_hid_i2c_addr,NXT_HID_CMD_TRANSMIT);
-}
-
-int nxt_hid_setmode(nxt_t *nxt,int port,int mode) {
-  return nxt_i2c_cmd(nxt,port,nxt_hid_i2c_addr,mode);
-}
-
-int nxt_hid_setmodifier(nxt_t *nxt,int port,int modifier) {
+int nxt_hid_set_modifier(nxt_t *nxt, int port, int modifier) {
   char m = modifier;
-  return nxt_i2c_regw(nxt,port,nxt_hid_i2c_addr,NXT_HID_REG_MODIFIER,1,&m);
+  return nxt_i2c_write(nxt, port, nxt_hid_i2c_addr, NXT_HID_REG_MODIFIER, 1, &m)==1?0:-1;
 }
 
-int nxt_hid_setkey(nxt_t *nxt,int port,int key) {
+int nxt_hid_set_key(nxt_t *nxt, int port, int key) {
   char k = key;
-  return nxt_i2c_regw(nxt,port,nxt_hid_i2c_addr,NXT_HID_REG_KEYDATA,1,&k);
+  return nxt_i2c_write(nxt,port, nxt_hid_i2c_addr, NXT_HID_REG_KEYDATA, 1, &k)==1?0:-1;
+}
+
+int nxt_hid_send_str(nxt_t *nxt, int port, const char *str) {
+  int i;
+
+  nxt_hid_set_mode(nxt, port, NXT_HID_MODE_ASCII);
+  nxt_wait_after_communication_command();
+
+  for (i=0; str[i]; i++) {
+    nxt_hid_set_key(nxt, port, str[i]);
+    nxt_wait_after_communication_command();
+
+    nxt_hid_transmit(nxt, port);
+    nxt_wait_after_communication_command();
+  }
 }

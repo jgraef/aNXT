@@ -34,8 +34,7 @@
 
 #include "nxtnet.h"
 
-static struct nxtnet_proto_listusb_sc *packer_usb_buf;
-static struct nxtnet_proto_listbt_sc *packer_bt_buf;
+static struct nxtnet_proto_list_sc *packer_buf;
 
 /**
  * Receives NXTNET packet
@@ -156,57 +155,31 @@ nxtnet_cli_t *nxtnet_cli_connect(const char *hostname,int port,const char *passw
 }
 
 /**
- * Lists NXTs that are connected via USB
+ * Lists all NXTs
  */
-struct nxtnet_proto_listusb_sc *nxtnet_cli_listusb(nxtnet_cli_t *cli) {
+struct nxtnet_proto_list_sc *nxtnet_cli_list(nxtnet_cli_t *cli) {
   cli->buf->sig = NXTNET_PROTO_SIG;
-  cli->buf->cmd = NXTNET_PROTO_DIR_CS|NXTNET_PROTO_CMD_LISTUSB;
+  cli->buf->cmd = NXTNET_PROTO_DIR_CS|NXTNET_PROTO_CMD_LIST;
   cli->buf->size = sizeof(struct nxtnet_proto_packet);
   cli->buf->error = 0;
   strcpy(cli->buf->password,cli->password);
   nxtnet_send(cli->sock,cli->buf);
-
-  if (nxtnet_recv(cli->sock,cli->buf,NXTNET_PROTO_DIR_SC|NXTNET_PROTO_CMD_LISTUSB)!=NULL) {
-    struct nxtnet_proto_listusb_sc* listusb = (struct nxtnet_proto_listusb_sc*)cli->buf->data;
+  if (nxtnet_recv(cli->sock,cli->buf,NXTNET_PROTO_DIR_SC|NXTNET_PROTO_CMD_LIST)!=NULL) {
+    struct nxtnet_proto_list_sc *list = (struct nxtnet_proto_list_sc*)cli->buf->data;
     size_t i;
 
     // convert all multibyte values to host byte order
-    listusb->num_items = ntohl(listusb->num_items);
-    for (i=0;i<listusb->num_items;i++) {
-      listusb->nxts[i].nxtid = ntohl(listusb->nxts[i].nxtid);
+    list->num_items = ntohl(list->num_items);
+    for (i=0;i<list->num_items;i++) {
+      list->nxts[i].handle = ntohl(list->nxts[i].handle);
     }
 
-    return listusb;
+    return list;
   }
   else return NULL;
 }
 
-/**
- * Lists NXTs that are connected via Bluetooth
- */
-struct nxtnet_proto_listbt_sc *nxtnet_cli_listbt(nxtnet_cli_t *cli) {
-  cli->buf->sig = NXTNET_PROTO_SIG;
-  cli->buf->cmd = NXTNET_PROTO_DIR_CS|NXTNET_PROTO_CMD_LISTBT;
-  cli->buf->size = sizeof(struct nxtnet_proto_packet);
-  cli->buf->error = 0;
-  strcpy(cli->buf->password,cli->password);
-  nxtnet_send(cli->sock,cli->buf);
-  if (nxtnet_recv(cli->sock,cli->buf,NXTNET_PROTO_DIR_SC|NXTNET_PROTO_CMD_LISTBT)!=NULL) {
-    struct nxtnet_proto_listbt_sc* listbt = (struct nxtnet_proto_listbt_sc*)cli->buf->data;
-    size_t i;
-
-    // convert all multibyte values to host byte order
-    listbt->num_items = ntohl(listbt->num_items);
-    for (i=0;i<listbt->num_items;i++) {
-      listbt->nxts[i].nxtid = ntohl(listbt->nxts[i].nxtid);
-    }
-
-    return listbt;
-  }
-  else return NULL;
-}
-
-ssize_t nxtnet_cli_send(nxtnet_cli_t *cli,int nxtid,const void *buf,size_t size) {
+ssize_t nxtnet_cli_send(nxtnet_cli_t *cli,int handle,const void *buf,size_t size) {
   struct nxtnet_proto_send_cs *send_cs = (struct nxtnet_proto_send_cs*)cli->buf->data;
 
   cli->buf->sig = NXTNET_PROTO_SIG;
@@ -215,7 +188,7 @@ ssize_t nxtnet_cli_send(nxtnet_cli_t *cli,int nxtid,const void *buf,size_t size)
   cli->buf->error = 0;
   strcpy(cli->buf->password,cli->password);
 
-  send_cs->nxtid = htonl(nxtid);
+  send_cs->handle = htonl(handle);
   send_cs->size = htonl(size);
   memcpy(send_cs->data,buf,size);
 
@@ -228,7 +201,7 @@ ssize_t nxtnet_cli_send(nxtnet_cli_t *cli,int nxtid,const void *buf,size_t size)
   else return -1;
 }
 
-ssize_t nxtnet_cli_recv(nxtnet_cli_t *cli,int nxtid,void *buf,size_t size) {
+ssize_t nxtnet_cli_recv(nxtnet_cli_t *cli,int handle,void *buf,size_t size) {
   struct nxtnet_proto_recv_cs *recv_cs = (struct nxtnet_proto_recv_cs*)cli->buf->data;
 
   cli->buf->sig = NXTNET_PROTO_SIG;
@@ -237,7 +210,7 @@ ssize_t nxtnet_cli_recv(nxtnet_cli_t *cli,int nxtid,void *buf,size_t size) {
   cli->buf->error = 0;
   strcpy(cli->buf->password,cli->password);
 
-  recv_cs->nxtid = htonl(nxtid);
+  recv_cs->handle = htonl(handle);
   recv_cs->size = htonl(size);
 
   nxtnet_send(cli->sock,cli->buf);
@@ -321,62 +294,35 @@ nxtnet_srv_t *nxtnet_srv_create(int port,const char *password,FILE *logfile,int 
   return srv;
 }
 
-static void packer_usb_func(int nxtid,char *name) {
-  size_t i = ntohl(packer_usb_buf->num_items);
-  packer_usb_buf->nxts[i].nxtid = htonl(nxtid);
-  strncpy(packer_usb_buf->nxts[i].name,name,NXTNET_NXTNAME_LEN);
-  packer_usb_buf->num_items = htonl(i+1);
-}
-
-static void packer_bt_func(int nxtid,char *name,void *bt_addr) {
-  size_t i = ntohl(packer_bt_buf->num_items);
-  packer_bt_buf->nxts[i].nxtid = htonl(nxtid);
-  strncpy(packer_bt_buf->nxts[i].name,name,NXTNET_NXTNAME_LEN);
-  memcpy(packer_bt_buf->nxts[i].bt_addr,bt_addr,6);
-  packer_bt_buf->num_items = htonl(i+1);
+static void packer_func(int handle, char *name, void *id, int is_bt) {
+  size_t i = ntohl(packer_buf->num_items);
+  packer_buf->nxts[i].handle = htonl(handle);
+  packer_buf->nxts[i].is_bt = is_bt;
+  strncpy(packer_buf->nxts[i].name,name,NXTNET_NXTNAME_LEN);
+  memcpy(packer_buf->nxts[i].id, id,6);
+  packer_buf->num_items = htonl(i+1);
 }
 
 /**
- * Lists USB devices
+ * Lists NXTs
  *  @param packet NXTNET packet
  */
-static void nxtnet_srv_listusb(nxtnet_srv_t *srv,struct nxtnet_proto_packet *packet) {
-  struct nxtnet_proto_listusb_sc *listusb = (struct nxtnet_proto_listusb_sc*)packet->data;
+static void nxtnet_srv_list(nxtnet_srv_t *srv, struct nxtnet_proto_packet *packet) {
+  struct nxtnet_proto_list_sc *list = (struct nxtnet_proto_list_sc*)packet->data;
 
-  nxtnet_srv_log(srv,"Listing NXTs that are connected via USB\n");
-  listusb->num_items = 0;
-  packer_usb_buf = listusb;
+  nxtnet_srv_log(srv,"Listing NXTs\n");
 
-  if (srv->ops.list_usb!=NULL) {
-    srv->ops.list_usb(packer_usb_func);
+  list->num_items = 0;
+  packer_buf = list;
+
+  if (srv->ops.list!=NULL) {
+    srv->ops.list(packer_func);
     packet->error = 0;
   }
   else packet->error = NXTNET_ERROR_NOTIMPL;
 
-  packet->cmd = NXTNET_PROTO_DIR_SC|NXTNET_PROTO_CMD_LISTUSB;
-  packet->size = sizeof(struct nxtnet_proto_packet)+sizeof(struct nxtnet_proto_listusb_sc)+ntohl(listusb->num_items)*sizeof(struct nxtnet_proto_listusb_nxts);
-}
-
-/**
- * Lists Bluetooth devices
- *  @param packet NXTNET packet
- */
-static void nxtnet_srv_listbt(nxtnet_srv_t *srv,struct nxtnet_proto_packet *packet) {
-  struct nxtnet_proto_listbt_sc *listbt = (struct nxtnet_proto_listbt_sc*)packet->data;
-
-  nxtnet_srv_log(srv,"Listing NXTs that are connected via Bluetooth\n");
-
-  listbt->num_items = 0;
-  packer_bt_buf = listbt;
-
-  if (srv->ops.list_bt!=NULL) {
-    srv->ops.list_bt(packer_bt_func);
-    packet->error = 0;
-  }
-  else packet->error = NXTNET_ERROR_NOTIMPL;
-
-  packet->cmd = NXTNET_PROTO_DIR_SC|NXTNET_PROTO_CMD_LISTBT;
-  packet->size = sizeof(struct nxtnet_proto_packet)+sizeof(struct nxtnet_proto_listbt_sc)+ntohl(listbt->num_items)*sizeof(struct nxtnet_proto_listbt_nxts);
+  packet->cmd = NXTNET_PROTO_DIR_SC|NXTNET_PROTO_CMD_LIST;
+  packet->size = sizeof(struct nxtnet_proto_packet)+sizeof(struct nxtnet_proto_list_sc)+ntohl(list->num_items)*sizeof(struct nxtnet_proto_list_nxts);
   packet->error = 0;
 }
 
@@ -384,17 +330,17 @@ static void nxtnet_srv_send(nxtnet_srv_t *srv,struct nxtnet_proto_packet *packet
   struct nxtnet_proto_send_cs *send_cs = (struct nxtnet_proto_send_cs*)packet->data;
   struct nxtnet_proto_send_sc *send_sc = (struct nxtnet_proto_send_sc*)packet->data;
   size_t size = ntohl(send_cs->size);
-  int nxtid = ntohl(send_cs->nxtid);
+  int handle = ntohl(send_cs->handle);
 
-  nxtnet_srv_log(srv,"Sending %u bytes to NXT %u: %02x %02x\n",size,nxtid,send_cs->data[0],send_cs->data[1]);
+  nxtnet_srv_log(srv,"Sending %u bytes to NXT %u: %02x %02x\n",size,handle,send_cs->data[0]&0xFF,send_cs->data[1]&0xFF);
 
   if (srv->ops.send!=NULL) {
-    size = srv->ops.send(nxtid,send_cs->data,size);
+    size = srv->ops.send(handle,send_cs->data,size);
     packet->error = 0;
   }
   else packet->error = NXTNET_ERROR_NOTIMPL;
 
-  send_sc->nxtid = htonl(nxtid);
+  send_sc->handle = htonl(handle);
   send_sc->size = htonl(size);
   packet->cmd = NXTNET_PROTO_DIR_SC|NXTNET_PROTO_CMD_SEND;
   packet->size = sizeof(struct nxtnet_proto_packet)+sizeof(struct nxtnet_proto_send_sc);
@@ -405,17 +351,17 @@ static void nxtnet_srv_recv(nxtnet_srv_t *srv,struct nxtnet_proto_packet *packet
   struct nxtnet_proto_recv_cs *recv_cs = (struct nxtnet_proto_recv_cs*)packet->data;
   struct nxtnet_proto_recv_sc *recv_sc = (struct nxtnet_proto_recv_sc*)packet->data;
   ssize_t size = ntohl(recv_cs->size);
-  int nxtid = ntohl(recv_cs->nxtid);
+  int handle = ntohl(recv_cs->handle);
 
-  nxtnet_srv_log(srv,"Receiving %u bytes from NXT %u\n",size,nxtid);
+  nxtnet_srv_log(srv,"Receiving %u bytes from NXT %u\n",size,handle);
 
   if (srv->ops.recv!=NULL) {
-    size = srv->ops.recv(nxtid,recv_sc->data,size);
+    size = srv->ops.recv(handle,recv_sc->data,size);
     packet->error = 0;
   }
   else packet->error = NXTNET_ERROR_NOTIMPL;
 
-  recv_sc->nxtid = htonl(nxtid);
+  recv_sc->handle = htonl(handle);
   recv_sc->size = htonl(size);
   packet->cmd = NXTNET_PROTO_DIR_SC|NXTNET_PROTO_CMD_SEND;
   packet->size = sizeof(struct nxtnet_proto_packet)+sizeof(struct nxtnet_proto_recv_sc)+(size>0?size:0);
@@ -468,12 +414,8 @@ int nxtnet_srv_mainloop(nxtnet_srv_t *srv) {
           }
           else {
             if (strcmp(packet->password,srv->password)==0) {
-              if (packet->cmd==NXTNET_PROTO_CMD_LISTUSB) {
-                nxtnet_srv_listusb(srv,packet);
-                nxtnet_send(i,packet);
-              }
-              else if (packet->cmd==NXTNET_PROTO_CMD_LISTBT) {
-                nxtnet_srv_listbt(srv,packet);
+              if (packet->cmd==NXTNET_PROTO_CMD_LIST) {
+                nxtnet_srv_list(srv,packet);
                 nxtnet_send(i,packet);
               }
               else if (packet->cmd==NXTNET_PROTO_CMD_SEND) {

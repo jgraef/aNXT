@@ -25,14 +25,14 @@
 
 #define NXT_US_REG_MEASUREMENT_DATA 0x42
 
-#define nxt_us_getversion(nxt,port)  nxt_i2c_get_version(nxt,port,nxt_us_i2c_addr)
-#define nxt_us_getvendorid(nxt,port) nxt_i2c_get_vendorid(nxt,port,nxt_us_i2c_addr)
-#define nxt_us_getdeviceid(nxt,port) nxt_i2c_get_deviceid(nxt,port,nxt_us_i2c_addr)
+#define nxt_us_get_version(nxt,port)  nxt_i2c_get_version(nxt,port,nxt_us_i2c_addr)
+#define nxt_us_get_vendorid(nxt,port) nxt_i2c_get_vendorid(nxt,port,nxt_us_i2c_addr)
+#define nxt_us_get_deviceid(nxt,port) nxt_i2c_get_deviceid(nxt,port,nxt_us_i2c_addr)
 #define nxt_us_cmd(nxt,port,cmd)     nxt_i2c_cmd(nxt,port,nxt_us_i2c_addr,cmd)
 
 int nxt_us_i2c_addr;
 
 int nxt_us_get_measdata(nxt_t *nxt,int port,size_t m1,size_t nm,int *mbuf);
-int nxt_us_getdist(nxt_t *nxt,int port);
+int nxt_us_get_dist(nxt_t *nxt,int port);
 
 #endif /* _NXT_I2C_US_H_ */

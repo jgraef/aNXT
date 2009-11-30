@@ -17,5 +17,8 @@ fi
 cat > /etc/udev/rules.d/40-nxt.rules << EOT
 # USB udev rules for Mindstorms NXT
 
+# NXT brick
 SYSFS{idVendor}=="0694", SYSFS{idProduct}=="0002", MODE="0660", OWNER="$NXTUSER", GROUP="users"
+# NXTCam
+SYSFS{idVendor}=="0403", SYSFS{idProduct}=="ABB8", MODE="0660", OWNER="$NXTUSER", GROUP="users"
 EOT

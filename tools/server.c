@@ -552,7 +552,7 @@ static void handle_commmands(char *command, char *fifo_out, char *fifo_err)
       int dist;
       nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
       usleep(60000);
-      dist = nxt_us_getdist(nxt,sensor);
+      dist = nxt_us_get_dist(nxt,sensor);
       if (reset)
         nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
       if (dist>=0) {

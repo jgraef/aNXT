@@ -27,6 +27,9 @@
 /// Max. number of NXTs
 #define NXTD_MAXNUM 256
 
+/// NXT ID (unique for ALL NXTs)
+typedef char nxtd_id_t[6];
+
 /// Enumeration of connection types
 typedef enum {
   /// Connection over Universal Serial Bus
@@ -36,11 +39,11 @@ typedef enum {
 } nxtd_conn_t;
 
 /// Descriptor for NXTs
-///  @todo Save serial number too and send it to client. So that nxt_open can
-///        be used with serial number too
 struct nxtd_nxt {
   /// The NXTs name
   char *name;
+  /// ID
+  nxtd_id_t id;
   /// How the NXT is connected
   nxtd_conn_t conn_type;
   /// UNIX timestamp when connection times out.

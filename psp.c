@@ -29,12 +29,11 @@ int nxt_psp_i2c_addr = 0x02;
  *  @param nxt NXT handle
  *  @param port Sensor port
  *  @return Controller mode
- *  @todo Doesn't work yet
  */
 int nxt_psp_get_mode(nxt_t *nxt,int port) {
   char mode;
 
-  if (nxt_i2c_regr(nxt,port,nxt_psp_i2c_addr,NXT_PSP_REG_MODE,1,&mode)==1) {
+  if (nxt_i2c_read(nxt,port,nxt_psp_i2c_addr,NXT_PSP_REG_MODE,1,&mode)==1) {
     return mode;
   }
   else {
@@ -50,10 +49,10 @@ int nxt_psp_get_mode(nxt_t *nxt,int port) {
  *  @return 0 = Success
  *         -1 = Failure
  */
-int nxt_psp_getbuttons(nxt_t *nxt,int port,struct nxt_psp_buttons *buttons) {
+int nxt_psp_get_buttons(nxt_t *nxt,int port,struct nxt_psp_buttons *buttons) {
   uint16_t buf;
 
-  int ret = nxt_i2c_regr(nxt,port,nxt_psp_i2c_addr,NXT_PSP_REG_BUTTONS,2,&buf);
+  int ret = nxt_i2c_read(nxt,port,nxt_psp_i2c_addr,NXT_PSP_REG_BUTTONS,2,&buf);
   if (ret==2) {
     buf = ~buf;
 
@@ -108,7 +107,7 @@ int nxt_psp_get_joystick(nxt_t *nxt,int port,int joy,struct nxt_psp_joystick *jb
     nj = 1;
   }
 
-  if (nxt_i2c_regr(nxt,port,nxt_psp_i2c_addr,NXT_PSP_REG_JOYSTICKS+j1*2,nj*2,buf)==nj*2) {
+  if (nxt_i2c_read(nxt,port,nxt_psp_i2c_addr,NXT_PSP_REG_JOYSTICKS+j1*2,nj*2,buf)==nj*2) {
     if (jbuf!=NULL) {
       for (i=0;i<nj;i++) {
         jbuf[i].x = (buf[i*2]&0xFF)-128;

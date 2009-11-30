@@ -43,9 +43,10 @@ void nxtd_usb_shutdown() {
 /**
  * Gets name of NXT device
  *  @param handle USB handle
+ *  @param id Reference for pointer to id
  *  @return Name of NXT
  */
-static char *nxtd_usb_getname(struct usb_dev_handle *handle) {
+static char *nxtd_usb_getname(struct usb_dev_handle *handle, char **id) {
   static char buffer[33];
   // send
   buffer[0] = 0x01;
@@ -54,8 +55,15 @@ static char *nxtd_usb_getname(struct usb_dev_handle *handle) {
 
   // receive
   usb_bulk_read(handle,NXT_USB_IN_ENDPOINT,buffer,33,NXT_USB_WAIT_TIMEOUT);
-  if (buffer[2]!=0) return NULL;
-  else return buffer+3;
+  if (buffer[2]!=0) {
+     return NULL;
+  }
+  else {
+    if (id!=NULL) {
+      *id = buffer+18;
+    }
+    return buffer+3;
+  }
 }
 
 /**
@@ -111,6 +119,7 @@ int nxtd_usb_scan() {
   struct usb_device *dev;
   struct usb_dev_handle *handle;
   struct nxtd_nxt_usb *nxt;
+  char *id;
 
   usb_find_busses();
   usb_find_devices();
@@ -119,9 +128,10 @@ int nxtd_usb_scan() {
       if (nxtd_usb_finddev(dev)==NULL && dev->descriptor.idVendor==NXT_USB_VENDORID && dev->descriptor.idProduct==NXT_USB_PRODUCTID) {
         handle = nxtd_usb_opendev(dev);
         if (handle!=NULL) {
-          char *name = nxtd_usb_getname(handle);
+          char *name = nxtd_usb_getname(handle, &id);
           if (name!=NULL) {
             nxt = malloc(sizeof(struct nxtd_nxt_usb));
+            memcpy(&nxt->nxt.id, id, sizeof(nxtd_id_t));
             nxt->nxt.name = strdup(name);
             nxt->nxt.conn_type = NXTD_USB;
             nxt->nxt.conn_timeout = 0;

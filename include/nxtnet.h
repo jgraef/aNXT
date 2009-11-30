@@ -48,14 +48,12 @@
 #define NXTNET_PROTO_DIR_MASK    0x80
 /// Packet command - Hello
 #define NXTNET_PROTO_CMD_HELLO   0x01
-/// Packet command - List USB NXTs
-#define NXTNET_PROTO_CMD_LISTUSB 0x02
-/// Packet command - List Bluetooth NXTs
-#define NXTNET_PROTO_CMD_LISTBT  0x03
+/// Packet command - List NXTs
+#define NXTNET_PROTO_CMD_LIST    0x02
 /// Packet command - Send data to NXT
-#define NXTNET_PROTO_CMD_SEND    0x04
+#define NXTNET_PROTO_CMD_SEND    0x03
 /// Packet command - Recv data from NXT
-#define NXTNET_PROTO_CMD_RECV    0x05
+#define NXTNET_PROTO_CMD_RECV    0x04
 
 /// Error - No error
 #define NXTNET_ERROR_NOERROR 0
@@ -65,8 +63,9 @@
 #define NXTNET_ERROR_NOTIMPL 2
 
 /// Default TCP port
-///  @todo Assign a correct port
-#define NXTNET_DEFAULT_PORT 13370
+///  @note Changed to a private/dynamic port.
+///  @todo Assign a correct port: http://www.iana.org/cgi-bin/usr-port-number.pl
+#define NXTNET_DEFAULT_PORT 51337
 
 /// Timeout in select() in seconds
 #define NXTNET_SELECT_TIMEOUT 10
@@ -87,44 +86,30 @@ struct nxtnet_proto_packet {
   char data[0];
 } __attribute__ ((packed));
 
-/// List item for LISTUSB's NXT list
-struct nxtnet_proto_listusb_nxts {
-  /// NXT's ID
-  uint32_t nxtid;
+/// List item for LIST's NXT list
+struct nxtnet_proto_list_nxts {
+  /// NXT's handle
+  uint32_t handle;
   /// NXT's name
   char name[NXTNET_NXTNAME_LEN];
+  /// NXT's ID/bluetooth address
+  uint8_t id[6];
+  /// If NXT is connected via BT
+  int is_bt;
 } __attribute__ ((packed)) ;
 
-/// Server to client data for LISTUSB command
-struct nxtnet_proto_listusb_sc {
+/// Server to client data for LIST command
+struct nxtnet_proto_list_sc {
   /// Number of items in 'nxts'
   uint32_t num_items;
   /// NXT list
-  struct nxtnet_proto_listusb_nxts nxts[0];
-} __attribute__ ((packed));
-
-/// List item for LISTBT's NXT list
-struct nxtnet_proto_listbt_nxts {
-  /// NXT's ID
-  uint32_t nxtid;
-  /// NXT's name
-  char name[NXTNET_NXTNAME_LEN];
-  /// NXT's bluetooth address
-  uint8_t bt_addr[6];
-} __attribute__ ((packed)) ;
-
-/// Server to client data for LISTBT command
-struct nxtnet_proto_listbt_sc {
-  /// Number of items in 'nxts'
-  uint32_t num_items;
-  /// NXT list
-  struct nxtnet_proto_listbt_nxts nxts[0];
+  struct nxtnet_proto_list_nxts nxts[0];
 } __attribute__ ((packed));
 
 /// Client to server data for SEND command
 struct nxtnet_proto_send_cs {
   /// NXT ID
-  uint32_t nxtid;
+  uint32_t handle;
   /// How many bytes to send
   uint32_t size;
   /// Data to send
@@ -134,7 +119,7 @@ struct nxtnet_proto_send_cs {
 /// Server to client data for SEND command
 struct nxtnet_proto_send_sc {
   /// NXT ID
-  uint32_t nxtid;
+  uint32_t handle;
   /// How many bytes sent
   uint32_t size;
 } __attribute__ ((packed));
@@ -142,7 +127,7 @@ struct nxtnet_proto_send_sc {
 /// Client to server data for RECV command
 struct nxtnet_proto_recv_cs {
   /// NXT ID
-  uint32_t nxtid;
+  uint32_t handle;
   /// How many bytes to receive
   uint32_t size;
 } __attribute__ ((packed));
@@ -150,7 +135,7 @@ struct nxtnet_proto_recv_cs {
 /// Server to client data for RECV command
 struct nxtnet_proto_recv_sc {
   /// NXT ID
-  uint32_t nxtid;
+  uint32_t handle;
   /// How many bytes received
   uint32_t size;
   /// Received data
@@ -176,31 +161,26 @@ typedef struct {
   /// Operations
   struct {
     /**
-     * Lists all USB NXTs
+     * Lists all NXTs
      *  @param packer Packer function. Call this to add NXT to list
      */
-    void (*list_usb)(void (*packer)(int nxtid,char *name));
-    /**
-     * Lists all Bluetooth NXTs
-     *  @param packer Packer function. Call this to add NXT to list
-     */
-    void (*list_bt)(void (*packer)(int nxtid,char *name,void *bt_addr));
+    void (*list)(void (*packer)(int handle, char *name, void *id, int is_bt));
     /**
      * Sends data to NXT
-     *  @param nxtid NXT ID
+     *  @param handle NXT handle
      *  @param buf Data to send
      *  @param size How many bytes to send
      *  @return How many bytes sent
      */
-    ssize_t (*send)(int nxtid,const void *buf,size_t size);
+    ssize_t (*send)(int handle,const void *buf,size_t size);
     /**
      * Receives data from NXT
-     *  @param nxtid NXT ID
+     *  @param handle NXT handle
      *  @param buf Buffer for received data
      *  @param size How many bytes to receive
      *  @return How many bytes received
      */
-    ssize_t (*recv)(int nxtid,void *buf,size_t size);
+    ssize_t (*recv)(int handle,void *buf,size_t size);
   } ops;
   /// Client sockets
   int clients[NXTNET_SRV_MAXSOCKS];
@@ -213,10 +193,9 @@ typedef struct {
 } nxtnet_srv_t;
 
 nxtnet_cli_t *nxtnet_cli_connect(const char *hostname,int port,const char *password);
-struct nxtnet_proto_listusb_sc *nxtnet_cli_listusb(nxtnet_cli_t *cli);
-struct nxtnet_proto_listbt_sc *nxtnet_cli_listbt(nxtnet_cli_t *cli);
-ssize_t nxtnet_cli_send(nxtnet_cli_t *cli,int nxtid,const void *buf,size_t size);
-ssize_t nxtnet_cli_recv(nxtnet_cli_t *cli,int nxtid,void *buf,size_t size);
+struct nxtnet_proto_list_sc *nxtnet_cli_list(nxtnet_cli_t *cli);
+ssize_t nxtnet_cli_send(nxtnet_cli_t *cli,int handle,const void *buf,size_t size);
+ssize_t nxtnet_cli_recv(nxtnet_cli_t *cli,int handle,void *buf,size_t size);
 void nxtnet_cli_disconnect(nxtnet_cli_t *cli);
 
 nxtnet_srv_t *nxtnet_srv_create(int port,const char *password,FILE *logfile,int local);

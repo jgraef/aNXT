@@ -22,7 +22,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <sndfile.h>
+#include <math.h>
+
+//#include <smf.h>
 
 #include "nxtfile/rmd.h"
 
@@ -56,13 +58,57 @@ static format_t recognize_format(char *file) {
   return NONE;
 }
 
+int mid_note2freq(int note_num) {
+  double n, f;
+
+  n = (double)note_num;
+  f = 440.*pow(2.,((n-69.)/12.));
+  return (int)f;
+}
+
 /// @todo Implement
-static int mid2rmd(FILE *mid,FILE *rmd,int verbose) {
+static int mid2rmd(FILE *mid, const char *mid_path, int verbose) {
+  /*smf_t *smf;
+  smf_event_t *event;
+  int freq;
+  int dur;
+  struct {
+    void *data;
+    size_t size;
+    size_t allocated;
+  } buf;
+
+  smf = smf_load(mid_path);
+  if (smf!=NULL) {
+    while ((event = smf_get_next_event(smf))!=NULL) {
+      if (smf_event_is_metadata(event)) {
+        continue;
+      }
+
+      if (event->time_seconds) {
+
+      }
+
+      switch (event->midi_buffer[0]&0xF0) {
+        case 0x80:
+          freq = mid_note2freq(event->midi_buffer[1]);
+          printf("Freq: 
+          break;
+        case 0x90:
+          freq = mid_note2freq(event->midi_buffer[1]);
+          break;
+    }
+
+    smf_delete(smf);
+
+    return 0;
+  }*/
+
   return -1;
 }
 
 /// @todo Implement
-static int rmd2mid(FILE *rmd,FILE *mid,int verbose) {
+static int rmd2mid(FILE *rmd, const char *mid_path, int verbose) {
   return -1;
 }
 
@@ -135,8 +181,8 @@ int main(int argc,char *argv[]) {
     perror("fopen");
     return 1;
   }
-  if (input_format==RMD) ret = rmd2mid(input_stream,output_stream,verbose);
-  else ret = mid2rmd(input_stream,output_stream,verbose);
+  if (input_format==RMD) ret = rmd2mid(input_stream,output,verbose);
+  else ret = mid2rmd(input_stream,output,verbose);
   fclose(input_stream);
   fclose(output_stream);
   free(output);

@@ -86,9 +86,9 @@ int main(int argc,char *argv[]) {
   }
 
   nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
-  usleep(60000);
+  nxt_wait_after_communication_command();
 
-  if (nxt_accel_getaccel(nxt,port,&accel)==-1) {
+  if (nxt_accel_get_accel(nxt,port,&accel)==-1) {
     fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
   }
   else {

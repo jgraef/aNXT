@@ -1,5 +1,5 @@
 /*
-    cam.c
+    nxtcam.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -21,157 +21,59 @@
 #include <nxt.h>
 #include <nxt_i2c/nxtcam.h>
 
-#include <stdlib.h>
-#include <string.h>
-
 /// I2C Address
 int nxt_cam_i2c_addr = 0x02;
 
-/**
- * Reads version
- *  @param nxt NXT handle
- *  @param port Sensor port
- *  @return Version string
- */
-char *nxt_cam_getversion(nxt_t *nxt,int port) {
-  static char buf[9] = {
-    0,
-    NXT_CAM_REG_VERSION,
-    0x03
-  };
-
-  buf[0] = nxt_cam_i2c_addr;
-  nxt_lsxchg(nxt,port,3,8,buf);
-
-  buf[8] = 0;
-  return buf;
-}
-
-/**
- * Reads product ID
- *  @param nxt NXT handle
- *  @param port Sensor port
- *  @return Product ID
- */
-char *nxt_cam_getproductid(nxt_t *nxt,int port) {
-  static char buf[9] = {
-    0,
-    NXT_CAM_REG_PRODUCTID,
-    0x03
-  };
-
-  buf[0] = nxt_cam_i2c_addr;
-  nxt_lsxchg(nxt,port,3,8,buf);
-
-  buf[8] = 0;
-  return buf;
-}
-
-/**
- * Reads sensor type
- *  @param nxt NXT handle
- *  @param port Sensor port
- *  @return Sensor Type
- */
-char *nxt_cam_getsensortype(nxt_t *nxt,int port) {
-  static char buf[9] = {
-    0,
-    NXT_CAM_REG_SENSORTYPE,
-    0x03
-  };
-
-  buf[0] = nxt_cam_i2c_addr;
-  nxt_lsxchg(nxt,port,3,8,buf);
-
-  buf[8] = 0;
-  return buf;
-}
-
-/**
- * Sends a command
- *  @param nxt NXT handle
- *  @param port Sensor port
- *  @param cmd Command
- */
-void nxt_cam_command(nxt_t *nxt,int port,int cmd) {
-  char buf[3] = {
-    nxt_cam_i2c_addr,
-    NXT_CAM_REG_COMMAND,
-    cmd
-  };
-
-  nxt_lswrite(nxt,port,3,0,buf);
-}
-
-/**
- * Returns number of objects camera can see
- *  @param nxt NXT handle
- *  @param port Sensor port
- *  @return Number of objects
- */
 int nxt_cam_num_objects(nxt_t *nxt,int port) {
-  char buf[3] = {
-    nxt_cam_i2c_addr,
-    NXT_CAM_REG_OBJCOUNT,
-    0x03
-  };
+  char buf;
 
-  nxt_lsxchg(nxt,port,3,1,buf);
-
-  return buf[0];
-}
-
-/**
- * Gets object data
- *  @param nxt NXT handle
- *  @param port Sensor port
- *  @param obj Object number
- *  @param object Reference for object data
- *  @return Success
- */
-int nxt_cam_getobject(nxt_t *nxt,int port,int obj,nxt_cam_object_t *object) {
-  char sbuf[3] = {
-    nxt_cam_i2c_addr,
-    NXT_CAM_REG_OBJDATA,
-    0x03
-  };
-  char buf[3];
-
-  if (!NXT_CAM_VALID_OBJ(obj)) {
-    return NXT_FAIL;
+  sleep(1);
+  if (nxt_i2c_read(nxt,port,nxt_cam_i2c_addr,NXT_CAM_REG_OBJCOUNT,1,&buf)==-1) {
+    return -1;
   }
 
-  object->id = obj;
-  sbuf[1] += obj*5;
+  return buf;
+}
 
-  // color
-  memcpy(buf,sbuf,3);
-  nxt_lsxchg(nxt,port,3,1,buf);
-  object->color = buf[0];
+int nxt_cam_get_objects(nxt_t *nxt,int port,size_t obj1,size_t nobj,nxt_cam_object_t *objbuf) {
+  char buf[40];
+  int i;
 
-  // ul_x
-  sbuf[1]++;
-  memcpy(buf,sbuf,3);
-  nxt_lsxchg(nxt,port,3,1,buf);
-  object->ul_x = buf[0];
+  if (obj1>7) {
+    return -1;
+  }
+  if (obj1+nobj>8) {
+    nobj = 8-obj1;
+  }
 
-  // ul_y
-  sbuf[1]++;
-  memcpy(buf,sbuf,3);
-  nxt_lsxchg(nxt,port,3,1,buf);
-  object->ul_y = buf[0];
+  if (nxt_i2c_read(nxt,port,nxt_cam_i2c_addr,NXT_CAM_REG_OBJDATA+obj1*5,nobj*5,buf)==-1) {
+    return -1;
+  }
 
-  // lr_x
-  sbuf[1]++;
-  memcpy(buf,sbuf,3);
-  nxt_lsxchg(nxt,port,3,1,buf);
-  object->lr_x = buf[0];
+  for (i=0;i<nobj;i++) {
+    objbuf[i].id = i;
+    objbuf[i].color = buf[i*5+0]&0xFF;
+    objbuf[i].x = buf[i*5+1]&0xFF;
+    objbuf[i].y = buf[i*5+2]&0xFF;
+    objbuf[i].x2 = buf[i*5+3]&0xFF;
+    objbuf[i].y2 = buf[i*5+4]&0xFF;
+    objbuf[i].w = objbuf[i].x2-objbuf[i].x;
+    objbuf[i].h = objbuf[i].y2-objbuf[i].y;
+  }
 
-  // lr_y
-  sbuf[1]++;
-  memcpy(buf,sbuf,3);
-  nxt_lsxchg(nxt,port,3,1,buf);
-  object->lr_y = buf[0];
+  return i;
+}
 
-  return NXT_SUCC;
+int nxt_cam_get_colormap(nxt_t *nxt,int port,nxt_cam_colormap_t *colormap) {
+  int i;
+
+  nxt_cam_cmd(nxt,port,NXT_CAM_CMD_COLORMAP_READ);
+
+  for (i=0;i<3;i++) {
+    if (nxt_i2c_read(nxt,port,nxt_cam_i2c_addr,NXT_CAM_REG_COLORMAP+i*0x10,0x10,((void*)colormap)+i*0x10)==-1) {
+      return -1;
+    }
+  }
+
+  return 0;
 }

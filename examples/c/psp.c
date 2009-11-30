@@ -87,16 +87,16 @@ int main(int argc,char *argv[]) {
     }
 
     // get joystick values
-    if (nxt_psp_get_joystick(nxt,sensor,NXT_PSP_JOY_LEFT|NXT_PSP_JOY_RIGHT,&joysticks)==-1) {
+    if (nxt_psp_get_joystick(nxt,sensor,NXT_PSP_JOY_LEFT|NXT_PSP_JOY_RIGHT,joysticks)==-1) {
       memset(joysticks,0,sizeof(joysticks));
     }
-    usleep(NXT_DIRECT_COMMAND_LATENCY);
+    nxt_wait_after_direct_command();
 
     // get button states
-    if (nxt_psp_getbuttons(nxt,sensor,&buttons)==-1) {
+    if (nxt_psp_get_buttons(nxt,sensor,&buttons)==-1) {
       memset(&buttons,0,sizeof(buttons));
     }
-    usleep(NXT_DIRECT_COMMAND_LATENCY);
+    nxt_wait_after_direct_command();
 
     // draw on screen
     SDL_BlitSurface(bgimg,NULL,screen,NULL);

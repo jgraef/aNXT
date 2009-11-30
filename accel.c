@@ -32,11 +32,11 @@ int nxt_accel_i2c_addr = 0x02;
  *  @param port Sensor port
  *  @return Sensity
  */
-float nxt_accel_getsensity(nxt_t *nxt,int port) {
+float nxt_accel_get_sensity(nxt_t *nxt,int port) {
   float t[] = {2.5, 3.3, 6.7, 10.0};
   char c;
 
-  nxt_i2c_regr(nxt,port,nxt_accel_i2c_addr,NXT_ACCEL_REG_SENSITY,1,&c);
+  nxt_i2c_read(nxt,port,nxt_accel_i2c_addr,NXT_ACCEL_REG_SENSITY,1,&c);
 
   if (c>='1' && c<='4') {
     return t[c-'1'];
@@ -54,7 +54,7 @@ float nxt_accel_getsensity(nxt_t *nxt,int port) {
  *  @return 0 = Success
  *         -1 = Failure
  */
-int nxt_accel_setsensity(nxt_t *nxt,int port,float sensity) {
+int nxt_accel_set_sensity(nxt_t *nxt,int port,float sensity) {
   char c;
 
   if (sensity==2.5) {
@@ -84,10 +84,10 @@ int nxt_accel_setsensity(nxt_t *nxt,int port,float sensity) {
  *  @return 0 = Success
  *         -1 = Failure
  */
-int nxt_accel_gettilt(nxt_t *nxt,int port,struct nxt_accel_vector *tilt) {
+int nxt_accel_get_tilt(nxt_t *nxt,int port,struct nxt_accel_vector *tilt) {
   char buf[3];
 
-  if (nxt_i2c_regr(nxt,port,nxt_accel_i2c_addr,NXT_ACCEL_REG_TILT,3,buf)!=3) {
+  if (nxt_i2c_read(nxt,port,nxt_accel_i2c_addr,NXT_ACCEL_REG_TILT,3,buf)!=3) {
     return -1;
   }
 
@@ -107,10 +107,10 @@ int nxt_accel_gettilt(nxt_t *nxt,int port,struct nxt_accel_vector *tilt) {
  *  @param accel Reference to vector for accel data
  *  @return Tilt data
  */
-int nxt_accel_getaccel(nxt_t *nxt,int port,struct nxt_accel_vector *accel) {
+int nxt_accel_get_accel(nxt_t *nxt,int port,struct nxt_accel_vector *accel) {
   int16_t buf[3];
 
-  if (nxt_i2c_regr(nxt,port,nxt_accel_i2c_addr,NXT_ACCEL_REG_ACCEL,6,buf)!=6) {
+  if (nxt_i2c_read(nxt,port,nxt_accel_i2c_addr,NXT_ACCEL_REG_ACCEL,6,buf)!=6) {
     return -1;
   }
 

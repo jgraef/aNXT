@@ -1,5 +1,5 @@
 /*
-    sensorus.c
+    sensoraccel.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -19,7 +19,7 @@
 */
 
 #include <nxt.h>
-#include <nxt_i2c/us.h>
+#include <nxt_i2c/nxtcam.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -28,7 +28,7 @@
 void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;
   fprintf(out,"Usage: %s [OPTION]...\n",cmd);
-  fprintf(out,"Get measurement from Ultrasonic sensor from NXT\n");
+  fprintf(out,"Get measurement from Acceletation sensor from NXT\n");
   fprintf(out,"Options:\n");
   fprintf(out,"\t-h         Show help\n");
   fprintf(out,"\t-n NXTNAME Name of NXT (Default: first found) or bluetooth address\n");
@@ -40,19 +40,20 @@ void usage(char *cmd,int r) {
 
 int main(int argc,char *argv[]) {
   char *name = NULL;
-  int c,newport;
-  int port = 3;
+  int c,i,n,newport;
+  int port = 0;
   int verbose = 0;
   int reset = 0;
-  int dist;
+  int mode = -1;
+  nxt_cam_object_t objects[8];
 
-  while ((c = getopt(argc,argv,":hn:s:vr"))!=-1) {
+  while ((c = getopt(argc,argv,":hn:s:vrs:ol"))!=-1) {
     switch(c) {
       case 'h':
         usage(argv[0],0);
         break;
       case 'n':
-        name = strdup(optarg);
+        name = optarg;
         break;
       case 'v':
         verbose = 1;
@@ -67,6 +68,12 @@ int main(int argc,char *argv[]) {
           fprintf(stderr,"Invalid sensor: %s\n",optarg);
           usage(argv[0],1);
         }
+        break;
+      case 'o':
+        mode = NXT_CAM_TRACKING_OBJECT;
+        break;
+      case 'l':
+        mode = NXT_CAM_TRACKING_LINE;
         break;
       case ':':
         fprintf(stderr,"Option -%c requires an operand\n",optopt);
@@ -88,27 +95,42 @@ int main(int argc,char *argv[]) {
   nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
   nxt_wait_after_communication_command();
 
-  dist = nxt_us_get_dist(nxt,port);
-  if (reset) {
-    nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
+  if (mode!=-1) {
+    nxt_cam_set_trackingmode(nxt,port,mode);
+    nxt_wait_after_communication_command();
   }
-  if (dist<0) {
+  nxt_cam_enable_tracking(nxt,port,1);
+
+  n = nxt_cam_num_objects(nxt,port);
+  if (n==-1) {
+    fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
+  }
+  else if (nxt_cam_get_objects(nxt,port,0,n,objects)==-1) {
     fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
   }
   else {
     if (verbose) {
-      printf("Sensor %d: ",port+1);
-    }
-    if (dist==0xFF) {
-      printf("?\n");
+      printf("Sensor %d:\n",port+1);
+      printf("Objects: %d\n",n);
+      for (i=0;i<n;i++) {
+        printf("pos = (%d, %d);\tsize = (%d, %d);\tcolor = %d\n", objects[i].x, objects[i].y, objects[i].w, objects[i].h,objects[i].color);
+      }
     }
     else {
-      printf("%d%s\n",dist,verbose?"cm":"");
+      printf("%d\n",n);
+      for (i=0;i<n;i++) {
+        printf("%d %d %d %d %d\n", objects[i].x, objects[i].y, objects[i].w, objects[i].h, objects[i].color);
+      }
     }
   }
 
+  if (reset) {
+    nxt_cam_enable_tracking(nxt,port,0);
+    nxt_wait_after_communication_command();
+    nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
+  }
+
   int ret = nxt_error(nxt);
-  if (name!=NULL) free(name);
   nxt_close(nxt);
 
   return ret;

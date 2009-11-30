@@ -47,20 +47,18 @@ void usage(char *cmd,int r) {
  */
 void nxtnet_scan(nxtnet_cli_t *cli) {
   size_t i;
+  struct nxtnet_proto_list_sc *list;
+  struct nxtnet_proto_list_nxts *nxt;
 
-  // Search USB
-  printf("  USB:\n");
-  struct nxtnet_proto_listusb_sc *listusb = nxtnet_cli_listusb(cli);
-  if (listusb!=NULL) {
-    for (i=0;i<listusb->num_items;i++) printf("    %s\t%d\n",listusb->nxts[i].name,listusb->nxts[i].nxtid);
-  }
-
-  // Search Bluetooth
-  printf("  Bluetooth:\n");
-  struct nxtnet_proto_listbt_sc *listbt = nxtnet_cli_listbt(cli);
-  if (listbt!=NULL) {
-    for (i=0;i<listbt->num_items;i++) {
-      printf("    %s\t%d\t%02x:%02x:%02x:%02x:%02x:%02x\n",listbt->nxts[i].name,listbt->nxts[i].nxtid,listbt->nxts[i].bt_addr[0],listbt->nxts[i].bt_addr[1],listbt->nxts[i].bt_addr[2],listbt->nxts[i].bt_addr[3],listbt->nxts[i].bt_addr[4],listbt->nxts[i].bt_addr[5]);
+  // list NXTs
+  list = nxtnet_cli_list(cli);
+  if (list!=NULL) {
+    for (i=0;i<list->num_items;i++) {
+      nxt = list->nxts+i;
+      printf("%d:\t%s\t%s\t%02X%02X%02X%02X%02X%02X\n",nxt->handle, nxt->name,
+                                                           nxt->is_bt?"Bluetooth":"USB",
+                                                           nxt->id[0],nxt->id[1],nxt->id[2],
+                                                           nxt->id[3],nxt->id[4],nxt->id[5]);
     }
   }
 }

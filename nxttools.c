@@ -35,7 +35,7 @@ typedef struct {
 
 void nxt_print_file(char *filename,size_t filesize,void *data) {
   nxt_list_file_data *list_data = data;
-  if (!list_data->show_hidden && *filename=='.') return;
+  if (!list_data->show_hidden && *filename=='!') return;
   fprintf(list_data->out,"%s",filename);
   if (list_data->show_filesizes) fprintf(list_data->out,"\t%d",filesize);
   putc('\n',list_data->out);
@@ -53,7 +53,6 @@ int nxt_list(nxt_t *nxt,char *wildcard,nxt_list_one_file_callback callback,void 
   if ((fh = nxt_findfirst(nxt,wild,&filename,&filesize))!=NXT_FAIL) {
     do {
       valid_fh = fh;
-      //printf("fh=%d\n",fh);
       callback(filename,filesize,data);
     }
     while ((fh = nxt_findnext(nxt,fh,&filename,&filesize))!=NXT_FAIL);

@@ -33,7 +33,7 @@ int nxt_us_get_measdata(nxt_t *nxt,int port,size_t m1,size_t nm,int *mbuf) {
     return -1;
   }
 
-  if (nxt_i2c_regr(nxt,port,nxt_us_i2c_addr,NXT_US_REG_MEASUREMENT_DATA+m1,nm,buf)==nm) {
+  if (nxt_i2c_read(nxt,port,nxt_us_i2c_addr,NXT_US_REG_MEASUREMENT_DATA+m1,nm,buf)==nm) {
     for (i=0;i<nm;i++) {
       mbuf[i] = buf[i];
     }
@@ -45,7 +45,7 @@ int nxt_us_get_measdata(nxt_t *nxt,int port,size_t m1,size_t nm,int *mbuf) {
   }
 }
 
-int nxt_us_getdist(nxt_t *nxt,int port) {
+int nxt_us_get_dist(nxt_t *nxt,int port) {
   int dist;
 
   if (nxt_us_get_measdata(nxt,port,0,1,&dist)==1) {

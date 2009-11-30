@@ -42,18 +42,20 @@
 #define NXT_PSP_BTN_R2       0x0200
 #define NXT_PSP_BTN_L2       0x0100
 
-#define NXT_PSP_CMD_SETANALOGMODE 0x73
+#define NXT_PSP_CMD_SETANALOG  NXT_PSP_MODE_ANALOG
+#define NXT_PSP_CMD_SETDIGITAL NXT_PSP_MODE_DIGITAL
+#define NXT_PSP_CMD_POWEROFF   0x44
+#define NXT_PSP_CMD_POWERON    0x45
 
 #define NXT_PSP_MODE_DIGITAL  0x41
-#define NXT_PSP_MODE_POWEROFF 0x44
-#define NXT_PSP_MODE_POWERON  0x45
+#define NXT_PSP_MODE_ANALOG   0x73
 
 #define NXT_PSP_JOY_LEFT  1
 #define NXT_PSP_JOY_RIGHT 2
 
-#define nxt_psp_getversion(nxt,port)  nxt_i2c_get_version(nxt,port,nxt_psp_i2c_addr)
-#define nxt_psp_getvendorid(nxt,port) nxt_i2c_get_vendorid(nxt,port,nxt_psp_i2c_addr)
-#define nxt_psp_getdeviceid(nxt,port) nxt_i2c_get_deviceid(nxt,port,nxt_psp_i2c_addr)
+#define nxt_psp_get_version(nxt,port)  nxt_i2c_get_version(nxt,port,nxt_psp_i2c_addr)
+#define nxt_psp_get_vendorid(nxt,port) nxt_i2c_get_vendorid(nxt,port,nxt_psp_i2c_addr)
+#define nxt_psp_get_deviceid(nxt,port) nxt_i2c_get_deviceid(nxt,port,nxt_psp_i2c_addr)
 #define nxt_psp_cmd(nxt,port,cmd)     nxt_i2c_cmd(nxt,port,nxt_psp_i2c_addr,cmd)
 
 struct nxt_psp_buttons {
@@ -70,8 +72,8 @@ struct nxt_psp_joystick {
 int nxt_psp_i2c_addr;
 
 int nxt_psp_command(nxt_t *nxt,int port,int cmd);
-int nxt_psp_getmode(nxt_t *nxt,int port);
-int nxt_psp_getbuttons(nxt_t *nxt,int port,struct nxt_psp_buttons *buttons);
+int nxt_psp_get_mode(nxt_t *nxt,int port);
+int nxt_psp_get_buttons(nxt_t *nxt,int port,struct nxt_psp_buttons *buttons);
 int nxt_psp_get_joystick(nxt_t *nxt,int port,int joy,struct nxt_psp_joystick *jbuf);
 
 #endif /* _NXT_I2C_PSP_H_ */

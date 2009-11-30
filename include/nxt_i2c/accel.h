@@ -45,9 +45,9 @@ struct nxt_accel_vector {
 
 int nxt_accel_i2c_addr;
 
-float nxt_accel_getsensity(nxt_t *nxt,int port);
-int nxt_accel_setsensity(nxt_t *nxt,int port,float sensity);
-int nxt_accel_gettilt(nxt_t *nxt,int port,struct nxt_accel_vector *tilt);
-int nxt_accel_getaccel(nxt_t *nxt,int port,struct nxt_accel_vector *accel);
+float nxt_accel_get_sensity(nxt_t *nxt,int port);
+int nxt_accel_set_sensity(nxt_t *nxt,int port,float sensity);
+int nxt_accel_get_tilt(nxt_t *nxt,int port,struct nxt_accel_vector *tilt);
+int nxt_accel_get_accel(nxt_t *nxt,int port,struct nxt_accel_vector *accel);
 
 #endif /* _NXT_I2C_ACCEL_H_ */ 

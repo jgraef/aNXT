@@ -133,6 +133,7 @@ int nxtd_bt_scan() {
         nxt = malloc(sizeof(struct nxtd_nxt_bt));
         memset(nxt,0,sizeof(struct nxtd_nxt_bt));
         nxt->nxt.name = strdup(bt_name);
+        memcpy(&nxt->nxt.id, &(ii+i)->bdaddr, sizeof(nxtd_id_t));
         nxt->nxt.conn_type = NXTD_BT;
         bacpy(&(nxt->bt_addr),&(ii+i)->bdaddr);
         nxtd_nxt_reg((struct nxtd_nxt*)nxt);

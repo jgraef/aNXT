@@ -192,6 +192,8 @@ typedef enum {
   NXT_CON_BT
 } nxt_contype_t;
 
+typedef char nxt_id_t[6];
+
 typedef struct {
   char *name;
   char *buffer;
@@ -199,7 +201,8 @@ typedef struct {
   int error;
   nxt_contype_t contype;
   nxtnet_cli_t *cli;
-  int nxtid;
+  int handle;
+  nxt_id_t id;
 } nxt_t;
 
 struct nxt_sensor_values {
@@ -253,12 +256,13 @@ int nxt_findnext(nxt_t *nxt,int handle,char **filename,size_t *filesize);
 int nxt_resetbt(nxt_t *nxt);
 ssize_t nxt_pollcmd(nxt_t *nxt,void **ptr,int buffer);
 int nxt_deluserflash(nxt_t *nxt);
-ssize_t nxt_lsstatus(nxt_t *nxt,int port);
-int nxt_lswrite(nxt_t *nxt,int port,size_t tx,size_t rx,void *data);
-ssize_t nxt_lsread(nxt_t *nxt,int port,size_t bufsize,void *buf);
-ssize_t nxt_i2c_regr(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *buf);
-ssize_t nxt_i2c_regw(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *buf);
+ssize_t nxt_ls_status(nxt_t *nxt,int port);
+int nxt_ls_write(nxt_t *nxt,int port,size_t tx,size_t rx,void *data);
+ssize_t nxt_ls_read(nxt_t *nxt,int port,size_t bufsize,void *buf);
+ssize_t nxt_i2c_read(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *buf);
+ssize_t nxt_i2c_write(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *buf);
 int nxt_i2c_cmd(nxt_t *nxt,int port,int addr,int cmd);
+int nxt_i2c_set_i2caddr(nxt_t *nxt, int port, int addr, int newaddr);
 const char *nxt_i2c_get_version(nxt_t *nxt,int port,int addr);
 const char *nxt_i2c_get_vendorid(nxt_t *nxt,int port,int addr);
 const char *nxt_i2c_get_deviceid(nxt_t *nxt,int port,int addr);

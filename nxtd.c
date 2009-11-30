@@ -52,6 +52,13 @@ static void logmsg(const char *fmt,...) {
   }
 }
 
+const char *nxtd_id2str(nxtd_id_t id) {
+  static char buf[13];
+
+  snprintf(buf,13,"%02X%02X%02X%02X%02X%02X\n",id[0]&0xFF,id[1]&0xFF,id[2]&0xFF,id[3]&0xFF,id[4]&0xFF,id[5]&0xFF);
+  return buf;
+}
+
 /**
  * Registers a NXT in NXT list
  *  @param nxt NXT
@@ -64,7 +71,7 @@ int nxtd_nxt_reg(struct nxtd_nxt *nxt) {
   for (i=0;i<NXTD_MAXNUM;i++) {
     if (nxts.list[i]==NULL) {
       nxts.list[i] = nxt;
-      logmsg("Added %s (%d;%s)\n",nxts.list[i]->name,i,nxts.list[i]->conn_type==NXTD_USB?"USB":"BT");
+      logmsg("Added %s (%d; %s; %s)\n",nxts.list[i]->name,i,nxtd_id2str(nxts.list[i]->id),nxts.list[i]->conn_type==NXTD_USB?"USB":"BT");
       pthread_mutex_unlock(&nxts.mutex);
       return 0;
     }
@@ -73,33 +80,12 @@ int nxtd_nxt_reg(struct nxtd_nxt *nxt) {
   return -1;
 }
 
-void nxtd_nxt_remove(int nxtid) {
-  if (nxts.list[nxtid]==NULL) return;
-  logmsg("Removing %s (%d;%s)\n",nxts.list[nxtid]->name,nxtid,nxts.list[nxtid]->conn_type==NXTD_USB?"USB":"BT");
-  if (nxts.list[nxtid]->conn_type==NXTD_USB) nxtd_usb_close((struct nxtd_nxt_usb*)nxts.list[nxtid]);
-  else if (nxts.list[nxtid]->conn_type==NXTD_BT) nxtd_bt_close((struct nxtd_nxt_bt*)nxts.list[nxtid]);
-  nxts.list[nxtid] = 0;
-}
-
-/**
- * Finds NXT in NXT list
- *  @param name NXT name
- *  @return NXT handle
- */
-struct nxtd_nxt *nxtd_nxt_find(const char *name,nxtd_conn_t conn_type) {
-  size_t i;
-
-  pthread_mutex_lock(&nxts.mutex);
-  for (i=0;i<NXTD_MAXNUM;i++) {
-    if (nxts.list[i]!=NULL) {
-      if (strcmp(nxts.list[i]->name,name)==0 && nxts.list[i]->conn_type==conn_type) {
-        pthread_mutex_unlock(&nxts.mutex);
-        return nxts.list[i];
-      }
-    }
-  }
-  pthread_mutex_unlock(&nxts.mutex);
-  return NULL;
+void nxtd_nxt_remove(int handle) {
+  if (nxts.list[handle]==NULL) return;
+  logmsg("Removing %s (%d;%s)\n", nxts.list[handle]->name, handle, nxts.list[handle]->conn_type==NXTD_USB?"USB":"BT");
+  if (nxts.list[handle]->conn_type==NXTD_USB) nxtd_usb_close((struct nxtd_nxt_usb*)nxts.list[handle]);
+  else if (nxts.list[handle]->conn_type==NXTD_BT) nxtd_bt_close((struct nxtd_nxt_bt*)nxts.list[handle]);
+  nxts.list[handle] = 0;
 }
 
 /**
@@ -131,6 +117,7 @@ static void *nxtd_scanner(void *x) {
     }
     pthread_mutex_unlock(&nxts.mutex);*/
 
+    usleep(1000);
     pthread_testcancel();
   }
 }
@@ -154,40 +141,20 @@ static int nxtd_keepalive(struct nxtd_nxt *nxt) {
 }
 
 /**
- * Lists all NXTs that are connected via USB
- *  @param packer Packer function
- */
-static void nxtd_listusb(void (*packer)(int nxtid,char *name)) {
-  size_t i;
-  if (!use_usb) return;
-  pthread_mutex_lock(&nxts.mutex);
-  for (i=0;i<NXTD_MAXNUM;i++) {
-    if (nxts.list[i]!=NULL) {
-      if (nxts.list[i]->conn_type==NXTD_USB) {
-        if (nxtd_keepalive(nxts.list[i])==0) packer(i,nxts.list[i]->name);
-        else nxtd_nxt_remove(i);
-      }
-    }
-  }
-  pthread_mutex_unlock(&nxts.mutex);
-}
-
-/**
  * Lists all NXTs that are connected via BT
  *  @param packer Packer function
  */
-static void nxtd_listbt(void (*packer)(int nxtid,char *name,void *bt_addr)) {
+static void nxtd_list(void (*packer)(int handle, char *name, void *id, int is_bt)) {
   size_t i;
-  if (!use_bt) return;
+
   pthread_mutex_lock(&nxts.mutex);
   for (i=0;i<NXTD_MAXNUM;i++) {
     if (nxts.list[i]!=NULL) {
-      if (nxts.list[i]->conn_type==NXTD_BT) {
-        if (nxtd_keepalive(nxts.list[i])==0) {
-          struct nxtd_nxt_bt *nxt = (struct nxtd_nxt_bt*)nxts.list[i];
-          packer(i,nxt->nxt.name,&(nxt->bt_addr));
-        }
-        else nxtd_nxt_remove(i);
+      if (nxtd_keepalive(nxts.list[i])==0) {
+        packer(i, nxts.list[i]->name, nxts.list[i]->id, nxts.list[i]->conn_type==NXTD_BT);
+      }
+      else {
+        nxtd_nxt_remove(i);
       }
     }
   }
@@ -196,39 +163,39 @@ static void nxtd_listbt(void (*packer)(int nxtid,char *name,void *bt_addr)) {
 
 /**
  * Sends data to NXT
- *  @param nxtid NXT ID
+ *  @param handle NXT handle
  *  @param buf Buffer
  *  @param size How many bytes to send
  *  @return How many bytes sent
  */
-static ssize_t nxtd_send(int nxtid,const void *buf,size_t size) {
+static ssize_t nxtd_send(int handle,const void *buf,size_t size) {
   ssize_t ret = -1;
   pthread_mutex_lock(&nxts.mutex);
-  if (nxts.list[nxtid]!=NULL) {
-    if (nxts.list[nxtid]->conn_type==NXTD_USB) ret = nxtd_usb_send((struct nxtd_nxt_usb*)nxts.list[nxtid],buf,size);
-    else if (nxts.list[nxtid]->conn_type==NXTD_BT) ret = nxtd_bt_send((struct nxtd_nxt_bt*)nxts.list[nxtid],buf,size);
+  if (nxts.list[handle]!=NULL) {
+    if (nxts.list[handle]->conn_type==NXTD_USB) ret = nxtd_usb_send((struct nxtd_nxt_usb*)nxts.list[handle],buf,size);
+    else if (nxts.list[handle]->conn_type==NXTD_BT) ret = nxtd_bt_send((struct nxtd_nxt_bt*)nxts.list[handle],buf,size);
   }
   pthread_mutex_unlock(&nxts.mutex);
-  if (ret!=size) nxtd_nxt_remove(nxtid);
+  if (ret!=size) nxtd_nxt_remove(handle);
   return ret;
 }
 
 /**
  * Receives data from NXT
- *  @param nxtid NXT ID
+ *  @param handle NXT ID
  *  @param buf Buffer
  *  @param size How many bytes to receive
  *  @return How many bytes received
  */
-static ssize_t nxtd_recv(int nxtid,void *buf,size_t size) {
+static ssize_t nxtd_recv(int handle,void *buf,size_t size) {
   ssize_t ret = 0;
   pthread_mutex_lock(&nxts.mutex);
-  if (nxts.list[nxtid]!=NULL) {
-    if (nxts.list[nxtid]->conn_type==NXTD_USB) ret = nxtd_usb_recv((struct nxtd_nxt_usb*)nxts.list[nxtid],buf,size);
-    else if (nxts.list[nxtid]->conn_type==NXTD_BT) ret = nxtd_bt_recv((struct nxtd_nxt_bt*)nxts.list[nxtid],buf,size);
+  if (nxts.list[handle]!=NULL) {
+    if (nxts.list[handle]->conn_type==NXTD_USB) ret = nxtd_usb_recv((struct nxtd_nxt_usb*)nxts.list[handle],buf,size);
+    else if (nxts.list[handle]->conn_type==NXTD_BT) ret = nxtd_bt_recv((struct nxtd_nxt_bt*)nxts.list[handle],buf,size);
   }
   pthread_mutex_unlock(&nxts.mutex);
-  if (ret!=size) nxtd_nxt_remove(nxtid);
+  if (ret!=size) nxtd_nxt_remove(handle);
   return ret;
 }
 
@@ -379,14 +346,15 @@ int main(int argc,char *argv[]) {
   }
 
   // daemonize
-  if (run_as_daemon) daemon(0,0);
+  if (run_as_daemon) {
+    daemon(0,0);
+  }
 
   // Spawn thread for scanning
   pthread_create(&scanner_tid,NULL,nxtd_scanner,NULL);
 
   // Start server
-  server->ops.list_usb = nxtd_listusb;
-  server->ops.list_bt = nxtd_listbt;
+  server->ops.list = nxtd_list;
   server->ops.recv = nxtd_recv;
   server->ops.send = nxtd_send;
   nxtnet_srv_mainloop(server);

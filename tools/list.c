@@ -34,7 +34,7 @@ void usage(char *cmd,int r) {
   fprintf(out,"\t-h          Show help\n");
   fprintf(out,"\t-n NXTNAME  Name of NXT (Default: first found) or bluetooth address\n");
   fprintf(out,"\t-s          Show filesizes\n");
-  fprintf(out,"\t-a          Show all files (also files starting with a .)\n");
+  fprintf(out,"\t-a          Show all files (also files starting with a '!')\n");
   exit(r);
 }
 

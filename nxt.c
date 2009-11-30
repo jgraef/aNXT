@@ -30,14 +30,14 @@
 
 #include "nxt.h"
 
-#define test(func)             { if ((func)==NXT_FAIL) return NXT_FAIL; }
+#define test(func)             do { if ((func)==NXT_FAIL) return NXT_FAIL; } while (0)
 
-#define set_word(buf,word)     { ((unsigned char*)(buf))[0] = ((uint16_t)(word))%0x100; ((unsigned char*)(buf))[1] = ((uint16_t)(word))/0x100; }
-#define set_dword(buf,dword)   { set_word((buf),((uint32_t)(dword))%0x10000); set_word((buf)+2,((uint32_t)(dword))/0x10000); }
+#define set_word(buf,word)     do { ((unsigned char*)(buf))[0] = ((uint16_t)(word))%0x100; ((unsigned char*)(buf))[1] = ((uint16_t)(word))/0x100; } while (0)
+#define set_dword(buf,dword)   do { set_word((buf),((uint32_t)(dword))%0x10000); set_word((buf)+2,((uint32_t)(dword))/0x10000); } while (0)
 #define get_word(buf)          (((uint16_t)(((unsigned char*)(buf))[0]))+((unsigned char*)(buf))[1]*0x100)
 #define get_dword(buf)         (((uint32_t)get_word(buf))+get_word(buf+2)*0x10000)
 
-#define FLAGSET(val,flag) (((val)&(flag))==(flag))
+#define FLAG_ISSET(val,flag) (((val)&(flag))==(flag))
 
 /// Packet type
 typedef enum {
@@ -66,7 +66,7 @@ typedef enum {
  *  @return How many bytes sent
  */
 static __inline__ ssize_t nxt_con_send(nxt_t *nxt) {
-  ssize_t ret = nxtnet_cli_send(nxt->cli,nxt->nxtid,nxt->buffer,nxt->ptr-nxt->buffer);
+  ssize_t ret = nxtnet_cli_send(nxt->cli, nxt->handle, nxt->buffer, nxt->ptr-nxt->buffer);
   if (ret==-1) nxt->error = NXT_ERR_CONNECTION;
   return ret;
 }
@@ -78,7 +78,7 @@ static __inline__ ssize_t nxt_con_send(nxt_t *nxt) {
  *  @return How many bytes received
  */
 static __inline__ ssize_t nxt_con_recv(nxt_t *nxt,size_t size) {
-  ssize_t ret = nxtnet_cli_recv(nxt->cli,nxt->nxtid,nxt->buffer,size);
+  ssize_t ret = nxtnet_cli_recv(nxt->cli, nxt->handle, nxt->buffer, size);
   if (ret==-1) nxt->error = NXT_ERR_CONNECTION;
   return ret;
 }
@@ -177,7 +177,7 @@ void nxt_wait_extra_long_after_communication_command(void)
 
 /**
  * Opens a NXT
- *  @param name Name of NXT
+ *  @param name Name, Bluetooth address or ID of NXT
  *  @return NXT handle
  *  @note You can pass a NULL pointer as name if you wish to use the first NXT found
  */
@@ -185,6 +185,7 @@ nxt_t *nxt_open_net(const char *name,const char *hostname,int port,const char *p
   size_t i,num_nxts;
   nxtnet_cli_t *cli;
   nxt_t *nxt;
+  nxt_id_t id;
 
   // Connect to nxtd
   cli = nxtnet_cli_connect(hostname,port,password);
@@ -193,41 +194,30 @@ nxt_t *nxt_open_net(const char *name,const char *hostname,int port,const char *p
     return NULL;
   }
 
-  // Search USB
-  struct nxtnet_proto_listusb_sc *listusb = nxtnet_cli_listusb(cli);
-  if (listusb!=NULL) {
-    for (i=0;i<listusb->num_items;i++) {
-      if (name==NULL || strcmp(name,listusb->nxts[i].name)==0) {
+  // Convert name to bluetooth address or ID (if possible)
+  if (name==NULL ||
+     (sscanf(name,"%02x:%02x:%02x:%02x:%02x:%02x",&id[0],&id[1],&id[2],&id[3],&id[4],&id[5])!=6
+   && sscanf(name,"%02x%02x%02x%02x%02x%02x",&id[0],&id[1],&id[2],&id[3],&id[4],&id[5])!=6)) {
+    memset(id,0,6);
+  }
+
+  // List NXTs
+  struct nxtnet_proto_list_sc *list = nxtnet_cli_list(cli);
+  if (list!=NULL) {
+    for (i=0;i<list->num_items;i++) {
+      if (name==NULL || strcmp(name,list->nxts[i].name)==0 || memcmp(id, list->nxts[i].id, 6)==0) {
         nxt = malloc(sizeof(nxt_t));
         nxt->cli = cli;
-        nxt->name = strdup(listusb->nxts[i].name);
+        nxt->name = strdup(list->nxts[i].name);
         nxt->buffer = malloc(NXT_CON_BUFFERSIZE);
         nxt->error = 0;
-        nxt->contype = NXT_CON_USB;
-        nxt->nxtid = listusb->nxts[i].nxtid;
+        nxt->contype = list->nxts[i].is_bt?NXT_CON_BT:NXT_CON_USB;
+        nxt->handle = list->nxts[i].handle;
+        memcpy(nxt->id, list->nxts[i].id, 6);
         return nxt;
       }
     }
   }
-
-  // Search Bluetooth
-
-  struct nxtnet_proto_listbt_sc *listbt = nxtnet_cli_listbt(cli);
-  if (listbt!=NULL) {
-    for (i=0;i<listbt->num_items;i++) {
-      if (name==NULL || strcmp(name,listbt->nxts[i].name)==0) {
-        nxt = malloc(sizeof(nxt_t));
-        nxt->cli = cli;
-        nxt->name = strdup(listbt->nxts[i].name);
-        nxt->buffer = malloc(NXT_CON_BUFFERSIZE);
-        nxt->error = 0;
-        nxt->contype = NXT_CON_BT;
-        nxt->nxtid = listbt->nxts[i].nxtid;
-        return nxt;
-      }
-    }
-  }
-
 
   nxtnet_cli_disconnect(cli);
 
@@ -434,16 +424,16 @@ int nxt_file_open(nxt_t *nxt,const char *file,int oflag,...) {
 
   va_start(args,oflag);
 
-  if (FLAGSET(oflag,NXT_OREAD)) handle = nxt_file_open_read(nxt,file,va_arg(args,size_t*));
-  else if (FLAGSET(oflag,NXT_OAPPND)) handle = nxt_file_open_append(nxt,file,va_arg(args,size_t*));
+  if (FLAG_ISSET(oflag,NXT_OREAD)) handle = nxt_file_open_read(nxt,file,va_arg(args,size_t*));
+  else if (FLAG_ISSET(oflag,NXT_OAPPND)) handle = nxt_file_open_append(nxt,file,va_arg(args,size_t*));
   else {
-    if (FLAGSET(oflag,NXT_OWOVER) && (handle = nxt_findfirst(nxt,file,NULL,NULL))>=0) {
+    if (FLAG_ISSET(oflag,NXT_OWOVER) && (handle = nxt_findfirst(nxt,file,NULL,NULL))>=0) {
       nxt_file_close(nxt,handle);
       nxt_file_remove(nxt,file);
       handle = -1;
     }
-    if (FLAGSET(oflag,NXT_OWLINE)) handle = nxt_file_open_write_linear(nxt,file,va_arg(args,size_t));
-    else if (FLAGSET(oflag,NXT_OWFRAG)) handle = nxt_file_open_write(nxt,file,va_arg(args,size_t));
+    if (FLAG_ISSET(oflag,NXT_OWLINE)) handle = nxt_file_open_write_linear(nxt,file,va_arg(args,size_t));
+    else if (FLAG_ISSET(oflag,NXT_OWFRAG)) handle = nxt_file_open_write(nxt,file,va_arg(args,size_t));
   }
 
   va_end(args);
@@ -1117,7 +1107,7 @@ int nxt_deluserflash(nxt_t *nxt) {
  *  @param port Sensor port
  *  @return Bytes ready
  */
-ssize_t nxt_lsstatus(nxt_t *nxt,int port) {
+ssize_t nxt_ls_status(nxt_t *nxt,int port) {
   if (!VALID_SENSOR(port)) return NXT_FAIL;
   nxt_packstart(nxt,0x0E);
   nxt_packbyte(nxt,port);
@@ -1136,7 +1126,7 @@ ssize_t nxt_lsstatus(nxt_t *nxt,int port) {
  *  @param data Data to send
  *  @return Success
  */
-int nxt_lswrite(nxt_t *nxt,int port,size_t tx,size_t rx,void *data) {
+int nxt_ls_write(nxt_t *nxt,int port,size_t tx,size_t rx,void *data) {
   if (!VALID_SENSOR(port)) return NXT_FAIL;
   if (tx>16 || rx>16) return NXT_FAIL;
   nxt_packstart(nxt,0x0F);
@@ -1158,7 +1148,7 @@ int nxt_lswrite(nxt_t *nxt,int port,size_t tx,size_t rx,void *data) {
  *  @param buf Buffer for received data
  *  @return How many bytes read
  */
-ssize_t nxt_lsread(nxt_t *nxt,int port,size_t bufsize,void *buf) {
+ssize_t nxt_ls_read(nxt_t *nxt,int port,size_t bufsize,void *buf) {
   if (!VALID_SENSOR(port)) return NXT_FAIL;
   if (buf==NULL) return NXT_FAIL;
   nxt_packstart(nxt,0x10);
@@ -1176,6 +1166,42 @@ ssize_t nxt_lsread(nxt_t *nxt,int port,size_t bufsize,void *buf) {
 }
 
 /**
+ * Read I2C register (lowlevel)
+ *  @param nxt NXT handle
+ *  @param port Sensor port
+ *  @param addr I2C address
+ *  @param reg1 First register
+ *  @param nreg Number of registers (max 16)
+ *  @param buf Buffer for read data
+ *  @return How many bytes read
+ */
+static ssize_t nxt_i2c_read_low(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *buf) {
+  time_t timeout;
+  char cmd[3] = {
+    addr,
+    reg1
+  };
+
+  // NOTE Don't know why it works with 15 bytes at max. From spec. it should work with 16 bytes.
+  if (nreg>15) {
+    nreg = 15;
+  }
+
+  nxt_ls_write(nxt,port,2,nreg,cmd);
+
+  // wait for data
+  timeout = time(NULL)+2;
+  while (nxt_ls_status(nxt,port)<((ssize_t)nreg) && time(NULL)<timeout);
+
+  if (nxt_ls_read(nxt,port,nreg,buf)==-1) {
+    return -1;
+  }
+  else {
+    return nreg;
+  }
+}
+
+/**
  * Read I2C register
  *  @param nxt NXT handle
  *  @param port Sensor port
@@ -1185,24 +1211,53 @@ ssize_t nxt_lsread(nxt_t *nxt,int port,size_t bufsize,void *buf) {
  *  @param buf Buffer for read data
  *  @return How many bytes read
  */
-ssize_t nxt_i2c_regr(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *buf) {
-  time_t timeout;
-  char cmd[3] = {
+ssize_t nxt_i2c_read(nxt_t *nxt, int port, int addr, size_t reg1, size_t nreg, void *buf) {
+  size_t n, c;
+
+  n = nreg;
+
+  while (n>0) {
+    c = nxt_i2c_read_low(nxt, port, addr, reg1, n, buf);
+
+    if (c==-1) {
+      return -1;
+    }
+
+    n -= c;
+    reg1 += c;
+    buf += c;
+  }
+
+  return 0;
+}
+
+/**
+ * Write I2C register (lowlevel)
+ *  @param nxt NXT handle
+ *  @param port Sensor port
+ *  @param addr I2C address
+ *  @param reg1 First register
+ *  @param nreg Number of registers (max 14)
+ *  @param buf Data to write to registers
+ *  @return How many bytes written
+ */
+static ssize_t nxt_i2c_write_low(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *buf) {
+  char cmd[16] = {
     addr,
     reg1
   };
 
-  if (nreg>16) {
-    nreg = 16;
+  if (nreg>14) {
+    nreg = 14;
   }
 
-  nxt_lswrite(nxt,port,2,nreg,cmd);
-
-  // wait for data
-  timeout = time(NULL)+2;
-  while (nxt_lsstatus(nxt,port)<((ssize_t)nreg) && time(NULL)<timeout);
-
-  return nxt_lsread(nxt,port,nreg,buf);
+  memcpy(cmd+2,buf,nreg);
+  if (nxt_ls_write(nxt,port,nreg+2,0,cmd)==-1) {
+    return -1;
+  }
+  else {
+    return nreg;
+  }
 }
 
 /**
@@ -1215,18 +1270,34 @@ ssize_t nxt_i2c_regr(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *
  *  @param buf Data to write to registers
  *  @return How many bytes written
  */
-ssize_t nxt_i2c_regw(nxt_t *nxt,int port,int addr,size_t reg1,size_t nreg,void *buf) {
-  char cmd[16] = {
-    addr,
-    reg1
-  };
+ssize_t nxt_i2c_write(nxt_t *nxt, int port, int addr, size_t reg1, size_t nreg, void *buf) {
+  size_t n, c;
 
-  if (nreg>14) {
-    nreg = 14;
+  n = nreg;
+
+  while (n>0) {
+    c = nxt_i2c_write_low(nxt, port, addr, reg1, n, buf);
+    if (c==-1) {
+      return -1;
+    }
+
+    /*printf("~ n    = 0x%X\n", n);
+    printf("~ reg1 = 0x%X\n", reg1);
+    printf("~ nreg = 0x%X\n", nreg);
+    printf("~ c    = 0x%X\n", c);
+    printf("~ buf  = { ");
+    int i;
+    for (i=0;i<c;i++) {
+      printf("%02X ", ((char*)buf)[i]&0xff);
+    }
+//     printf("}\n\n");*/
+
+    n -= c;
+    reg1 += c;
+    buf += c;
   }
 
-  memcpy(cmd+2,buf,nreg);
-  return nxt_lswrite(nxt,port,nreg+2,0,cmd);
+  return 0;
 }
 
 /**
@@ -1243,7 +1314,29 @@ int nxt_i2c_cmd(nxt_t *nxt,int port,int addr,int cmd) {
     cmd
   };
 
-  return nxt_lswrite(nxt,port,3,0,buf)==3?0:-1;
+  return nxt_ls_write(nxt,port,3,0,buf);
+}
+
+/**
+ * Changes I2C address
+ *  @param nxt NXT handle
+ *  @param port Sensor port
+ *  @param addr I2C address
+ *  @param newaddr New I2C address
+ *  @note Only changes hardware I2C address.
+ */
+int nxt_i2c_set_i2caddr(nxt_t *nxt, int port, int addr, int newaddr) {
+  char buf[] = { 0xA0, 0xAA, 0xA5, newaddr };
+  int i;
+
+  for (i=0;i<4;i++) {
+    if (nxt_i2c_cmd(nxt, port, addr, buf[i])==-1) {
+      return -1;
+    }
+    usleep(NXT_COMMUNICATION_COMMAND_LATENCY);
+  }
+
+  return 0;
 }
 
 /**
@@ -1256,7 +1349,7 @@ int nxt_i2c_cmd(nxt_t *nxt,int port,int addr,int cmd) {
 const char *nxt_i2c_get_version(nxt_t *nxt,int port,int addr) {
   static char buf[9];
 
-  if (nxt_i2c_regr(nxt,port,addr,NXT_I2C_REG_VERSION,8,buf)==8) {
+  if (nxt_i2c_read(nxt,port,addr,NXT_I2C_REG_VERSION,8,buf)==8) {
     buf[8] = 0;
     return buf;
   }
@@ -1275,7 +1368,7 @@ const char *nxt_i2c_get_version(nxt_t *nxt,int port,int addr) {
 const char *nxt_i2c_get_vendorid(nxt_t *nxt,int port,int addr) {
   static char buf[9];
 
-  if (nxt_i2c_regr(nxt,port,addr,NXT_I2C_REG_VENDORID,8,buf)==8) {
+  if (nxt_i2c_read(nxt,port,addr,NXT_I2C_REG_VENDORID,8,buf)==8) {
     buf[8] = 0;
     return buf;
   }
@@ -1294,7 +1387,7 @@ const char *nxt_i2c_get_vendorid(nxt_t *nxt,int port,int addr) {
 const char *nxt_i2c_get_deviceid(nxt_t *nxt,int port,int addr) {
   static char buf[9];
 
-  if (nxt_i2c_regr(nxt,port,addr,NXT_I2C_REG_DEVICEID,8,buf)==8) {
+  if (nxt_i2c_read(nxt,port,addr,NXT_I2C_REG_DEVICEID,8,buf)==8) {
     buf[8] = 0;
     return buf;
   }
