@@ -1,5 +1,5 @@
 /*
-    up_run.c
+    tools/up_run.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -24,14 +24,16 @@
   nxt_stop 2>/dev/null; nxt_remove $1 2>/dev/null; nxt_upload $1 && nxt_run $1
 */
 
-#include <nxt.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <libgen.h>
 #include <errno.h>
-#include <nxttools.h>
+
+#include <anxt/nxt.h>
+#include <anxt/file.h>
+#include <anxt/tools.h>
 
 void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;

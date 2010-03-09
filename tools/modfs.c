@@ -1,5 +1,5 @@
 /*
-    modfs.c
+    tools/modfs.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -34,7 +34,8 @@
 #include <fuse.h>
 #include <fuse_opt.h>
 
-#include <nxt.h>
+#include <anxt/nxt.h>
+#include <anxt/mod.h>
 
 typedef struct {
   char *name;

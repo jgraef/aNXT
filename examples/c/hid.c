@@ -18,10 +18,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nxt.h>
-#include <nxt_i2c/hid.h>
 #include <unistd.h>
 #include <stdio.h>
+
+#include <anxt/nxt.h>
+#include <anxt/i2c/hid.h>
 
 int main(int argc,char *argv[]) {
   int sensor = NXT_SENSOR1; // Sensor port at which the light sensor is connected

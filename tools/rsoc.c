@@ -1,5 +1,5 @@
 /*
-    rso.c
+    tools/rsoc.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -25,7 +25,7 @@
 #include <string.h>
 #include <sndfile.h>
 
-#include "nxtfile/ric.h"
+#include <anxt/file/rso.h>
 
 typedef enum {
   NONE,
@@ -124,7 +124,7 @@ static int rso2wav(FILE *rso,FILE *wav,int verbose) {
   // Extract wave data
   uint8_t *samples = NULL;
   unsigned int samplerate;
-  size = rso_decode(&samples,rso_data,&samplerate);
+  size = rso_decode((void**)&samples,rso_data,&samplerate);
 
   if (verbose) printf("Samplerate:    %d\n",samplerate);
 

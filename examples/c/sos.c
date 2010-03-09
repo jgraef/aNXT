@@ -18,9 +18,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nxt.h>
 #include <unistd.h>
 #include <stdio.h>
+
+#include <anxt/nxt.h>
 
 #define FREQ      1000
 #define PAUSE     200

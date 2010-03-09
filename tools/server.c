@@ -1,5 +1,5 @@
 /*
-    server.c
+    tools/server.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -28,9 +28,6 @@
    or the own processid)
 */
 
-#include <nxt.h>
-#include <nxt_i2c/us.h>
-#include <nxttools.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <ctype.h>
@@ -39,6 +36,12 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <gd.h>
+
+#include <anxt/nxt.h>
+#include <anxt/mod.h>
+#include <anxt/file.h>
+#include <anxt/tools.h>
+#include <anxt/i2c/us.h>
 
 static nxt_t *nxt;
 static FILE *out = NULL;

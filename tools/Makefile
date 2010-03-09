@@ -48,30 +48,31 @@ TOOLS = ../bin/nxt_info \
 	../bin/nxt_joystick \
 	../bin/nxt_joystick_travel \
 	../bin/nxt_graphic_test \
-	../bin/nxt_echo
+	../bin/nxt_echo \
+	../bin/nxt_lsi2c
 
 all: $(TOOLS)
 
 ../lib/libanxt.a:
 	make -C .. lib/libanxt.a
 
-../lib/libanxttools.a:
-	make -C .. lib/libanxttools.a
+../lib/libanxt_tools.a:
+	make -C .. lib/libanxt_tools.a
 
-../lib/libanxtfile.a:
-	make -C .. lib/libanxtfile.a
+../lib/libanxt_file.a:
+	make -C .. lib/libanxt_file.a
 
 ../bin/nxt_info: info.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_list: list.c ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
+../bin/nxt_list: list.c ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS)
 
-../bin/nxt_upload: upload.c  ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
+../bin/nxt_upload: upload.c  ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS)
 
-../bin/nxt_download: download.c ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
+../bin/nxt_download: download.c ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS)
 
 ../bin/nxt_remove: remove.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
@@ -79,14 +80,14 @@ all: $(TOOLS)
 ../bin/nxt_beep: beep.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_motor: motor.c ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
+../bin/nxt_motor: motor.c ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS)
 
 ../bin/nxt_tacho: tacho.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_sensor: sensor.c ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
+../bin/nxt_sensor: sensor.c ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS)
 
 ../bin/nxt_run: run.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
@@ -112,8 +113,8 @@ all: $(TOOLS)
 ../bin/nxt_delflash: delflash.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_up_run: up_run.c ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
+../bin/nxt_up_run: up_run.c ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS)
 
 ../bin/nxt_send: send.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
@@ -124,29 +125,29 @@ all: $(TOOLS)
 ../bin/nxt_resetbt: resetbt.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_lsmod: lsmod.c ../lib/libanxttools.a ../lib/libanxt.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
+../bin/nxt_lsmod: lsmod.c ../lib/libanxt_tools.a ../lib/libanxt.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS)
 
 ../bin/nxt_setname: setname.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_screenshot: screenshot.c  ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS) -lgd #-lpng -ljpeg
+../bin/nxt_screenshot: screenshot.c  ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS) -lgd #-lpng -ljpeg
 
 ../bin/nxt_turnoff: turnoff.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_setbutton: setbutton.c ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
+../bin/nxt_setbutton: setbutton.c ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS)
 
-../bin/nxt_motor_record: motor_record.c ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
+../bin/nxt_motor_record: motor_record.c ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS)
 
-../bin/nxt_motor_playback: motor_playback.c ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS) 
+../bin/nxt_motor_playback: motor_playback.c ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS) 
 
-../bin/nxt_server: server.c ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS) -lgd #-lpng -ljpeg
+../bin/nxt_server: server.c ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS) -lgd #-lpng -ljpeg
 
 ../bin/nxt_error: error.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
@@ -154,23 +155,23 @@ all: $(TOOLS)
 ../bin/nxt_scan: scan.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_mount: mount.c ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS) `pkg-config fuse --cflags --libs`
+../bin/nxt_mount: mount.c ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS) `pkg-config fuse --cflags --libs`
 
-../bin/nxt_ricc: ricc.c ../lib/libanxt.a  ../lib/libanxtfile.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS) ../lib/libanxtfile.a -lgd
+../bin/nxt_ricc: ricc.c ../lib/libanxt.a  ../lib/libanxt_file.a
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS) ../lib/libanxt_file.a -lgd
 
-../bin/nxt_rsoc: rsoc.c ../lib/libanxt.a  ../lib/libanxtfile.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS) ../lib/libanxtfile.a -lsndfile
+../bin/nxt_rsoc: rsoc.c ../lib/libanxt.a  ../lib/libanxt_file.a
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS) ../lib/libanxt_file.a -lsndfile
 
-../bin/nxt_rmdc: rmdc.c ../lib/libanxt.a  ../lib/libanxtfile.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS) -lm ../lib/libanxtfile.a
+../bin/nxt_rmdc: rmdc.c ../lib/libanxt.a  ../lib/libanxt_file.a
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS) -lm ../lib/libanxt_file.a
 
-../bin/nxt_calibrate: calibrate.c ../lib/libanxt.a ../lib/libanxtfile.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS) ../lib/libanxtfile.a
+../bin/nxt_calibrate: calibrate.c ../lib/libanxt.a ../lib/libanxt_file.a
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS) ../lib/libanxt_file.a
 
-../bin/nxt_sensorgraph: sensorgraph.c ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS) `sdl-config --cflags` `sdl-config --libs` ../lib/libanxttools.a
+../bin/nxt_sensorgraph: sensorgraph.c ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS) `sdl-config --cflags` `sdl-config --libs`
 
 ../bin/nxt_modfs: modfs.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS) `pkg-config fuse --cflags --libs`
@@ -178,8 +179,8 @@ all: $(TOOLS)
 ../bin/nxt_reset_tacho: reset_tacho.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_motor_travel: motor_travel.c ../lib/libanxt.a ../lib/libanxttools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxttools.a $(LIBS)
+../bin/nxt_motor_travel: motor_travel.c ../lib/libanxt.a ../lib/libanxt_tools.a
+	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS)
 
 ../bin/nxt_pilot: pilot.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< `sdl-config --cflags` `sdl-config --libs` -lSDL_image $(LIBS)
@@ -199,6 +200,10 @@ all: $(TOOLS)
 
 ../bin/nxt_echo: echo.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+
+../bin/nxt_lsi2c: lsi2c.c ../lib/libanxt.a
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+
 
 clean:
 	rm -f $(TOOLS)

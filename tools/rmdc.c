@@ -1,5 +1,5 @@
 /*
-    rmdc.c
+    tools/rmdc.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -26,7 +26,7 @@
 
 //#include <smf.h>
 
-#include "nxtfile/rmd.h"
+#include <anxt/file/rmd.h>
 
 typedef enum {
   NONE,

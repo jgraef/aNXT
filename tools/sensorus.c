@@ -1,5 +1,5 @@
 /*
-    sensorus.c
+    tools/sensorus.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -18,12 +18,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nxt.h>
-#include <nxt_i2c/us.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <anxt/nxt.h>
+#include <anxt/i2c/us.h>
 
 void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;

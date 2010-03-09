@@ -1,5 +1,5 @@
 /*
-    lsmod.c
+    tools/lsmod.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -19,11 +19,13 @@
 */
 
 #include <sys/types.h>
-#include <nxt.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include <anxt/nxt.h>
+#include <anxt/mod.h>
 
 void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;

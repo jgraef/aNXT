@@ -3,89 +3,14 @@
 
 -include Makefile.config
 
-all: lib/libanxt.a lib/libanxttools.a lib/libanxtfile.a lib/libanxtnet.a bin/nxtd
+all:
+	make -C libanxt/
+	make -C libanxt_file/
+	make -C libanxt_net/
+	make -C libanxt_tools/
+	make -C nxtd/
 	make -C examples/
 	make -C tools/
-
-##### Make libanxt #####
-
-lib/libanxt.a: nxt.o nxtdisplay.o us.o nxtcam.o psp.o accel.o hid.o
-	$(AR) rs $@ $^
-	$(CC) -shared -Wl,-soname,libanxt.so.1 -o lib/libanxt.so.1 $^ -lc
-
-nxt.o: nxt.c
-	$(CC) $(CFLAGS) -c -o $@ $< -DNXTD_PIDFILE=\"$(NXTD_PIDFILE)\" -DPATH_BIN=\"$(PATH_BIN)\"
-
-us.o: us.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-nxtcam.o: nxtcam.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-psp.o: psp.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-accel.o: accel.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-hid.o: hid.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-nxtdisplay.o: nxtdisplay.c nxtfont.h
-	$(CC) $(CFLAGS) -c -o $@ $< -include nxtfont.h
-
-nxtfont.h: font_8x5.png mkfont
-	./mkfont < $< > $@
-
-mkfont: mkfont.c
-	gcc -o $@ $< -lgd -lpng
-
-##### Make libanxttools #####
-
-lib/libanxttools.a: nxttools.c
-	$(CC) $(CFLAGS) -c -o nxttools.o $<
-	$(AR) rs $@ nxttools.o
-	$(CC) -shared -Wl,-soname,libanxttools.so.1 -o lib/libanxttools.so.1 nxttools.o -lc
-
-##### Make libanxtfile #####
-
-lib/libanxtfile.a: cal.o ric.o rmd.o rso.o nvconfig.o
-	$(AR) rs $@ $?
-	$(CC) -shared -Wl,-soname,libanxtfile.so.1 -o lib/libanxtfile.so.1 $^ -lc
-
-cal.o: cal.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-ric.o: ric.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-rmd.o: rmd.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-rso.o: rso.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-nvconfig.o: nvconfig.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-##### Make nxtd #####
-
-bin/nxtd: nxtd.c nxtd_usb_$(USB_MOD).c nxtd_bt_$(BT_MOD).c lib/libanxtnet.a
-	$(CC) $(CFLAGS) -o $@ $< -Llib/ -lanxtnet -lpthread \
-         -DNXTD_PIDFILE=\"$(NXTD_PIDFILE)\" \
-         nxtd_usb_$(USB_MOD).c \
-         nxtd_bt_$(BT_MOD).c \
-         -include nxtd_usb_$(USB_MOD).h \
-         -include nxtd_bt_$(BT_MOD).h \
-         `cat nxtd_usb_$(USB_MOD).libs` \
-         `cat nxtd_bt_$(BT_MOD).libs`
-
-##### Make libanxtnet #####
-
-lib/libanxtnet.a: nxtnet.c
-	$(CC) $(CFLAGS) -c -o nxtnet.o $<
-	$(AR) rs $@ nxtnet.o
-	$(CC) -shared -Wl,-soname,libanxtnet.so.1 -o lib/libanxtnet.so.1 nxtnet.o -lc
 
 ##### Install target #####
 
@@ -115,7 +40,11 @@ tar.gz:
 ##### Clean target #####
 
 clean:
-	rm -Rf *.o lib/* bin/nxtd mkfont nxtfont.h
+	make -C libanxt/ clean
+	make -C libanxt_file/ clean
+	make -C libanxt_net/ clean
+	make -C libanxt_tools/ clean
+	make -C nxtd/ clean
 	make -C examples/ clean
 	make -C tools/ clean
 

@@ -1,5 +1,5 @@
 /*
-    mount.c
+    tools/mount.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -25,7 +25,6 @@
 #include <stddef.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <nxttools.h>
 
 #ifdef FUSE_VERSION_2_5
 # define FUSE_USE_VERSION 25
@@ -35,7 +34,9 @@
 #include <fuse.h>
 #include <fuse_opt.h>
 
-#include <nxt.h>
+#include <anxt/nxt.h>
+#include <anxt/file.h>
+#include <anxt/tools.h>
 
 /// Data needed to add a file to a directory
 struct nxtfs_dir_file {

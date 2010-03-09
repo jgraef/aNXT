@@ -1,5 +1,5 @@
 /*
-    ricc.c
+    tools/ricc.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -25,7 +25,7 @@
 #include <string.h>
 #include <gd.h>
 
-#include "nxtfile/ric.h"
+#include <anxt/file/ric.h>
 
 typedef enum {
   NONE,

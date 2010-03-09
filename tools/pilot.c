@@ -1,5 +1,5 @@
 /*
-    pilot.c
+    tools/pilot.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -18,14 +18,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nxt.h>
-#include <nxtdisplay.h>
-
 #include <sys/types.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <SDL.h>
 #include <SDL_image.h>
+
+#include <anxt/nxt.h>
+#include <anxt/mod.h>
+#include <anxt/display.h>
 
 // Images
 #include "pilot_bg.xpm"

@@ -20,11 +20,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <SDL.h>
 #include <SDL_gfxPrimitives.h>
 
-#include <nxt.h>
-#include <nxt_i2c/psp.h>
+#include <anxt/nxt.h>
+#include <anxt/i2c/psp.h>
 
 #define LIGHT_COLOR 0x0000FFFF
 #define LINE_COLOR  0x00FF00FF

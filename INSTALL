@@ -1,5 +1,5 @@
 DEPENDENCIES:
-	C programming enviroment
+	(GNU) C programming enviroment
 	libusb
 	libbluetooth
 	libgd

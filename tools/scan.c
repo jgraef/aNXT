@@ -1,5 +1,5 @@
 /*
-    scan.c
+    tools/scan.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -19,12 +19,13 @@
 */
 
 #include <sys/types.h>
-#include <nxtnet.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+
+#include <anxt/net.h>
 
 /**
  * Display usage

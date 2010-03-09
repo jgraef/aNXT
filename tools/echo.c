@@ -1,5 +1,5 @@
 /*
-    beep.c
+    tools/echo.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -18,14 +18,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nxt.h>
-#include <nxtdisplay.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <errno.h>
+
+#include <anxt/nxt.h>
+#include <anxt/display.h>
 
 static void usage(char *prog,int ret) {
   FILE *stream = ret==0?stdout:stderr;

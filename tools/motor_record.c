@@ -1,5 +1,5 @@
 /*
-    motor_record.c
+    tools/motor_record.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
     Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
@@ -19,12 +19,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nxt.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include <anxt/nxt.h>
 
 void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;
