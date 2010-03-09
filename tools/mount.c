@@ -117,7 +117,7 @@ static int nxtfs_open(const char *fn,struct fuse_file_info *fi) {
   size_t filesize;
   if ((fh = nxt_file_open(nxt,filename,NXT_OREAD,&filesize))!=-1) {
     nxt_file_t *new = malloc(sizeof(nxt_file_t));
-    fi->fh = (int)new;
+    fi->fh = (intptr_t)new;
     new->filename = strdup(filename);
     new->buf = malloc(filesize);
     new->size = filesize;
@@ -136,7 +136,7 @@ static int nxtfs_open(const char *fn,struct fuse_file_info *fi) {
  *  @return Success?
  */
 static int nxtfs_flush(const char *filename,struct fuse_file_info *fi) {
-  nxt_file_t *file = (nxt_file_t*)((int)(fi->fh));
+  nxt_file_t *file = (nxt_file_t*)((intptr_t)(fi->fh));
   if (file->dirty==0) return 0;
   int fh;
   if ((fh = nxt_file_open(nxt,file->filename,NXT_OWLINE|NXT_OWOVER,file->size))!=-1) {
@@ -156,7 +156,7 @@ static int nxtfs_flush(const char *filename,struct fuse_file_info *fi) {
  */
 static int nxtfs_close(const char *filename,struct fuse_file_info *fi) {
   if (nxtfs_flush(filename,fi)!=-1) {
-    nxt_file_t *file = (nxt_file_t*)((int)(fi->fh));
+    nxt_file_t *file = (nxt_file_t*)((intptr_t)(fi->fh));
     free(file->filename);
     free(file->buf);
     free(file);
@@ -173,7 +173,7 @@ static int nxtfs_close(const char *filename,struct fuse_file_info *fi) {
  *  @return Success?
  */
 static int nxtfs_ftruncate(const char *filename,off_t newsize,struct fuse_file_info *fi) {
-  nxt_file_t *file = (nxt_file_t*)((int)(fi->fh));
+  nxt_file_t *file = (nxt_file_t*)((intptr_t)(fi->fh));
   file->buf = realloc(file->buf,newsize);
   //if (newsize>file->size) memset(file->buf+file->size,0,newsize-file->size);
   file->size = newsize;
@@ -191,7 +191,7 @@ static int nxtfs_ftruncate(const char *filename,off_t newsize,struct fuse_file_i
  *  @return How many bytes read
  */
 static int nxtfs_read(const char *filename,char *buf,size_t count,off_t offset,struct fuse_file_info *fi) {
-  nxt_file_t *file = (nxt_file_t*)((int)(fi->fh));
+  nxt_file_t *file = (nxt_file_t*)((intptr_t)(fi->fh));
   if (offset>file->size) return -EINVAL;
   if (offset+count>file->size) count = file->size-offset;
   memcpy(buf,file->buf+offset,count);
@@ -208,7 +208,7 @@ static int nxtfs_read(const char *filename,char *buf,size_t count,off_t offset,s
  *  @return How many bytes written
  */
 static int nxtfs_write(const char *filename,const char *buf,size_t count,off_t offset,struct fuse_file_info *fi) {
-  nxt_file_t *file = (nxt_file_t*)((int)(fi->fh));
+  nxt_file_t *file = (nxt_file_t*)((intptr_t)(fi->fh));
   if (offset>file->size) return -EINVAL;
   if (offset+count>file->size) nxtfs_ftruncate(filename,offset+count,fi);
   memcpy(file->buf+offset,buf,count);
