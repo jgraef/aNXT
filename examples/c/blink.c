@@ -37,9 +37,9 @@ int main(int argc,char *argv[]) {
   }
 
   for (i=0;i<times;i++) {
-    nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_ACTIVE,0); // Turn the light on
+    nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_ACTIVE,0); // Turn the light on
     usleep(500000); // Wait 0.5 sec
-    nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_INACTIVE,0); // Turn the light off
+    nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_INACTIVE,0); // Turn the light off
     usleep(500000); // Wait 0.5 sec again
   }
 

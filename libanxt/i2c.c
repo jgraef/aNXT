@@ -88,7 +88,7 @@ ssize_t nxt_i2c_read(nxt_t *nxt, int port, int addr, size_t reg1, size_t nreg, v
     buf += c;
   }
 
-  return 0;
+  return nreg;
 }
 
 /**
@@ -146,7 +146,7 @@ ssize_t nxt_i2c_write(nxt_t *nxt, int port, int addr, size_t reg1, size_t nreg, 
     buf += c;
   }
 
-  return 0;
+  return nreg;
 }
 
 /**

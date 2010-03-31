@@ -35,7 +35,7 @@ void usage(char *cmd,int r) {
   fprintf(out,"\t-n NXTNAME Name of NXT (Default: first found) or bluetooth address\n");
   fprintf(out,"\t-s SENSOR  Specify sensor port (Default: 4)\n");
   fprintf(out,"\t-r         Reset sensor after reading\n");
-  fprintf(out,"\t-v         Verbose mode\n");
+  fprintf(out,"\t-q         Quit mode\n");
   exit(r);
 }
 
@@ -43,12 +43,12 @@ int main(int argc,char *argv[]) {
   char *name = NULL;
   int c,i,n,newport;
   int port = 0;
-  int verbose = 0;
+  int verbose = 1;
   int reset = 0;
   int mode = -1;
   nxt_cam_object_t objects[8];
 
-  while ((c = getopt(argc,argv,":hn:s:vrs:ol"))!=-1) {
+  while ((c = getopt(argc,argv,":hn:s:qrl"))!=-1) {
     switch(c) {
       case 'h':
         usage(argv[0],0);
@@ -56,15 +56,15 @@ int main(int argc,char *argv[]) {
       case 'n':
         name = optarg;
         break;
-      case 'v':
-        verbose = 1;
+      case 'q':
+        verbose = 0;
         break;
       case 'r':
         reset = 1;
         break;
       case 's':
         newport = atoi(optarg)-1;
-        if (VALID_SENSOR(newport)) port = newport;
+        if (NXT_VALID_SENSOR(newport)) port = newport;
         else {
           fprintf(stderr,"Invalid sensor: %s\n",optarg);
           usage(argv[0],1);
@@ -93,7 +93,7 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
+  nxt_set_sensor_mode(nxt,port,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
   nxt_wait_after_communication_command();
 
   if (mode!=-1) {
@@ -101,8 +101,10 @@ int main(int argc,char *argv[]) {
     nxt_wait_after_communication_command();
   }
   nxt_cam_enable_tracking(nxt,port,1);
+  nxt_wait_after_communication_command();
 
   n = nxt_cam_num_objects(nxt,port);
+  nxt_wait_after_communication_command();
   if (n==-1) {
     fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
   }
@@ -114,7 +116,7 @@ int main(int argc,char *argv[]) {
       printf("Sensor %d:\n",port+1);
       printf("Objects: %d\n",n);
       for (i=0;i<n;i++) {
-        printf("pos = (%d, %d);\tsize = (%d, %d);\tcolor = %d\n", objects[i].x, objects[i].y, objects[i].w, objects[i].h,objects[i].color);
+        printf("pos = (%d, %d);\tsize = (%d, %d);\tcolor = %d\n", objects[i].x, objects[i].y, objects[i].w, objects[i].h, objects[i].color);
       }
     }
     else {
@@ -128,7 +130,7 @@ int main(int argc,char *argv[]) {
   if (reset) {
     nxt_cam_enable_tracking(nxt,port,0);
     nxt_wait_after_communication_command();
-    nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
+    nxt_set_sensor_mode(nxt,port,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
   }
 
   int ret = nxt_error(nxt);

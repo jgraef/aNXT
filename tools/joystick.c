@@ -25,6 +25,9 @@
 #include <SDL.h>
 
 #include <anxt/nxt.h>
+#include <anxt/motor.h>
+
+// TODO Add travel functionality (turn, etc.)
 
 #define MAPPING_MAXNUM 64
 
@@ -72,12 +75,11 @@ static int mapping_add(const char *str) {
 
 static void quit() {
   SDL_JoystickClose(joy);
-  nxt_setmotorrotation(nxt,NXT_MOTORA,0,0);
-  nxt_setmotorrotation(nxt,NXT_MOTORB,0,0);
-  nxt_setmotorrotation(nxt,NXT_MOTORC,0,0);
+  nxt_motor_stop(nxt, NXT_MOTORA, 0);
+  nxt_motor_stop(nxt, NXT_MOTORB, 0);
+  nxt_motor_stop(nxt, NXT_MOTORC, 0);
   nxt_close(nxt);
   SDL_Quit();
-  nxt_close(nxt);
 }
 
 int main(int argc,char *argv[]) {
@@ -154,7 +156,7 @@ int main(int argc,char *argv[]) {
         int axis = SDL_JoystickGetAxis(joy,mappings[i].axis);
         if (axis!=-1) {
           int power = (int)((float)axis*mappings[i].factor);
-          nxt_setmotorrotation(nxt,mappings[i].motor,0,power);
+          nxt_motor_run(nxt, mappings[i].motor, power);
         }
       }
     }

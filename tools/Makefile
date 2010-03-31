@@ -16,6 +16,7 @@ TOOLS = ../bin/nxt_info \
 	../bin/nxt_pollcmd \
 	../bin/nxt_sensorus \
 	../bin/nxt_sensoraccel \
+	../bin/nxt_sensorpsp \
 	../bin/nxt_sensorcam \
 	../bin/nxt_stop \
 	../bin/nxt_getprog \
@@ -43,10 +44,8 @@ TOOLS = ../bin/nxt_info \
 	../bin/nxt_modfs \
 	../bin/nxt_pilot \
 	../bin/nxt_reset_tacho \
-	../bin/nxt_motor_travel \
 	../bin/anxt-config \
 	../bin/nxt_joystick \
-	../bin/nxt_joystick_travel \
 	../bin/nxt_graphic_test \
 	../bin/nxt_echo \
 	../bin/nxt_lsi2c
@@ -99,6 +98,9 @@ all: $(TOOLS)
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
 ../bin/nxt_sensoraccel: sensoraccel.c  ../lib/libanxt.a
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS) -lm
+
+../bin/nxt_sensorpsp: sensorpsp.c  ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
 ../bin/nxt_sensorcam: sensorcam.c  ../lib/libanxt.a
@@ -179,9 +181,6 @@ all: $(TOOLS)
 ../bin/nxt_reset_tacho: reset_tacho.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-../bin/nxt_motor_travel: motor_travel.c ../lib/libanxt.a ../lib/libanxt_tools.a
-	$(CC) $(CFLAGS) -o $@ $< ../lib/libanxt_tools.a $(LIBS)
-
 ../bin/nxt_pilot: pilot.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< `sdl-config --cflags` `sdl-config --libs` -lSDL_image $(LIBS)
 
@@ -190,9 +189,6 @@ all: $(TOOLS)
 	chmod 755 $@
 
 ../bin/nxt_joystick: joystick.c ../lib/libanxt.a
-	$(CC) $(CFLAGS) -o $@ $< `sdl-config --cflags` `sdl-config --libs` $(LIBS)
-
-../bin/nxt_joystick_travel: joystick_travel.c ../lib/libanxt.a
 	$(CC) $(CFLAGS) -o $@ $< `sdl-config --cflags` `sdl-config --libs` $(LIBS)
 
 ../bin/nxt_graphic_test: graphic_test.c ../lib/libanxt.a

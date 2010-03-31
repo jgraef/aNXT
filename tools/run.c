@@ -71,7 +71,7 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  if (nxt_startprogram(nxt,prog)<0) fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
+  if (nxt_run_program(nxt,prog)<0) fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
 
   int ret = nxt_error(nxt);
   if (name!=NULL) free(name);

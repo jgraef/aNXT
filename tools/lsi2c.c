@@ -53,7 +53,7 @@ int main(int argc,char *argv[]) {
         break;
       case 's':
         newsensor = atoi(optarg)-1;
-        if (!VALID_SENSOR(newsensor)) {
+        if (!NXT_VALID_SENSOR(newsensor)) {
           fprintf(stderr,"Invalid sensor: %s\n",optarg);
           usage(argv[0],1);
         }

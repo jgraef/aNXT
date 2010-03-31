@@ -50,8 +50,8 @@ int main(int argc,char *argv[]) {
         usage(argv[0],0);
         break;
       case 'b':
-        newbtn = nxt_str2btn(optarg);
-        if (!VALID_BUTTON(newbtn)) {
+        newbtn = nxt_str2button(optarg);
+        if (!NXT_VALID_BUTTON(newbtn)) {
           fprintf(stderr,"Invalid button: %s\n",optarg);
           return 1;
         }
@@ -77,7 +77,7 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  nxt_setbutton(nxt,btn);
+  nxt_set_button(nxt,btn);
 
   int ret = nxt_error(nxt);
   if (name!=NULL) free(name);

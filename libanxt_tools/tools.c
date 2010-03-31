@@ -53,12 +53,12 @@ int nxt_list(nxt_t *nxt,char *wildcard,nxt_list_one_file_callback callback,void 
   if (wildcard==NULL)
     wild = "*.*";
 
-  if ((fh = nxt_findfirst(nxt,wild,&filename,&filesize))!=NXT_FAIL) {
+  if ((fh = nxt_file_find_first(nxt,wild,&filename,&filesize))!=NXT_FAIL) {
     do {
       valid_fh = fh;
       callback(filename,filesize,data);
     }
-    while ((fh = nxt_findnext(nxt,fh,&filename,&filesize))!=NXT_FAIL);
+    while ((fh = nxt_file_find_next(nxt,fh,&filename,&filesize))!=NXT_FAIL);
     nxt_file_close(nxt,valid_fh);
   }
 
@@ -80,7 +80,7 @@ int nxt_list_files(nxt_t *nxt,FILE *out,char *wildcard,int filesizes,int hidden)
   return nxt_list(nxt,wildcard,nxt_print_file,&file_data);
 }
 
-void nxt_print_mod(char *modname,int modid,size_t modsz,size_t iomapsz,void *data) {
+static void nxt_print_mod(char *modname,int modid,size_t modsz,size_t iomapsz,void *data) {
   fprintf((FILE *)data,"%s\t",modname);
   if (strlen(modname) < 8)
   fprintf((FILE *)data,"\t");
@@ -138,10 +138,12 @@ void nxt_motor_record(nxt_t *nxt,int motor,double t,nxt_motor_record_callback ca
   double time = 0;
   int capacity = 256;
   int fill_counter = 0;
-  nxt_motor(nxt,motor,0,0,NXT_MOTORON,NXT_REGMODE_MOTOR_SPEED,0);
+  //nxt_set_motor(nxt,motor,0,0,NXT_MOTORON,NXT_REGMODE_MOTOR_SPEED,0);
+  nxt_motor_stop(nxt, motor, 0);
   gettimeofday(&starttv,NULL);
   while (1) {
-    rot = nxt_tacho(nxt,motor);
+    //rot = nxt_get_tacho(nxt,motor);
+    rot = nxt_motor_get_rotation_count(nxt, motor);
     err = nxt_error(nxt);
     if (err != 0) 
       break;
@@ -174,7 +176,8 @@ void nxt_motor_playback(nxt_t *nxt,int motor,int power,int numvalues,double *tim
   if (numvalues == 0)
     return;
 
-  oldtacho = nxt_tacho(nxt,motor);
+  //oldtacho = nxt_get_tacho(nxt,motor);
+  oldtacho = nxt_motor_get_rotation_count(nxt, motor);
   if (nxt_error(nxt) != 0)
     return;
 
@@ -198,7 +201,8 @@ void nxt_motor_playback(nxt_t *nxt,int motor,int power,int numvalues,double *tim
     }    
     // new value or fix tacho at end
     if ((i > oldi) || (timeout == 1)) {
-      tacho = nxt_tacho(nxt,motor);
+      //tacho = nxt_get_tacho(nxt,motor);
+      tacho = nxt_motor_get_rotation_count(nxt, motor);
       newtacho = *(rotations + i - 1) - *rotations + oldtacho;
       if (nxt_error(nxt) != 0)
         break;
@@ -209,20 +213,23 @@ void nxt_motor_playback(nxt_t *nxt,int motor,int power,int numvalues,double *tim
       else {
         sign = 0;
         if (timeout == 1) {
-          nxt_setmotorbrake(nxt,motor);
+          //nxt_set_motor_brake(nxt,motor);
+          nxt_motor_stop(nxt, motor, 1);
           break;
         }
       }
       if (verbose)
         printf("target tacho:\t%d\tcurrent tacho:\t%d\n",newtacho,tacho);
-      nxt_setmotorrotation(nxt,motor,newtacho,sign * power);
+      //nxt_set_motor_rotation(nxt,motor,newtacho,sign * power);
+      nxt_motor_rotate(nxt, motor, newtacho, sign*power);
       if (nxt_error(nxt) != 0)
         break;
     }
   }
 
   if (stop == 1)
-    nxt_setmotorcoast(nxt,motor);
+    //nxt_set_motor_coast(nxt,motor);
+    nxt_motor_stop(nxt, 0);
 }
 
 /**
@@ -317,7 +324,7 @@ int nxt_str2type(char *str) {
  *  @return string with type of sensor or NULL on failure
  */
 
-char *nxt_getType(int i) {
+char *nxt_get_type(int i) {
   if (i < NXT_NUM_TYPES)
     return types[i];
   else
@@ -355,7 +362,7 @@ int nxt_str2mode(char *str) {
  *  @return string with mode of sensor or NULL on failure
  */
 
-char *nxt_getMode(int i) {
+char *nxt_get_mode(int i) {
   if (i < NXT_NUM_MODES)
     return modes[i];
   else
@@ -363,55 +370,44 @@ char *nxt_getMode(int i) {
 }
 
 /**
- * Gets number of motor port from a string like "A"
- *  @param str string of motor
- *  @return number of motor port or -1 on failure
+ * Gets motor port by character
+ *  @param chr Character (A, B, C)
+ *  @return Motor port
  */
-int nxt_str2motorport(char *str) {
+int nxt_chr2motor(char chr) {
   int motor;
-  if (strcasecmp(str,"abc")==0) motor = NXT_MOTORABC;
-  else if (strlen(str)==1) {
-    motor = tolower(*str)-'a';
-    if (motor<0 || motor>2) motor = -1;
+
+  return tolower(chr)-'a';
+}
+
+/**
+ * Gets motor port by string
+ *  @param str String
+ *  @return Motor port
+ */
+int nxt_str2motor(const char *str) {
+  if (strlen(str)==1) {
+    return nxt_chr2motor(str[0]);
   }
-  else motor = -1;
-  return motor;
-}
-
-/**
- * Gets number of motor port from a string like "BC"
- *  @param str string of motor
- *  @param index number of motor
- *  @return number of first motor port or -1 on failure
- */
-int nxt_str2motorport_index(char *str, int index) {
-  int motor;
-  char string[2];
-  if ((index<strlen(str)) && (index > 0)) {
-    string[0] = str[index];
-    string[1] = 0;
-    return nxt_str2motorport(string);
+  else {
+    return -1;
   }
-  else motor = -1;
-  return motor;
 }
-
-/**
- * Gets number of first motor port from a string like "BC"
- *  @param str string of motor
- *  @return number of first motor port or -1 on failure
- */
-int nxt_str2motorport1(char *str) {
-  return nxt_str2motorport_index(str, 1);
+int nxt_str2motor1(const char *str) {
+  if (strlen(str)==1) {
+    return nxt_chr2motor(str[1]);
+  }
+  else {
+    return -1;
+  }
 }
-
-/**
- * Gets number of second motor port from a string like "BC"
- *  @param str string of motor
- *  @return number of second motor port or -1 on failure
- */
-int nxt_str2motorport2(char *str) {
-  return nxt_str2motorport_index(str, 2);
+int nxt_str2motor2(const char *str) {
+  if (strlen(str)==1) {
+    return nxt_chr2motor(str[2]);
+  }
+  else {
+    return -1;
+  }
 }
 
 /**
@@ -419,7 +415,7 @@ int nxt_str2motorport2(char *str) {
  *  @param str string of button
  *  @return number of button or 0 on failure
  */
-int nxt_str2btn(char *str) {
+int nxt_str2button(char *str) {
   if (strcasecmp(str,"enter")==0) return NXT_UI_BUTTON_ENTER;
   else if (strcasecmp(str,"left")==0) return NXT_UI_BUTTON_LEFT;
   else if (strcasecmp(str,"right")==0) return NXT_UI_BUTTON_RIGHT;
@@ -432,7 +428,7 @@ int nxt_str2btn(char *str) {
  *  @param str string of bitmap fileformat
  *  @return number of fileformat or 0 on failure
  */
-int nxt_str2fmt(char *str) {
+int nxt_str2fileformat(char *str) {
   if (strcasecmp(str,"jpeg")==0) return NXT_JPEG;
   else if (strcasecmp(str,"png")==0) return NXT_PNG;
   else return 0;
@@ -500,7 +496,7 @@ int nxt_download(nxt_t *nxt,char *src,char *dest) {
 }
 
 /**
- * Download a file src from NXT brick to file dest on host filesystem
+ * Upload a file src from host filesystem to file dest on NXT brick
  *  @param nxt NXT handle
  *  @param src filename on host
  *  @param dest file on NXT

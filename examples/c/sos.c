@@ -42,25 +42,25 @@ int main(int argc,char *argv[]) {
 
   for (i=0;i<3;i++) { // Three times short
     nxt_beep(nxt,FREQ,DUR_SHORT); // play tone
-    nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_ACTIVE,0); // turn light on
+    nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_ACTIVE,0); // turn light on
     usleep(DUR_SHORT*1000); // wait for short duration
-    nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_INACTIVE,0); // turn light off
+    nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_INACTIVE,0); // turn light off
     usleep(PAUSE*1000); // wait short pause
   }
 
   for (i=0;i<3;i++) { // Three times long
     nxt_beep(nxt,FREQ,DUR_LONG); // play tone
-    nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_ACTIVE,0); // turn light on
+    nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_ACTIVE,0); // turn light on
     usleep(DUR_LONG*1000); // wait for long duration
-    nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_INACTIVE,0); // turn light off
+    nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_INACTIVE,0); // turn light off
     usleep(PAUSE*1000); // wait short pause
   }
 
   for (i=0;i<3;i++) { // Three times short
     nxt_beep(nxt,FREQ,DUR_SHORT); // play tone
-    nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_ACTIVE,0); // turn light on
+    nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_ACTIVE,0); // turn light on
     usleep(DUR_SHORT*1000); // wait for short duration
-    nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_INACTIVE,0); // turn light off
+    nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_INACTIVE,0); // turn light off
     usleep(PAUSE*1000); // wait short pause
   }
 

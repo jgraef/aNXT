@@ -37,11 +37,11 @@ void usage(char *cmd,int r) {
   fprintf(out,"\t-s SENSOR  Select sensor (Default: Choosen by type, or 1)\n");
   fprintf(out,"\t-t TYPE    Select sensor type (Default: none)\n");
   fprintf(out,"\tValid sensor types are:\n");
-  for (i=0;i<NXT_NUM_TYPES;i++) fprintf(out,"\t\t%s\n",nxt_getType(i));
+  for (i=0;i<NXT_NUM_TYPES;i++) fprintf(out,"\t\t%s\n",nxt_get_type(i));
   fprintf(out,"\n");
   fprintf(out,"\t-m MODE    Select sensor mode (Default: raw)\n");
   fprintf(out,"\tValid sensor modes are:\n");
-  for (i=0;i<NXT_NUM_MODES;i++) fprintf(out,"\t\t%s\n",nxt_getMode(i));
+  for (i=0;i<NXT_NUM_MODES;i++) fprintf(out,"\t\t%s\n",nxt_get_mode(i));
   fprintf(out,"\n");
   fprintf(out,"\t-r         Reset sensor after reading\n");
   fprintf(out,"\t-v         Verbose mode\n");
@@ -126,9 +126,9 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  nxt_setsensormode(nxt,sensor,type,mode);
-  val = nxt_getsensorval(nxt,sensor);
-  if (reset) nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
+  nxt_set_sensor_mode(nxt,sensor,type,mode);
+  val = nxt_get_sensor(nxt,sensor);
+  if (reset) nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
 
   if (val<0) fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
   else {

@@ -26,88 +26,94 @@
 #include <stdlib.h>
 
 #include <anxt/nxt.h>
+#include <anxt/motor.h>
 #include <anxt/tools.h>
 
 void usage(char *cmd,int r) {
-  FILE *out = r==0?stdout:stderr;
-  fprintf(out,"Usage: %s [OPTIONS]\n",cmd);
-  fprintf(out,"Control a NXT motor\n");
-  fprintf(out,"Options:\n");
-  fprintf(out,"\t-h           Show help\n");
-  fprintf(out,"\t-n NXTNAME   Name of NXT (Default: first found) or bluetooth address\n");
-  fprintf(out,"\t-m MOTOR     Select motor (Default: A. Valid values are: A, B, C, ABC)\n");
-  fprintf(out,"\t-p POWER     Set power (Default: (50 (\"weak\")))\n");
-  fprintf(out,"\t-r ROTATION  Set rotation (Default: 0. 0 means unlimited rotation)\n");
-  fprintf(out,"\t-s           Stop motor (same as '-p 0')\n");
-  fprintf(out,"\t-b           Use brake\n");
-  fprintf(out,"\t-y           Synchronise motor (be carefull, read manpage first)\n");
-  fprintf(out,"\t-i           Idle motor\n");
-  fprintf(out,"\t-t TURNRATIO Set turnratio (Default: (0 (\"straight on\")))\n");
+  FILE *out = (r==0?stdout:stderr);
+  fprintf(out, "Usage: %s [OPTIONS]\n",cmd);
+  fprintf(out, "Control a NXT motor\n");
+  fprintf(out, "Options:\n");
+  fprintf(out, "\t-h           Show help\n");
+  fprintf(out, "\t-n NXTNAME   Name of NXT (Default: first found) or bluetooth address\n");
+  fprintf(out, "\t-m MOTOR     Select motor (Default: A. Valid values are: A, B, C, AB, AC, BC, ABC)\n");
+  fprintf(out, "\t-p POWER     Set power (Default: (50 (\"weak\")))\n");
+  fprintf(out, "\t-r ROTATION  Set rotation (Default: 0. 0 means unlimited rotation)\n");
+  fprintf(out, "\t-s           Stop motor (same as '-p 0'). Use -sb to stop and brake\n");
+  fprintf(out, "\t-b           Use brake. Use -sb to stop and brake\n");
+  fprintf(out, "\t-y TURNRATIO Synchronise motor (be carefull, read manpage first)\n");
   exit(r);
 }
 
 int main(int argc,char *argv[]) {
   char *name = NULL;
-  int motor = 0;
+  char *motors = "A";
+  int motor;
+  int stop = 0;
   int power = 50;
   int rot = 0;
   int brake = 0;
   int synchronise = 0;
-  int idle = 0;
   int turnratio = 0;
-  int c,newmotor,newpower,newrot,newturnratio;
+  int c, i, newpower, newrot, newturnratio;
 
-  while ((c = getopt(argc,argv,":hm:p:r:t:sibyn:"))!=-1) {
+  while ((c = getopt(argc,argv,":hm:p:r:R:siby:n:"))!=-1) {
     switch(c) {
       case 'h':
         usage(argv[0],0);
         break;
       case 'm':
-        newmotor = nxt_str2motorport(optarg);
-        if (newmotor==-1) {
-          fprintf(stderr,"Invalid motor: %s\n",optarg);
-          usage(argv[0],1);
-        }
-        else motor = newmotor;
+        motors = optarg;
         break;
       case 'p':
         newpower = atoi(optarg);
-        if (newpower<-100 || newpower>100) {
-          fprintf(stderr,"Invalid power: %d\n",newpower);
-          usage(argv[0],1);
+        if (!NXT_VALID_POWER(newpower)) {
+          fprintf(stderr, "Invalid power: %d\n", newpower);
+          usage(argv[0], 1);
         }
-        else power = newpower;
+        else {
+          power = newpower;
+        }
         break;
       case 'r':
         newrot = atoi(optarg);
         if (newrot<0) {
-          fprintf(stderr,"Invalid rotation: %d\n",newrot);
-          usage(argv[0],1);
+          fprintf(stderr, "Invalid rotation: %d\n", newrot);
+          usage(argv[0], 1);
         }
-        else rot = newrot;
+        else {
+          rot = newrot;
+        }
+        break;
+      case 'R':
+        newrot = atoi(optarg)*360;
+        if (newrot<0) {
+          fprintf(stderr, "Invalid rotation: %d\n", newrot);
+          usage(argv[0], 1);
+        }
+        else {
+          rot = newrot;
+        }
         break;
       case 's':
-        power = 0;
+        stop = 1;
         break;
       case 'b':
         brake = 1;
         break;
-      case 'i':
-        idle = 1;
-        break;
-      case 't':
-        newturnratio = atoi(optarg);
-        if (newturnratio<-100 || newturnratio>100) {
-          fprintf(stderr,"Invalid turnratio: %d\n",newturnratio);
-          usage(argv[0],1);
-        }
-        else turnratio = newturnratio;
-        break;
       case 'y':
         synchronise = 1;
+        newturnratio = atoi(optarg);
+        if (!NXT_VALID_POWER(newturnratio)) {
+          fprintf(stderr, "Invalid turnratio: %d\n", newturnratio);
+          usage(argv[0], 1);
+        }
+        else {
+          turnratio = newturnratio;
+        }
         break;
       case 'n':
-        name = strdup(optarg);
+        name = optarg;
         break;
       case ':':
         fprintf(stderr,"Option -%c requires an operand\n",optopt);
@@ -126,13 +132,29 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  if (idle)
-    nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0),NXT_REGMODE_IDLE,turnratio);
-  else
-    nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake||synchronise?NXT_BRAKE|NXT_REGULATED:0),synchronise?NXT_REGMODE_MOTOR_SYNC:NXT_REGMODE_MOTOR_SPEED,turnratio);
+  if (stop || power==0) {
+    for (i=0; motors[i]!=0; i++) {
+      nxt_motor_stop(nxt, nxt_chr2motor(motors[i]), brake);
+    }
+  }
+  else {
+    for (i=0; motors[i]!=0; i++) {
+      motor = nxt_chr2motor(motors[i]);
+
+      nxt_motor_enable_autoset(nxt, motor, 0);
+      nxt_motor_set_power(nxt, motor, power);
+      nxt_motor_set_rotation(nxt, motor, rot);
+      nxt_motor_use_brake(nxt, motor, brake);
+      if (synchronise) {
+        nxt_motor_sync(nxt, motor, turnratio);
+      }
+      nxt_motor_set_runstate(nxt, motor, NXT_MOTOR_RUNSTATE_RUNNING);
+      nxt_motor_turn_on(nxt, motor, 1);
+      nxt_motor_set_state(nxt, motor);
+    }
+  }
 
   int ret = nxt_error(nxt);
-  if (name!=NULL) free(name);
   nxt_close(nxt);
 
   return ret;

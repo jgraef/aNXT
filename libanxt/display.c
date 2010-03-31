@@ -39,7 +39,7 @@ nxt_display_t *nxt_display_open(nxt_t *nxt) {
   nxt_display_t *display;
   int modid;
 
-  if ((modid = nxt_mod_getid(nxt,NXT_DISPLAY_MODFILE))!=-1) {
+  if ((modid = nxt_mod_get_id(nxt,NXT_DISPLAY_MODFILE))!=-1) {
     display = malloc(sizeof(nxt_display_t));
     display->nxt = nxt;
     display->modid = modid;
@@ -66,7 +66,7 @@ int nxt_display_refresh(nxt_display_t *display) {
   char screen[NXT_DISPLAY_HEIGHT/8][NXT_DISPLAY_WIDTH];
   int x,y;
 
-  if ((display->modid = nxt_mod_getid(display->nxt,NXT_DISPLAY_MODFILE))!=-1) {
+  if ((display->modid = nxt_mod_get_id(display->nxt,NXT_DISPLAY_MODFILE))!=-1) {
     nxt_mod_read(display->nxt,display->modid,screen,NXT_DISPLAY_BITMAP,NXT_DISPLAY_BUFSIZE);
     for (y=0;y<64;y++) {
       for (x=0;x<100;x++) {
@@ -90,7 +90,7 @@ int nxt_display_flush(nxt_display_t *display,int notdirty) {
 
   if (!notdirty && !display->dirty) return 0;
 
-  if ((display->modid = nxt_mod_getid(display->nxt,NXT_DISPLAY_MODFILE))!=-1) {
+  if ((display->modid = nxt_mod_get_id(display->nxt,NXT_DISPLAY_MODFILE))!=-1) {
     for (y=0;y<64;y++) {
       for (x=0;x<100;x++) {
         if (display->buffer[y][x]) screen[y/8][x] |= 1<<(y%8);

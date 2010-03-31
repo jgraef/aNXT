@@ -60,7 +60,7 @@ int main(int argc,char *argv[]) {
         name = optarg;
         break;
       case 'f':
-        newfmt = nxt_str2fmt(optarg);
+        newfmt = nxt_str2fileformat(optarg);
         if (newfmt==0) {
           fprintf(stderr,"Invalid file format\n");
           usage(argv[0],1);

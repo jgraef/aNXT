@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include <anxt/nxt.h>
 #include <anxt/i2c/accel.h>
@@ -35,7 +36,8 @@ void usage(char *cmd,int r) {
   fprintf(out,"\t-n NXTNAME Name of NXT (Default: first found) or bluetooth address\n");
   fprintf(out,"\t-s SENSOR  Specify sensor port (Default: 4)\n");
   fprintf(out,"\t-r         Reset sensor after reading\n");
-  fprintf(out,"\t-v         Verbose mode\n");
+  fprintf(out,"\t-q         Quit mode\n");
+  fprintf(out,"\t-m         Show magnitude of vector\n");
   exit(r);
 }
 
@@ -43,11 +45,13 @@ int main(int argc,char *argv[]) {
   char *name = NULL;
   int c,newport;
   int port = 3;
-  int verbose = 0;
+  int verbose = 1;
   int reset = 0;
+  int show_length = 0;
+  double length;
   struct nxt_accel_vector accel;
 
-  while ((c = getopt(argc,argv,":hn:s:vr"))!=-1) {
+  while ((c = getopt(argc,argv,":hn:s:qrm"))!=-1) {
     switch(c) {
       case 'h':
         usage(argv[0],0);
@@ -55,19 +59,22 @@ int main(int argc,char *argv[]) {
       case 'n':
         name = strdup(optarg);
         break;
-      case 'v':
-        verbose = 1;
+      case 'q':
+        verbose = 0;
         break;
       case 'r':
         reset = 1;
         break;
       case 's':
         newport = atoi(optarg)-1;
-        if (VALID_SENSOR(newport)) port = newport;
+        if (NXT_VALID_SENSOR(newport)) port = newport;
         else {
           fprintf(stderr,"Invalid sensor: %s\n",optarg);
           usage(argv[0],1);
         }
+        break;
+      case 'm':
+        show_length = 1;
         break;
       case ':':
         fprintf(stderr,"Option -%c requires an operand\n",optopt);
@@ -86,26 +93,38 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
+  nxt_set_sensor_mode(nxt,port,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
   nxt_wait_after_communication_command();
 
   if (nxt_accel_get_accel(nxt,port,&accel)==-1) {
     fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
   }
   else {
+    if (show_length) {
+      length = sqrt(pow(0.001*accel.x, 2.)+pow(0.001*accel.y, 2.)+pow(0.001*accel.z, 2.));
+    }
+
     if (verbose) {
       printf("Sensor %d:\n",port+1);
-      printf("x = %.3f\n",0.001*accel.x);
-      printf("y = %.3f\n",0.001*accel.y);
-      printf("z = %.3f\n",0.001*accel.z);
+      printf("x = %.3f G\n", 0.001*accel.x);
+      printf("y = %.3f G\n", 0.001*accel.y);
+      printf("z = %.3f G\n", 0.001*accel.z);
+      if (show_length)  {
+        printf("m = %.3f G\n", length);
+      }
     }
     else {
-      printf("%d\n%d\n%d\n",accel.x,accel.y,accel.z);
+      if (show_length) {
+        printf("%.3f\n%.3f\n%.3f\n%.3f\n", 0.001*accel.x, 0.001*accel.y, 0.001*accel.z, length);
+      }
+      else {
+        printf("%.3f\n%.3f\n%.3f\n", 0.001*accel.x, 0.001*accel.y, 0.001*accel.z);
+      }
     }
   }
 
   if (reset) {
-    nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
+    nxt_set_sensor_mode(nxt,port,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
   }
 
   int ret = nxt_error(nxt);

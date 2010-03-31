@@ -32,7 +32,7 @@
  *  @return Bytes ready
  */
 ssize_t nxt_ls_status(nxt_t *nxt,int port) {
-  if (!VALID_SENSOR(port)) return NXT_FAIL;
+  if (!NXT_VALID_SENSOR(port)) return NXT_FAIL;
   nxt_pack_start(nxt,0x0E);
   nxt_pack_byte(nxt,port);
   test(nxt_con_send(nxt));
@@ -51,7 +51,7 @@ ssize_t nxt_ls_status(nxt_t *nxt,int port) {
  *  @return Success
  */
 int nxt_ls_write(nxt_t *nxt,int port,size_t tx,size_t rx,void *data) {
-  if (!VALID_SENSOR(port)) return NXT_FAIL;
+  if (!NXT_VALID_SENSOR(port)) return NXT_FAIL;
   if (tx>16 || rx>16) return NXT_FAIL;
   nxt_pack_start(nxt,0x0F);
   nxt_pack_byte(nxt,port);
@@ -73,7 +73,7 @@ int nxt_ls_write(nxt_t *nxt,int port,size_t tx,size_t rx,void *data) {
  *  @return How many bytes read
  */
 ssize_t nxt_ls_read(nxt_t *nxt,int port,size_t bufsize,void *buf) {
-  if (!VALID_SENSOR(port)) return NXT_FAIL;
+  if (!NXT_VALID_SENSOR(port)) return NXT_FAIL;
   if (buf==NULL) return NXT_FAIL;
   nxt_pack_start(nxt,0x10);
   nxt_pack_byte(nxt,port);

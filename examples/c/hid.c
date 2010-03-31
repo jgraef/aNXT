@@ -36,7 +36,7 @@ int main(int argc,char *argv[]) {
   }
 
   // Set sensor mode
-  nxt_setsensormode(nxt, sensor, NXT_SENSOR_TYPE_LOWSPEED, NXT_SENSOR_MODE_RAW);
+  nxt_set_sensor_mode(nxt, sensor, NXT_SENSOR_TYPE_LOWSPEED, NXT_SENSOR_MODE_RAW);
   nxt_wait_after_communication_command();
 
   // Select ASCII mode

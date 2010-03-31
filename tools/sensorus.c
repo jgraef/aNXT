@@ -63,7 +63,7 @@ int main(int argc,char *argv[]) {
         break;
       case 's':
         newport = atoi(optarg)-1;
-        if (VALID_SENSOR(newport)) port = newport;
+        if (NXT_VALID_SENSOR(newport)) port = newport;
         else {
           fprintf(stderr,"Invalid sensor: %s\n",optarg);
           usage(argv[0],1);
@@ -86,12 +86,12 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
+  nxt_set_sensor_mode(nxt,port,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
   nxt_wait_after_communication_command();
 
   dist = nxt_us_get_dist(nxt,port);
   if (reset) {
-    nxt_setsensormode(nxt,port,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
+    nxt_set_sensor_mode(nxt,port,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
   }
   if (dist<0) {
     fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));

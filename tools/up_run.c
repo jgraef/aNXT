@@ -84,7 +84,7 @@ int main(int argc,char *argv[]) {
     if (optind<argc) dest = argv[optind];
     else dest = basename(src);
 
-    nxt_stopprogram(nxt);
+    nxt_stop_program(nxt);
 
     nxt_wait_after_direct_command();
 
@@ -95,7 +95,7 @@ int main(int argc,char *argv[]) {
 
     ret = nxt_error(nxt);
     if (ret == 0)
-      if (nxt_startprogram(nxt,dest)<0) {
+      if (nxt_run_program(nxt,dest)<0) {
         fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
       }
   } else {

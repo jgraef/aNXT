@@ -209,7 +209,7 @@ ssize_t nxt_mod_write(nxt_t *nxt,int modid,const void *buf,off_t offset,size_t s
  *  @param file Module file
  *  @return Module ID
  */
-int nxt_mod_getid(nxt_t *nxt,char *file) {
+int nxt_mod_get_id(nxt_t *nxt,char *file) {
   int handle,modid;
   if ((handle = nxt_mod_first(nxt,file,NULL,&modid,NULL,NULL))==0) {
     nxt_mod_close(nxt,handle);
@@ -223,9 +223,9 @@ int nxt_mod_getid(nxt_t *nxt,char *file) {
  *  @param nxt NXT handle
  *  @return Volume
  */
-int nxt_getvolume(nxt_t *nxt) {
+int nxt_get_volume(nxt_t *nxt) {
   int modid;
-  if ((modid = nxt_mod_getid(nxt,NXT_UI_MODFILE))!=-1) {
+  if ((modid = nxt_mod_get_id(nxt,NXT_UI_MODFILE))!=-1) {
     char volume;
     if (nxt_mod_read(nxt,modid,&volume,NXT_UI_VOLUME,1)==1) return volume;
   }
@@ -237,10 +237,10 @@ int nxt_getvolume(nxt_t *nxt) {
  *  @param nxt NXT handle
  *  @param volume Volume
  */
-int nxt_setvolume(nxt_t *nxt,int volume) {
+int nxt_set_volume(nxt_t *nxt,int volume) {
   int modid;
   char vol = volume;
-  if (VALID_VOLUME(volume) && (modid = nxt_mod_getid(nxt,NXT_UI_MODFILE))!=-1) {
+  if (NXT_VALID_VOLUME(volume) && (modid = nxt_mod_get_id(nxt,NXT_UI_MODFILE))!=-1) {
     if (nxt_mod_write(nxt,modid,&vol,NXT_UI_VOLUME,1)==1) return 0;
   }
   else return -1;
@@ -251,10 +251,10 @@ int nxt_setvolume(nxt_t *nxt,int volume) {
  *  @param nxt NXT handle
  *  @note NXT handle must be closed after this
  */
-int nxt_turnoff(nxt_t *nxt) {
+int nxt_turn_off(nxt_t *nxt) {
   int modid;
   char off = 1;
-  if ((modid = nxt_mod_getid(nxt,NXT_UI_MODFILE))!=-1) {
+  if ((modid = nxt_mod_get_id(nxt,NXT_UI_MODFILE))!=-1) {
     if (nxt_mod_write(nxt,modid,&off,NXT_UI_TURNOFF,1)==1) return 0;
   }
   else return -1;
@@ -265,10 +265,10 @@ int nxt_turnoff(nxt_t *nxt) {
  *  @param nxt NXT handle
  *  @param button Button
  */
-int nxt_setbutton(nxt_t *nxt,int button) {
+int nxt_set_button(nxt_t *nxt,int button) {
   int modid;
   char btn = button;
-  if ((modid = nxt_mod_getid(nxt,NXT_UI_MODFILE))!=-1) {
+  if ((modid = nxt_mod_get_id(nxt,NXT_UI_MODFILE))!=-1) {
     if (nxt_mod_write(nxt,modid,&btn,NXT_UI_BUTTON,1)==1) return 0;
   }
   else return -1;
@@ -283,7 +283,7 @@ int nxt_setbutton(nxt_t *nxt,int button) {
 int nxt_screenshot(nxt_t *nxt,char buf[64][100]) {
   char screen[8][100];
   int modid,x,y;
-  if ((modid = nxt_mod_getid(nxt,NXT_DISPLAY_MODFILE))!=-1) {
+  if ((modid = nxt_mod_get_id(nxt,NXT_DISPLAY_MODFILE))!=-1) {
     nxt_mod_read(nxt,modid,screen,NXT_DISPLAY_BITMAP,800);
     for (y=0;y<64;y++) {
       for (x=0;x<100;x++) buf[y][x] = screen[y/8][x]&(1<<(y%8));

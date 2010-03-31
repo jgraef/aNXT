@@ -66,7 +66,7 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  prog = nxt_getcurprog(nxt);
+  prog = nxt_get_program(nxt);
   if (prog!=NULL) {
     printf("%s\n",prog);
     free(prog);

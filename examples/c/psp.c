@@ -23,9 +23,12 @@
 
 #include <SDL.h>
 #include <SDL_gfxPrimitives.h>
+#include <SDL_image.h>
 
 #include <anxt/nxt.h>
 #include <anxt/i2c/psp.h>
+
+#include "psp_bg.xpm"
 
 #define LIGHT_COLOR 0x0000FFFF
 #define LINE_COLOR  0x00FF00FF
@@ -55,7 +58,7 @@ int main(int argc,char *argv[]) {
     fprintf(stderr,"Could not find NXT\n");
     return 1;
   }
-  nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
+  nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
 
   // setup SDL
   if (SDL_Init(SDL_INIT_VIDEO)==-1) {
@@ -65,7 +68,7 @@ int main(int argc,char *argv[]) {
   atexit(SDL_Quit);
 
   // load background image
-  bgimg = SDL_LoadBMP("psp_bg.bmp");
+  bgimg = IMG_ReadXPMFromArray(psp_bg_xpm);
   if (bgimg==NULL) {
     fprintf(stderr,"Can't load image: %s\n",SDL_GetError());
     return 1;

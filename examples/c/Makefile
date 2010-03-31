@@ -15,7 +15,7 @@ sos: sos.c
 	$(CC) $(CFLAGS) -o $@ $^ -L../../lib $(LIBS)
 
 psp: psp.c
-	$(CC) $(CFLAGS) -o $@ $^ -L../../lib $(LIBS) `sdl-config --cflags --libs` -lSDL_gfx
+	$(CC) $(CFLAGS) -o $@ $^ -L../../lib $(LIBS) `sdl-config --cflags --libs` -lSDL_gfx -lSDL_image
 
 hid: hid.c
 	$(CC) $(CFLAGS) -o $@ $^ -L../../lib $(LIBS) `sdl-config --cflags --libs` -lSDL_gfx

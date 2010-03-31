@@ -44,11 +44,11 @@ void usage(char *cmd,int r) {
   fprintf(out,"\t-s SENSOR  Select sensor (Default: Choosen by type, or 1)\n");
   fprintf(out,"\t-t TYPE    Select sensor type (Default: none)\n");
   fprintf(out,"\tValid sensor types are:\n");
-  for (i=0;i<NXT_NUM_TYPES;i++) fprintf(out,"\t\t%s\n",nxt_getType(i));
+  for (i=0;i<NXT_NUM_TYPES;i++) fprintf(out,"\t\t%s\n",nxt_get_type(i));
   fprintf(out,"\n");
   fprintf(out,"\t-m MODE    Select sensor mode (Default: raw)\n");
   fprintf(out,"\tValid sensor modes are:\n");
-  for (i=0;i<NXT_NUM_MODES;i++) fprintf(out,"\t\t%s\n",nxt_getMode(i));
+  for (i=0;i<NXT_NUM_MODES;i++) fprintf(out,"\t\t%s\n",nxt_get_mode(i));
   fprintf(out,"\n");
   fprintf(out,"\t-r         Reset sensor after reading\n");
   fprintf(out,"\t-v         Verbose mode\n");
@@ -216,7 +216,7 @@ int main(int argc,char *argv[]) {
   SDL_WM_SetCaption("NXT Sensor Graph","NXT Sensor Grap");
   SDL_Flip(display);
 
-  nxt_setsensormode(nxt,sensor,type,NXT_SENSOR_MODE_RAW);
+  nxt_set_sensor_mode(nxt,sensor,type,NXT_SENSOR_MODE_RAW);
 
   int lasty = 0;
   while (!done) {
@@ -229,7 +229,7 @@ int main(int argc,char *argv[]) {
       }
     }
 
-    int val = nxt_getsensorval(nxt,sensor);
+    int val = nxt_get_sensor(nxt,sensor);
     unsigned int y = screen.height-(val*screen.height/1023);
     if (x==screen.width) {
       x = 0;
@@ -255,7 +255,7 @@ int main(int argc,char *argv[]) {
     SDL_Delay(10);
   }
 
-  if (reset) nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
+  if (reset) nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
 
   int ret = nxt_error(nxt);
   if (name!=NULL) free(name);

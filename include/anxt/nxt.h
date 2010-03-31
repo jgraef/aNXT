@@ -32,6 +32,17 @@
 #define NXT_SENSOR2 1
 #define NXT_SENSOR3 2
 #define NXT_SENSOR4 3
+#define NXT_SENSOR_1 NXT_SENSOR1
+#define NXT_SENSOR_2 NXT_SENSOR2
+#define NXT_SENSOR_3 NXT_SENSOR3
+#define NXT_SENSOR_4 NXT_SENSOR4
+#define NXT_S1 NXT_SENSOR1
+#define NXT_S2 NXT_SENSOR2
+#define NXT_S3 NXT_SENSOR3
+#define NXT_S4 NXT_SENSOR4
+
+#define NXT_NUM_TYPES 12
+#define NXT_NUM_MODES 8
 
 #define NXT_SENSOR_TYPE_NONE           0x00
 #define NXT_SENSOR_TYPE_SWITCH         0x01
@@ -57,39 +68,13 @@
 #define NXT_SENSOR_MODE_SLOPE_MASK       0x1F
 #define NXT_SENSOR_MODE_MODE_MASK        0xE0
 
-#define NXT_MOTORA   0
-#define NXT_MOTORB   1
-#define NXT_MOTORC   2
-#define NXT_MOTORABC 0xFF
-
-#define NXT_MOTORON   1
-#define NXT_BRAKE     2
-#define NXT_REGULATED 4
-
-#define NXT_REGMODE_IDLE        0
-#define NXT_REGMODE_MOTOR_SPEED 1
-#define NXT_REGMODE_MOTOR_SYNC  2
-
-#define NXT_RUN_STATE_IDLE     0
-#define NXT_RUN_STATE_RAMPUP   0x10
-#define NXT_RUN_STATE_RUNNING  0x20
-#define NXT_RUN_STATE_RAMPDOWN 0x40
-
-#define NXT_NUM_TYPES 12
-#define NXT_NUM_MODES 8
-
-#define nxt_setmotorrotation(nxt,motor,rot,power) nxt_motor(nxt,motor,rot,power,NXT_MOTORON,NXT_REGMODE_MOTOR_SPEED,0)
-#define nxt_setmotorbrake(nxt,motor)              nxt_motor(nxt,motor,0,0,NXT_MOTORON|NXT_BRAKE|NXT_REGULATED,NXT_REGMODE_MOTOR_SPEED,0)
-#define nxt_setmotorcoast(nxt,motor)              nxt_motor(nxt,motor,0,0,0,NXT_REGMODE_IDLE,0)
-
 #define NXT_BUFFER_POLL      0x00
 #define NXT_BUFFER_HIGHSPEED 0x01
 
-#define VALID_SENSOR(s)  ((s)>=0 && (s)<=3)
-#define VALID_MOTOR(m)   (((m)>=0 && (m)<=2) || (m)==NXT_MOTORABC)
-#define VALID_MAILBOX(m) ((m)>=0 && (m)<=9)
-#define VALID_VOLUME(v)  ((v)>=0 && (v)<=4)
-#define VALID_BUTTON(b)  ((b)>=1 && (b)<=4)
+#define NXT_VALID_SENSOR(s)  ((s)>=0 && (s)<=3)
+#define NXT_VALID_MAILBOX(m) ((m)>=0 && (m)<=9)
+#define NXT_VALID_VOLUME(v)  ((v)>=0 && (v)<=4)
+#define NXT_VALID_BUTTON(b)  ((b)>=1 && (b)<=4)
 
 #define NXT_CON_BUFFERSIZE 64
 
@@ -143,6 +128,21 @@
 
 #define nxt_open(name) nxt_open_net(name,"localhost",NXTNET_DEFAULT_PORT,NULL)
 
+struct nxt_motor {
+  int autoset;
+  int autoget;
+  int on;
+  int brake;
+  int power;
+  int regmode;
+  int turnratio;
+  int runstate;
+  int tacho_limit;
+  int tacho_count;
+  int tacho_block_count;
+  int rotation_count;
+};
+
 typedef enum {
   NXT_CON_USB,
   NXT_CON_BT
@@ -159,6 +159,7 @@ typedef struct {
   nxtnet_cli_t *cli;
   int handle;
   nxt_id_t id;
+  struct nxt_motor motors[3];
 } nxt_t;
 
 struct nxt_sensor_values {
@@ -180,31 +181,31 @@ void nxt_close(nxt_t *nxt);
 int nxt_error(nxt_t *nxt);
 char *nxt_strerror(unsigned int error);
 void nxt_reset_error(nxt_t *nxt);
-nxt_contype_t nxt_getcontype(nxt_t *nxt);
-int nxt_sendmsg(nxt_t *nxt,int mailbox,char *data);
-char *nxt_recvmsg(nxt_t *nxt,int mailbox,int clear);
-int nxt_setname(nxt_t *nxt,char *name);
-int nxt_getver(nxt_t *nxt,int *firmmaj,int *firmmin,int *protomaj,int *protomin);
-int nxt_setsensormode(nxt_t *nxt,int sensor,int type,int mode);
-int nxt_getsensorval(nxt_t *nxt,int sensor);
-int nxt_getsensorvals(nxt_t *nxt,int sensor,struct nxt_sensor_values *values);
-int nxt_resetsensor(nxt_t *nxt,int sensor);
-int nxt_getbattery(nxt_t *nxt);
-int nxt_motor(nxt_t *nxt,int motor,unsigned int rotation,int power,int mode,int regmode, int turnratio);
-int nxt_tacho(nxt_t *nxt,int motor);
-int nxt_resettacho(nxt_t *nxt,int motor,int relative);
-int nxt_runprogram(nxt_t *nxt,char *filename);
-int nxt_stopprogram(nxt_t *nxt);
-char *nxt_getcurprog(nxt_t *nxt);
-int nxt_getdevinfo(nxt_t *nxt,char **nxt_name,char bt_addr[6],unsigned int *bt_strength,unsigned int *free_flash);
-char *nxt_getname(nxt_t *nxt);
-int nxt_keepalive(nxt_t *nxt);
+nxt_contype_t nxt_get_connection_type(nxt_t *nxt);
+int nxt_send_msg(nxt_t *nxt,int mailbox,char *data);
+char *nxt_recv_msg(nxt_t *nxt,int mailbox,int clear);
+int nxt_set_name(nxt_t *nxt,char *name);
+int nxt_get_version(nxt_t *nxt,int *firmmaj,int *firmmin,int *protomaj,int *protomin);
+int nxt_set_sensor_mode(nxt_t *nxt,int sensor,int type,int mode);
+int nxt_get_sensor(nxt_t *nxt,int sensor);
+int nxt_get_sensor_values(nxt_t *nxt,int sensor,struct nxt_sensor_values *values);
+int nxt_reset_sensor(nxt_t *nxt,int sensor);
+int nxt_get_battery(nxt_t *nxt);
+int nxt_set_motor(nxt_t *nxt, int motor, unsigned int rotation, int power, int mode, int regmode, int turnratio, int runstate);
+int nxt_get_tacho(nxt_t *nxt,int motor);
+int nxt_reset_tacho(nxt_t *nxt,int motor,int relative);
+int nxt_run_program(nxt_t *nxt,char *filename);
+int nxt_stop_program(nxt_t *nxt);
+char *nxt_get_program(nxt_t *nxt);
+int nxt_get_devinfo(nxt_t *nxt,char **nxt_name,char bt_addr[6],unsigned int *bt_strength,unsigned int *free_flash);
+char *nxt_get_name(nxt_t *nxt);
+int nxt_keep_alive(nxt_t *nxt);
 int nxt_beep(nxt_t *nxt,unsigned int freq,unsigned int dur);
-int nxt_playsoundfile(nxt_t *nxt,char *filename,int loop);
-int nxt_stopsound(nxt_t *nxt);
-int nxt_resetbt(nxt_t *nxt);
-ssize_t nxt_pollcmd(nxt_t *nxt,void **ptr,int buffer);
-int nxt_deluserflash(nxt_t *nxt);
+int nxt_play_sound(nxt_t *nxt,char *filename,int loop);
+int nxt_stop_sound(nxt_t *nxt);
+int nxt_reset_bluetooth(nxt_t *nxt);
+ssize_t nxt_poll_command(nxt_t *nxt,void **ptr,int buffer);
+int nxt_delete_userflash(nxt_t *nxt);
 
 #endif /* _ANXT_NXT_H_ */
 

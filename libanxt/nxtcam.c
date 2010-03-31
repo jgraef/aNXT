@@ -27,7 +27,6 @@ int nxt_cam_i2c_addr = 0x02;
 int nxt_cam_num_objects(nxt_t *nxt,int port) {
   char buf;
 
-  sleep(1);
   if (nxt_i2c_read(nxt,port,nxt_cam_i2c_addr,NXT_CAM_REG_OBJCOUNT,1,&buf)==-1) {
     return -1;
   }

@@ -24,11 +24,15 @@
 
 #include <anxt/nxt.h>
 
+#define NXT_BUTTON_STATUS_STR(s) ((s)?"pressed":"released")
+#define NXT_BUTTON_STATUS_INT(s) ((s)?1:0)
+
 typedef void (*nxt_list_one_file_callback)(char *filename,size_t filesize,void *data);
 int nxt_list(nxt_t *nxt,char* wildcard,nxt_list_one_file_callback callback,void *data);
 int nxt_list_files(nxt_t *nxt,FILE *out,char *wildcard,int filesizes,int hidden);
 
 typedef void (*nxt_list_one_module_callback)(char *modname,int modid,size_t modsz,size_t iomapsz,void *data);
+int nxt_lsmod(nxt_t *nxt,char *wildcard,nxt_list_one_module_callback callback,void *data);
 int nxt_list_modules(nxt_t *nxt,FILE *out,char *wild);
 
 typedef void (*nxt_motor_record_callback)(double t,int tacho,void *data);
@@ -37,16 +41,15 @@ void nxt_motor_record(nxt_t *nxt,int motor,double t,nxt_motor_record_callback ca
 void nxt_motor_playback(nxt_t *nxt,int motor,int power,int numvalues,double *times,int *rotations,int stop,int verbose);
 int nxt_read_recorded_file(int *numvalues,double **times,int **rotations,FILE *file);
 
-int nxt_str2motorport(char *str);
-int nxt_str2motorport1(char *str);
-int nxt_str2motorport2(char *str);
-int nxt_str2btn(char *str);
-int nxt_str2fmt(char *str);
+int nxt_chr2motor(char chr);
+int nxt_str2motor(const char *str);
+int nxt_str2button(char *str);
+int nxt_str2format(char *str);
 int nxt_str2type(char *str);
 int nxt_str2mode(char *str);
 
-char *nxt_getType(int i);
-char *nxt_getMode(int i);
+char *nxt_get_type(int i);
+char *nxt_get_mode(int i);
 
 int nxt_download(nxt_t *nxt,char *src,char *dest);
 int nxt_upload(nxt_t *nxt,char *src,char *dest,int oflag);

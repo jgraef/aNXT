@@ -3,7 +3,9 @@
 
 -include Makefile.config
 
-all:
+.PHONY: all installfiles install tar.gz clean realclean
+
+all: bin/anxt-config
 	make -C libanxt/
 	make -C libanxt_file/
 	make -C libanxt_net/
@@ -11,6 +13,12 @@ all:
 	make -C nxtd/
 	make -C examples/
 	make -C tools/
+
+##### make config script ####
+
+bin/anxt-config: tools/anxt-config-creator.sh
+	sh $^ $(PREFIX) > $@
+	chmod 755 $@
 
 ##### Install target #####
 
@@ -23,8 +31,6 @@ installfiles:
 	cp -R bin/* $(PATH_BIN)
 	mkdir -p $(PATH_MAN)
 	cp -R doc/man/* $(PATH_MAN)
-	sh tools/anxt-config-creator.sh $(PREFIX) > $(PATH_BIN)/anxt-config
-	chmod 755 $(PATH_BIN)/anxt-config
 
 install: installfiles
 	ln -sf $(PATH_LIB)/libanxt.so.1 $(PATH_LIB)/libanxt.so
@@ -40,6 +46,7 @@ tar.gz:
 ##### Clean target #####
 
 clean:
+	rm bin/anxt-config
 	make -C libanxt/ clean
 	make -C libanxt_file/ clean
 	make -C libanxt_net/ clean

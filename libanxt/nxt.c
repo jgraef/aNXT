@@ -25,10 +25,10 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <stdio.h>
-#include <nxtnet.h>
 #include <unistd.h>
 
 #include <anxt/nxt.h>
+#include <anxt/net.h>
 #include "private.h"
 
 /**
@@ -98,6 +98,12 @@ nxt_t *nxt_open_net(const char *name,const char *hostname,int port,const char *p
         nxt->contype = list->nxts[i].is_bt?NXT_CON_BT:NXT_CON_USB;
         nxt->handle = list->nxts[i].handle;
         memcpy(nxt->id, list->nxts[i].id, 6);
+        nxt_motor_reset(nxt, 0);
+        nxt_motor_get_state(nxt, 0);
+        nxt_motor_reset(nxt, 1);
+        nxt_motor_get_state(nxt, 1);
+        nxt_motor_reset(nxt, 2);
+        nxt_motor_get_state(nxt, 2);
         return nxt;
       }
     }
@@ -206,7 +212,7 @@ void nxt_reset_error(nxt_t *nxt) {
  *  @param nxt NXT handle
  *  @return Connection type
  */
-nxt_contype_t nxt_getcontype(nxt_t *nxt) {
+nxt_contype_t nxt_get_connection_type(nxt_t *nxt) {
   return nxt->contype;
 }
 
@@ -217,8 +223,8 @@ nxt_contype_t nxt_getcontype(nxt_t *nxt) {
  *  @param data Message
  *  @return Whether message could be sent
  */
-int nxt_sendmsg(nxt_t *nxt,int mailbox,char *data) {
-  if (!VALID_MAILBOX(mailbox)) return NXT_FAIL;
+int nxt_send_msg(nxt_t *nxt,int mailbox,char *data) {
+  if (!NXT_VALID_MAILBOX(mailbox)) return NXT_FAIL;
   size_t len = strlen(data)+1;
   nxt_pack_start(nxt,0x09);
   nxt_pack_byte(nxt,mailbox);
@@ -238,8 +244,8 @@ int nxt_sendmsg(nxt_t *nxt,int mailbox,char *data) {
  *  @return Message as string
  *  @note The return pointer can and should be passed to free()
  */
-char *nxt_recvmsg(nxt_t *nxt,int mailbox,int clear) {
-  if (!VALID_MAILBOX(mailbox)) return NULL;
+char *nxt_recv_msg(nxt_t *nxt,int mailbox,int clear) {
+  if (!NXT_VALID_MAILBOX(mailbox)) return NULL;
   nxt_pack_start(nxt,0x13);
   nxt_pack_byte(nxt,mailbox);
   nxt_pack_byte(nxt,0);
@@ -259,7 +265,7 @@ char *nxt_recvmsg(nxt_t *nxt,int mailbox,int clear) {
  *  @param name New NXT name
  *  @return Whether name could be set
  */
-int nxt_setname(nxt_t *nxt,char *name) {
+int nxt_set_name(nxt_t *nxt,char *name) {
   nxt_pack_start(nxt,0x98);
   nxt_pack_str(nxt,name,15);
   test(nxt_con_send(nxt));
@@ -282,7 +288,7 @@ int nxt_setname(nxt_t *nxt,char *name) {
  *  @param protomin Pointer where to store minor protocol version
  *  @return Whether function was successful
  */
-int nxt_getver(nxt_t *nxt,int *firmmaj,int *firmmin,int *protomaj,int *protomin) {
+int nxt_get_version(nxt_t *nxt,int *firmmaj,int *firmmin,int *protomaj,int *protomin) {
   nxt_pack_start(nxt,0x88);
   test(nxt_con_send(nxt));
   test(nxt_con_recv(nxt,7));
@@ -309,8 +315,8 @@ int nxt_getver(nxt_t *nxt,int *firmmaj,int *firmmin,int *protomaj,int *protomin)
  *  @param mode Sensor mode
  *  @return Success?
  */
-int nxt_setsensormode(nxt_t *nxt,int sensor,int type,int mode) {
-  if (!VALID_SENSOR(sensor)) return NXT_FAIL;
+int nxt_set_sensor_mode(nxt_t *nxt,int sensor,int type,int mode) {
+  if (!NXT_VALID_SENSOR(sensor)) return NXT_FAIL;
   nxt_pack_start(nxt,0x05);
   nxt_pack_byte(nxt,sensor);
   nxt_pack_byte(nxt,type);
@@ -327,9 +333,9 @@ int nxt_setsensormode(nxt_t *nxt,int sensor,int type,int mode) {
  *  @param sensor Sensor (0,1,2,3)
  *  @return Sensor value
  */
-int nxt_getsensorval(nxt_t *nxt,int sensor) {
+int nxt_get_sensor(nxt_t *nxt,int sensor) {
   struct nxt_sensor_values values;
-  if (nxt_getsensorvals(nxt,sensor,&values)==0) {
+  if (nxt_get_sensor_values(nxt,sensor,&values)==0) {
     return values.is_calibrated?values.calibrated:values.scaled;
   }
   else {
@@ -345,8 +351,8 @@ int nxt_getsensorval(nxt_t *nxt,int sensor) {
  *  @return 0 = Success
  *         -1 = Failure
  */
-int nxt_getsensorvals(nxt_t *nxt,int sensor,struct nxt_sensor_values *values) {
-  if (!VALID_SENSOR(sensor)) return NXT_FAIL;
+int nxt_get_sensor_values(nxt_t *nxt,int sensor,struct nxt_sensor_values *values) {
+  if (!NXT_VALID_SENSOR(sensor)) return NXT_FAIL;
   nxt_pack_start(nxt,0x07);
   nxt_pack_byte(nxt,sensor);
   test(nxt_con_send(nxt));
@@ -368,7 +374,7 @@ int nxt_getsensorvals(nxt_t *nxt,int sensor,struct nxt_sensor_values *values) {
     }
     else {
       nxt_wait_after_direct_command();
-      return nxt_getsensorvals(nxt,sensor,values);
+      return nxt_get_sensor_values(nxt,sensor,values);
     }
   }
   return NXT_FAIL;
@@ -380,8 +386,8 @@ int nxt_getsensorvals(nxt_t *nxt,int sensor,struct nxt_sensor_values *values) {
  *  @param sensor Sensor (0,1,2,3)
  *  @return Success?
  */
-int nxt_resetsensor(nxt_t *nxt,int sensor) {
-  if (!VALID_SENSOR(sensor)) return NXT_FAIL;
+int nxt_reset_sensor(nxt_t *nxt,int sensor) {
+  if (!NXT_VALID_SENSOR(sensor)) return NXT_FAIL;
   nxt_pack_start(nxt,0x08);
   nxt_pack_byte(nxt,sensor);
   test(nxt_con_send(nxt));
@@ -395,7 +401,7 @@ int nxt_resetsensor(nxt_t *nxt,int sensor) {
  *  @param nxt NXT handle
  *  @return battery level in millivolt
  */
-int nxt_getbattery(nxt_t *nxt) {
+int nxt_get_battery(nxt_t *nxt) {
   nxt_pack_start(nxt,0x0B);
   test(nxt_con_send(nxt));
   test(nxt_con_recv(nxt,5));
@@ -405,90 +411,10 @@ int nxt_getbattery(nxt_t *nxt) {
 }
 
 /**
- * Sets rotation of a motor
- *  @param nxt NXT handle
- *  @param motor (0,1,2)
- *  @param rotation (0..360)
- *  @param power (-100..100)
- *  @param mode (0..7)
- *  @param regmode (0..3)
- *  @param turnratio (-100..100)
- *  @return Success?
- *  @note If rotation is 0 motor will work until it's turned off
- */
-int nxt_motor(nxt_t *nxt,int motor,unsigned int rotation,int power,int mode,int regmode,int turnratio) {
-  if (!VALID_MOTOR(motor)) return NXT_FAIL;
-  nxt_pack_start(nxt,0x04);
-  nxt_pack_byte(nxt,motor);
-  nxt_pack_byte(nxt,power);
-  nxt_pack_byte(nxt,mode);
-  if ((power == 0) && ((mode & NXT_BRAKE) == 0))
-    nxt_pack_byte(nxt,NXT_REGMODE_IDLE);
-  else
-    nxt_pack_byte(nxt,regmode);
-  nxt_pack_byte(nxt,turnratio);
-  if ((power == 0) && ((mode & NXT_BRAKE) == 0))
-    nxt_pack_byte(nxt,NXT_RUN_STATE_IDLE);
-  else
-    nxt_pack_byte(nxt,NXT_RUN_STATE_RUNNING);
-  nxt_pack_dword(nxt,rotation);
-  test(nxt_con_send(nxt));
-  test(nxt_con_recv(nxt,3));
-  test(nxt_unpack_start(nxt,0x04));
-  return nxt_unpack_error(nxt)==0?NXT_SUCC:NXT_FAIL;
-}
-
-/**
- * Get tacho value (gets motor rotation)
- *  @param nxt NXT handle
- *  @param motor Motor
- *  @return Rotation count
- */
-int nxt_tacho(nxt_t *nxt,int motor) {
-  if (!VALID_MOTOR(motor)) return NXT_FAIL;
-  nxt_pack_start(nxt,0x06);
-  nxt_pack_byte(nxt,motor);
-  test(nxt_con_send(nxt));
-  test(nxt_con_recv(nxt,25));
-  test(nxt_unpack_start(nxt,0x06));
-  if (nxt_unpack_error(nxt)==0) {
-    nxt_unpack_byte(nxt); // Motor
-    nxt_unpack_byte(nxt); // Power
-    nxt_unpack_byte(nxt); // Mode
-    nxt_unpack_byte(nxt); // Regulation Mode
-    nxt_unpack_byte(nxt); // Turn Ratio
-    nxt_unpack_byte(nxt); // RunState
-    nxt_unpack_dword(nxt); // Tacho Limit
-    nxt_unpack_dword(nxt); // Tacho Count
-    nxt_unpack_dword(nxt); // Block Tacho Count
-    return nxt_unpack_dword(nxt);
-  }
-  else return NXT_FAIL;
-}
-
-/**
- * Resets current tacho value
- *  @param nxt NXT handle
- *  @param motor Motor
- *  @param relative Relativ (or Absolute)
- *  @return Whether resetting was successful
- */
-int nxt_resettacho(nxt_t *nxt,int motor,int relative) {
-  if (!VALID_MOTOR(motor)) return NXT_FAIL;
-  nxt_pack_start(nxt,0x0A);
-  nxt_pack_byte(nxt,motor);
-  nxt_pack_byte(nxt,relative?1:0);
-  test(nxt_con_send(nxt));
-  test(nxt_con_recv(nxt,3));
-  test(nxt_unpack_start(nxt,0x0A));
-  return nxt_unpack_error(nxt)==0?NXT_SUCC:NXT_FAIL;
-}
-
-/**
  * Stops program
  *  @param nxt NXT handle
  */
-int nxt_stopprogram(nxt_t *nxt) {
+int nxt_stop_program(nxt_t *nxt) {
   nxt_pack_start(nxt,0x01);
   test(nxt_con_send(nxt));
   test(nxt_con_recv(nxt,3));
@@ -502,7 +428,7 @@ int nxt_stopprogram(nxt_t *nxt) {
  *  @return Name of current programm
  *  @note The return pointer can and should be passed to free()
  */
-char *nxt_getcurprog(nxt_t *nxt) {
+char *nxt_get_program(nxt_t *nxt) {
   nxt_pack_start(nxt,0x11);
   if (nxt_con_send(nxt)==NXT_FAIL) return NULL;
   usleep(60000); // latency of direct output commands: up to 60 ms
@@ -522,7 +448,7 @@ char *nxt_getcurprog(nxt_t *nxt) {
  *  @note Set a reference to NULL if you do not need this value
  *  @note The pointer 'nxt_name' can and should be passed to free()
  */
-int nxt_getdevinfo(nxt_t *nxt,char **nxt_name,char bt_addr[6],unsigned int *bt_strength,unsigned int *free_flash) {
+int nxt_get_devinfo(nxt_t *nxt,char **nxt_name,char bt_addr[6],unsigned int *bt_strength,unsigned int *free_flash) {
   nxt_pack_start(nxt,0x9B);
   test(nxt_con_send(nxt));
   test(nxt_con_recv(nxt,33));
@@ -546,7 +472,7 @@ int nxt_getdevinfo(nxt_t *nxt,char **nxt_name,char bt_addr[6],unsigned int *bt_s
  *  @param nxt NXT handle
  *  @return NXT name as string
  */
-char *nxt_getname(nxt_t *nxt) {
+char *nxt_get_name(nxt_t *nxt) {
   return nxt->name;
 }
 
@@ -555,7 +481,7 @@ char *nxt_getname(nxt_t *nxt) {
  *  @param nxt NXT handle
  *  @return Current sleep time limit (in milliseconds)
  */
-int nxt_keepalive(nxt_t *nxt) {
+int nxt_keep_alive(nxt_t *nxt) {
   nxt_pack_start(nxt,0x0D);
   test(nxt_con_send(nxt));
   test(nxt_con_recv(nxt,7));
@@ -587,7 +513,7 @@ int nxt_beep(nxt_t *nxt,unsigned int freq,unsigned int dur) {
  *  @param loop Whether to loop sound playback
  *  @return Success
  */
-int nxt_playsoundfile(nxt_t *nxt,char *filename,int loop) {
+int nxt_play_sound(nxt_t *nxt,char *filename,int loop) {
   nxt_pack_start(nxt,0x02);
   nxt_pack_byte(nxt,loop?1:0);
   nxt_pack_str(nxt,filename,20);
@@ -602,7 +528,7 @@ int nxt_playsoundfile(nxt_t *nxt,char *filename,int loop) {
  *  @param nxt NXT handle
  *  @return Success
  */
-int nxt_stopsound(nxt_t *nxt) {
+int nxt_stop_sound(nxt_t *nxt) {
   nxt_pack_start(nxt,0x0C);
   test(nxt_con_send(nxt));
   test(nxt_con_recv(nxt,3));
@@ -616,7 +542,7 @@ int nxt_stopsound(nxt_t *nxt) {
  *  @param filename Program file
  *  @return Success
  */
-int nxt_startprogram(nxt_t *nxt,char *filename) {
+int nxt_run_program(nxt_t *nxt,char *filename) {
   nxt_pack_start(nxt,0x00);
   nxt_pack_str(nxt,filename,20);
   test(nxt_con_send(nxt));
@@ -632,7 +558,7 @@ int nxt_startprogram(nxt_t *nxt,char *filename) {
  *  @return Success
  *  @note Can only be done via USB
  */
-int nxt_resetbt(nxt_t *nxt) {
+int nxt_reset_bluetooth(nxt_t *nxt) {
   if (nxt->contype==NXT_CON_BT) return NXT_FAIL;
   nxt_pack_start(nxt,0xA4);
   test(nxt_con_send(nxt));
@@ -654,7 +580,7 @@ int nxt_resetbt(nxt_t *nxt) {
  *  @note The pointer 'ptr' can and should be passed to free()
  *  @todo What does this function do?
  */
-ssize_t nxt_pollcmd(nxt_t *nxt,void **ptr,int buffer) {
+ssize_t nxt_poll_command(nxt_t *nxt,void **ptr,int buffer) {
   if (ptr==NULL) return NXT_FAIL;
   // get size
   nxt_pack_start(nxt,0xA1);
@@ -687,11 +613,11 @@ ssize_t nxt_pollcmd(nxt_t *nxt,void **ptr,int buffer) {
 }
 
 /**
- * Removes user flash
+ * Deletes user flash
  *  @param nxt NXT handle
  *  @note Can take upto 3 seconds
  */
-int nxt_deluserflash(nxt_t *nxt) {
+int nxt_delete_userflash(nxt_t *nxt) {
   nxt_pack_start(nxt,0xA0);
   test(nxt_con_send(nxt));
   test(nxt_con_recv(nxt,3));

@@ -129,7 +129,7 @@ int main(int argc,char *argv[]) {
     fprintf(stderr,"Could not find NXT\n");
     return 1;
   }
-  if (nxt_getcontype(nxt)==NXT_CON_BT && !force) {
+  if (nxt_get_connection_type(nxt)==NXT_CON_BT && !force) {
     fprintf(stderr,"Warning! Using NXT Pilot over Bluetooth can make trouble. Are you sure to continue (y/n)[n]: ");
     if (fgetc(stdin)!='y') {
       nxt_close(nxt);
@@ -171,7 +171,7 @@ int main(int argc,char *argv[]) {
   SDL_BlitSurface(exit,NULL,screen,&rect_exit);
 
   int done = 0;
-  unsigned int pause = nxt_getcontype(nxt)==NXT_CON_BT?500:100;
+  unsigned int pause = nxt_get_connection_type(nxt)==NXT_CON_BT?500:100;
   while (!done) {
     while (SDL_PollEvent(&event)) {
       switch(event.type) {
@@ -180,16 +180,16 @@ int main(int argc,char *argv[]) {
           break;
         case SDL_KEYUP:
           if (event.key.keysym.sym==SDLK_ESCAPE) done = 1;
-          else if (event.key.keysym.sym==SDLK_RETURN) nxt_setbutton(nxt,NXT_UI_BUTTON_ENTER);
-          else if (event.key.keysym.sym==SDLK_BACKSPACE) nxt_setbutton(nxt,NXT_UI_BUTTON_EXIT);
-          else if (event.key.keysym.sym==SDLK_LEFT) nxt_setbutton(nxt,NXT_UI_BUTTON_LEFT);
-          else if (event.key.keysym.sym==SDLK_RIGHT) nxt_setbutton(nxt,NXT_UI_BUTTON_RIGHT);
+          else if (event.key.keysym.sym==SDLK_RETURN) nxt_set_button(nxt,NXT_UI_BUTTON_ENTER);
+          else if (event.key.keysym.sym==SDLK_BACKSPACE) nxt_set_button(nxt,NXT_UI_BUTTON_EXIT);
+          else if (event.key.keysym.sym==SDLK_LEFT) nxt_set_button(nxt,NXT_UI_BUTTON_LEFT);
+          else if (event.key.keysym.sym==SDLK_RIGHT) nxt_set_button(nxt,NXT_UI_BUTTON_RIGHT);
           break;
         case SDL_MOUSEBUTTONUP:
-          if (in_rect(rect_left,event.button)) nxt_setbutton(nxt,NXT_UI_BUTTON_LEFT);
-          else if (in_rect(rect_enter,event.button)) nxt_setbutton(nxt,NXT_UI_BUTTON_ENTER);
-          else if (in_rect(rect_right,event.button)) nxt_setbutton(nxt,NXT_UI_BUTTON_RIGHT);
-          else if (in_rect(rect_exit,event.button)) nxt_setbutton(nxt,NXT_UI_BUTTON_EXIT);
+          if (in_rect(rect_left,event.button)) nxt_set_button(nxt,NXT_UI_BUTTON_LEFT);
+          else if (in_rect(rect_enter,event.button)) nxt_set_button(nxt,NXT_UI_BUTTON_ENTER);
+          else if (in_rect(rect_right,event.button)) nxt_set_button(nxt,NXT_UI_BUTTON_RIGHT);
+          else if (in_rect(rect_exit,event.button)) nxt_set_button(nxt,NXT_UI_BUTTON_EXIT);
           break;
       }
     }

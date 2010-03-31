@@ -25,6 +25,7 @@
 #include <stdlib.h>
 
 #include <anxt/nxt.h>
+#include <anxt/motor.h>
 
 void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;
@@ -85,9 +86,13 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  rot = nxt_tacho(nxt,motor);
-  if (reset) nxt_resettacho(nxt,motor,0);
-  if (verbose) printf("Motor %c: ",motor+'A');
+  rot = nxt_motor_get_rotation_count(nxt, motor);
+  if (reset) {
+    nxt_motor_reset_tacho(nxt, motor, 0);
+  }
+  if (verbose) {
+    printf("Motor %c: ",motor+'A');
+  }
   printf("%d%s\n",rot,verbose?"°":"");
 
   int ret = nxt_error(nxt);

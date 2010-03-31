@@ -64,7 +64,12 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  nxt_resetbt(nxt);
+  if (nxt_get_connection_type(nxt)==NXT_CON_BT) {
+    fprintf(stderr, "Bluetooth can be only reset via USB\n");
+    return 1;
+  }
+
+  nxt_reset_bluetooth(nxt);
 
   int ret = nxt_error(nxt);
   if (name!=NULL) free(name);

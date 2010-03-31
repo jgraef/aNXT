@@ -78,14 +78,14 @@ int main(int argc,char *argv[]) {
   protomaj = 0;
   protomin = 0;
 
-  if ((volume = nxt_getvolume(nxt))==-1) ERROR();
-  if ((battery = nxt_getbattery(nxt))==-1) ERROR();
-  if ((devinfo = nxt_getdevinfo(nxt,&nxt_name,bt_addr,&bt_strength,&free_flash))==-1) ERROR();
-  if ((ver = nxt_getver(nxt,&firmmaj,&firmmin,&protomaj,&protomin))==-1) ERROR();
-  if ((nxt_name = nxt_getname(nxt))==NULL) ERROR();
+  if ((volume = nxt_get_volume(nxt))==-1) ERROR();
+  if ((battery = nxt_get_battery(nxt))==-1) ERROR();
+  if ((devinfo = nxt_get_devinfo(nxt,&nxt_name,bt_addr,&bt_strength,&free_flash))==-1) ERROR();
+  if ((ver = nxt_get_version(nxt,&firmmaj,&firmmin,&protomaj,&protomin))==-1) ERROR();
+  if ((nxt_name = nxt_get_name(nxt))==NULL) ERROR();
 
   if (nxt_name) printf("Name:               %s\n",nxt_name);
-  printf("Connection type:    %s\n",nxt_getcontype(nxt)==NXT_CON_USB?"USB":"Bluetooth");
+  printf("Connection type:    %s\n",nxt_get_connection_type(nxt)==NXT_CON_USB?"USB":"Bluetooth");
   if (battery>=0) printf("Battery:            %dmV\n",battery);
   if (volume>=0) printf("Volume:             %d\n",volume);
   if (devinfo>=0) {

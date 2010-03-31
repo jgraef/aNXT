@@ -127,7 +127,7 @@ int nxt_file_open(nxt_t *nxt,const char *file,int oflag,...) {
   if (FLAG_ISSET(oflag,NXT_OREAD)) handle = nxt_file_open_read(nxt,file,va_arg(args,size_t*));
   else if (FLAG_ISSET(oflag,NXT_OAPPND)) handle = nxt_file_open_append(nxt,file,va_arg(args,size_t*));
   else {
-    if (FLAG_ISSET(oflag,NXT_OWOVER) && (handle = nxt_findfirst(nxt,file,NULL,NULL))>=0) {
+    if (FLAG_ISSET(oflag,NXT_OWOVER) && (handle = nxt_file_find_first(nxt,file,NULL,NULL))>=0) {
       nxt_file_close(nxt,handle);
       nxt_file_remove(nxt,file);
       handle = -1;
@@ -272,7 +272,7 @@ int nxt_file_remove(nxt_t *nxt,const char *file) {
  *  @note The pointer 'filename' can and should be passed to free()
  *  @note If the file is not needed it should be passed to nxt_file_close()
  */
-int nxt_findfirst(nxt_t *nxt,const char *wildcard,char **filename,size_t *filesize) {
+int nxt_file_find_first(nxt_t *nxt,const char *wildcard,char **filename,size_t *filesize) {
   nxt_pack_start(nxt,0x86);
   nxt_pack_str(nxt,wildcard,20);
   test(nxt_con_send(nxt));
@@ -297,7 +297,7 @@ int nxt_findfirst(nxt_t *nxt,const char *wildcard,char **filename,size_t *filesi
  *  @note The pointer 'filename' can and should be passed to free()
  *  @note If the file is not needed it should be passed to nxt_file_close()
  */
-int nxt_findnext(nxt_t *nxt,int handle,char **filename,size_t *filesize) {
+int nxt_file_find_next(nxt_t *nxt,int handle,char **filename,size_t *filesize) {
   nxt_pack_start(nxt,0x87);
   nxt_pack_byte(nxt,handle);
   test(nxt_con_send(nxt));

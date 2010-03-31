@@ -72,7 +72,7 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  if (nxt_setname(nxt,new)!=0) fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
+  if (nxt_set_name(nxt,new)!=0) fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
 
   int ret = nxt_error(nxt);
   if (name!=NULL) free(name);

@@ -56,7 +56,7 @@ int main(int argc,char *argv[]) {
         break;
       case 'm':
         newbox = atoi(optarg)-1;
-        if (VALID_MAILBOX(newbox)) box = newbox;
+        if (NXT_VALID_MAILBOX(newbox)) box = newbox;
         else {
           fprintf(stderr,"Invalid mailbox: %d",newbox+1);
           usage(argv[0],1);
@@ -85,7 +85,7 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  if ((msg = nxt_recvmsg(nxt,box,clear))!=NULL) {
+  if ((msg = nxt_recv_msg(nxt,box,clear))!=NULL) {
     if (verbose) printf("Mailbox %d: ",box+1);
     printf("%s%c",msg,verbose?'\n':0);
     free(msg);

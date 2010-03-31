@@ -81,7 +81,7 @@ int main(int argc,char *argv[]) {
 
   if (really=='y') {
     printf("Deleting user flash. Please wait...\n");
-    nxt_deluserflash(nxt);
+    nxt_delete_userflash(nxt);
   }
 
   int ret = nxt_error(nxt);

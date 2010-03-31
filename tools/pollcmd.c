@@ -83,7 +83,7 @@ int main(int argc,char *argv[]) {
   }
 
   void *cmd;
-  ssize_t size = nxt_pollcmd(nxt,&cmd,buf);
+  ssize_t size = nxt_poll_command(nxt,&cmd,buf);
   if (size>0) {
     fwrite(cmd,1,size,stdout);
     free(cmd);

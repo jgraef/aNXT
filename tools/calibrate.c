@@ -41,43 +41,43 @@ void usage(char *cmd,int r) {
 }
 
 void calibrate_light(nxt_t *nxt,int sensor,unsigned int *min,unsigned int *max) {
-  nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_ACTIVE,NXT_SENSOR_MODE_RAW);
+  nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_LIGHT_ACTIVE,NXT_SENSOR_MODE_RAW);
 
   printf("Hold the light sensor over a black field of you test pad\n");
   printf("Press Enter to continue");
   fflush(stdout);
   while (getchar()!='\n');
-  *min = nxt_getsensorval(nxt,sensor);
+  *min = nxt_get_sensor(nxt,sensor);
   printf("Minimum value (raw): %d\n\n",*min);
 
   printf("Hold the light sensor over a white field of you test pad\n");
   printf("Press Enter to continue");
   fflush(stdout);
   while (getchar()!='\n');
-  *max = nxt_getsensorval(nxt,sensor);
+  *max = nxt_get_sensor(nxt,sensor);
   printf("Maximum value (raw): %d\n\n",*max);
 
-  nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
+  nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
 }
 
 void calibrate_sound(nxt_t *nxt,int sensor,unsigned int *min,unsigned int *max) {
-  nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_SOUND_DBA,NXT_SENSOR_MODE_RAW);
+  nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_SOUND_DBA,NXT_SENSOR_MODE_RAW);
 
   printf("Be quiet around your sound sensor\n");
   printf("Press Enter to continue");
   fflush(stdout);
   while (getchar()!='\n');
-  *min = nxt_getsensorval(nxt,sensor);
+  *min = nxt_get_sensor(nxt,sensor);
   printf("Minimum value (raw): %d\n\n",*min);
 
   printf("Make noise around your sound sensor\n");
   printf("Press Enter to continue");
   fflush(stdout);
   while (getchar()!='\n');
-  *max = nxt_getsensorval(nxt,sensor);
+  *max = nxt_get_sensor(nxt,sensor);
   printf("Maximum value (raw): %d\n\n",*max);
 
-  nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
+  nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
 }
 
 int main(int argc,char *argv[]) {

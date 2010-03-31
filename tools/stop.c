@@ -64,7 +64,7 @@ int main(int argc,char *argv[]) {
     return 1;
   }
 
-  nxt_stopprogram(nxt);
+  nxt_stop_program(nxt);
 
   int ret = nxt_error(nxt);
   if (name!=NULL) free(name);

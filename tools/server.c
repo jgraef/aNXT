@@ -39,6 +39,7 @@
 
 #include <anxt/nxt.h>
 #include <anxt/mod.h>
+#include <anxt/motor.h>
 #include <anxt/file.h>
 #include <anxt/tools.h>
 #include <anxt/i2c/us.h>
@@ -93,7 +94,7 @@ static int button;             /* argument for option b */
 static int force;              /*              option f */
 static int oflag;              /* argument for option o */
 
-/* nxt_motor arguments */
+/* nxt_set_motor arguments */
 static int motor;              /* argument for option m */
 static int power;              /* argument for option p */
 static int rot;                /* argument for option r */
@@ -105,12 +106,12 @@ static int idle;               /*              option i */
 /* nxt_motor_record arguments */
 static double time;            /* argument for option t */
 
-/* nxt_motor_travel arguments */
+/* nxt_set_motor_travel arguments */
 static int motor1;             /* argument for option m */
 static int motor2;             /* argument for option m */
 static int turnratio;          /* argument for option t */
 
-/* nxt_pollcmd arguments */
+/* nxt_poll_command arguments */
 static int buffer = NXT_BUFFER_POLL; /* argument for option b */
 
 /* nxt_recv arguments */
@@ -225,14 +226,14 @@ static void handle_argument(char option, char* argument)
    switch(option) {
      case 'f':
        frequency = atoi(argument);
-       format = nxt_str2fmt(argument);
+       format = nxt_str2fileformat(argument);
        break;
      case 'd':
        duration = atoi(argument);
        break;
 
      case 'b':
-       button = nxt_str2btn(argument);
+       button = nxt_str2button(argument);
        if (strcasecmp(argument,"highspeed")==0) 
          buffer = NXT_BUFFER_HIGHSPEED;
        else if (strcasecmp(argument,"poll")==0)       
@@ -240,9 +241,9 @@ static void handle_argument(char option, char* argument)
        break;
 
      case 'm':
-       motor = nxt_str2motorport(argument);
-       motor1 = nxt_str2motorport1(argument);
-       motor2 = nxt_str2motorport2(argument);
+       motor = nxt_str2motor(argument);
+       motor1 = nxt_str2motor1(argument);
+       motor2 = nxt_str2motor2(argument);
        mailbox = atoi(argument)-1;
        mode = nxt_str2mode(argument);
        break;
@@ -362,7 +363,7 @@ static void handle_commmands(char *command, char *fifo_out, char *fifo_err)
     if (strcmp(command,"beep")==0) {
       nxt_beep(nxt,frequency,duration);
     } else if (strcmp(command,"delflash")==0) {
-      nxt_deluserflash(nxt);
+      nxt_delete_userflash(nxt);
     } else if (strcmp(command,"download")==0) {
       if (arg1 != NULL) {
          if (arg2 == NULL)
@@ -371,7 +372,7 @@ static void handle_commmands(char *command, char *fifo_out, char *fifo_err)
       }
     } else if (strcmp(command,"getprog")==0) {
       char *prog;
-      prog = nxt_getcurprog(nxt);
+      prog = nxt_get_program(nxt);
       if (prog != NULL)
         snprintf(output,OUTPUT_SIZE,"%s\n",prog);
     } else if (strcmp(command,"info")==0) {
@@ -380,10 +381,10 @@ static void handle_commmands(char *command, char *fifo_out, char *fifo_err)
       unsigned int bt_strength,free_flash;
       int firmmaj,firmmin,protomaj,protomin,battery,devinfo,ver,volume;
   
-      volume = nxt_getvolume(nxt);
-      battery = nxt_getbattery(nxt);
-      devinfo = nxt_getdevinfo(nxt,&nxt_name,bt_addr,&bt_strength,&free_flash);
-      ver = nxt_getver(nxt,&firmmaj,&firmmin,&protomaj,&protomin);
+      volume = nxt_get_volume(nxt);
+      battery = nxt_get_battery(nxt);
+      devinfo = nxt_get_devinfo(nxt,&nxt_name,bt_addr,&bt_strength,&free_flash);
+      ver = nxt_get_version(nxt,&firmmaj,&firmmin,&protomaj,&protomin);
   
       snprintf(outptr,rest,"Name:               %s\n",nxt_name);
       UPDATE_OUTPUT_PTR()
@@ -425,10 +426,8 @@ static void handle_commmands(char *command, char *fifo_out, char *fifo_err)
     } else if (strcmp(command,"motor")==0) {
       if (power == INT_MAX)
         power = 50;
-        if (idle)
-          nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0),NXT_REGMODE_IDLE,turnratio);
-        else
-          nxt_motor(nxt,motor,rot,brake?0:power,NXT_MOTORON|(brake||syncro?NXT_BRAKE|NXT_REGULATED:0),syncro?NXT_REGMODE_MOTOR_SYNC:NXT_REGMODE_MOTOR_SPEED,turnratio);
+      // TODO Motor code has changed a lot. Server should change too
+      nxt_motor_rotate(nxt, motor, rot, power);
     } else if (strcmp(command,"motor_playback")==0) {
       int numvalues;
       double *times;
@@ -466,33 +465,35 @@ static void handle_commmands(char *command, char *fifo_out, char *fifo_err)
       int regmode = 0;
       int synchronise = 1;
 
-      nxt_motor(nxt,motor1,rotation1,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?:NXT_REGMODE_IDLE,turnratio);
-      nxt_motor(nxt,motor2,rotation2,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?:NXT_REGMODE_IDLE,turnratio);
+      // FIXME
+      //nxt_set_motor(nxt,motor1,rotation1,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?:NXT_REGMODE_IDLE,turnratio);
+      //nxt_set_motor(nxt,motor2,rotation2,0,brake?NXT_MOTORON|NXT_BRAKE|NXT_REGULATED:0,brake?:NXT_REGMODE_IDLE,turnratio);
 
-      nxt_resettacho(nxt,motor1,1);
-      nxt_resettacho(nxt,motor2,1);
+      nxt_motor_reset_tacho(nxt,motor1,1);
+      nxt_motor_reset_tacho(nxt,motor2,1);
 
       if (idle) {
-        mode = brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0);
-        regmode = NXT_REGMODE_IDLE;
+        //mode = brake?0:power,NXT_MOTORON|(brake?NXT_BRAKE|NXT_REGULATED:0);
+        //regmode = NXT_REGMODE_IDLE;
       } else {
-        mode = NXT_MOTORON|(brake||(synchronise && (turnratio == 0))?NXT_BRAKE:0)|NXT_REGULATED;
-       regmode = synchronise && (power != 0)?NXT_REGMODE_MOTOR_SYNC:NXT_REGMODE_MOTOR_SPEED;
+        //mode = NXT_MOTORON|(brake||(synchronise && (turnratio == 0))?NXT_BRAKE:0)|NXT_REGULATED;
+       //regmode = synchronise && (power != 0)?NXT_REGMODE_MOTOR_SYNC:NXT_REGMODE_MOTOR_SPEED;
       }
- 
-      nxt_motor(nxt,motor1,rotation1,brake?0:power,mode,regmode,turnratio);
-      nxt_motor(nxt,motor2,rotation2,brake?0:power,mode,regmode,turnratio);
+
+      // FIXME 
+      //nxt_set_motor(nxt,motor1,rotation1,brake?0:power,mode,regmode,turnratio);
+      //nxt_set_motor(nxt,motor2,rotation2,brake?0:power,mode,regmode,turnratio);
     } else if (strcmp(command,"pollcmd")==0) {
       void *cmd;
       ssize_t size;
-      size = nxt_pollcmd(nxt,&cmd,buffer);
+      size = nxt_poll_command(nxt,&cmd,buffer);
       if (size>0) {
         fwrite(cmd,1,size,out);
         free(cmd);
       }
     } else if (strcmp(command,"recv")==0) {
       char *msg;
-      if ((msg = nxt_recvmsg(nxt,mailbox,clear_mailbox))!=NULL) {
+      if ((msg = nxt_recv_msg(nxt,mailbox,clear_mailbox))!=NULL) {
         if (verbose) snprintf(output,OUTPUT_SIZE,"Mailbox %d: ",mailbox+1);
         snprintf(output,OUTPUT_SIZE,"%s%c",msg,verbose?'\n':0);
         free(msg);
@@ -501,10 +502,10 @@ static void handle_commmands(char *command, char *fifo_out, char *fifo_err)
       if (arg1 != NULL)
         nxt_file_remove(nxt,arg1);
     } else if (strcmp(command,"resetbt")==0) {
-      nxt_resetbt(nxt);
+      nxt_reset_bluetooth(nxt);
     } else if (strcmp(command,"run")==0) {
       if (arg1 != NULL)
-        nxt_startprogram(nxt,arg1);
+        nxt_run_program(nxt,arg1);
     } else if (strcmp(command,"screenshot")==0) {
       char screen[64][100];
       int transparency = 0;
@@ -527,7 +528,7 @@ static void handle_commmands(char *command, char *fifo_out, char *fifo_err)
       }
     } else if (strcmp(command,"send")==0) {
       if (arg1 != NULL)
-        nxt_sendmsg(nxt,mailbox,arg1);
+        nxt_send_msg(nxt,mailbox,arg1);
     } else if (strcmp(command,"sensor")==0) {
       char *unit = NULL;
       if (sensor==-1) {
@@ -541,51 +542,51 @@ static void handle_commmands(char *command, char *fifo_out, char *fifo_err)
         else if (mode==0x80) unit = "%";
         else unit = "";
       }
-      nxt_setsensormode(nxt,sensor,type,mode);
+      nxt_set_sensor_mode(nxt,sensor,type,mode);
       usleep(100000);
       int val;
-      val = nxt_getsensorval(nxt,sensor);
+      val = nxt_get_sensor(nxt,sensor);
       if (reset) 
-        nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
+        nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
       if (val >= 0) {
         if (verbose) snprintf(output,OUTPUT_SIZE,"Sensor %d: ",sensor+1,val);
         snprintf(output,OUTPUT_SIZE,"%d%s\n",val,verbose?unit:"");
       }
     } else if (strcmp(command,"sensorus")==0) {
       int dist;
-      nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
+      nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_LOWSPEED,NXT_SENSOR_MODE_RAW);
       usleep(60000);
       dist = nxt_us_get_dist(nxt,sensor);
       if (reset)
-        nxt_setsensormode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
+        nxt_set_sensor_mode(nxt,sensor,NXT_SENSOR_TYPE_NONE,NXT_SENSOR_MODE_RAW);
       if (dist>=0) {
         if (verbose) snprintf(output,OUTPUT_SIZE,"Sensor %d: ",sensor+1);
         if (dist==0xFF) snprintf(output,OUTPUT_SIZE,"?\n");
         else snprintf(output,OUTPUT_SIZE,"%d%s\n",dist,verbose?"cm":"");
       }
     } else if (strcmp(command,"setbutton")==0) {
-      nxt_setbutton(nxt,button);
+      nxt_set_button(nxt,button);
     } else if (strcmp(command,"setname")==0) {
       if (arg1 != NULL)
-        nxt_setname(nxt,arg1);
+        nxt_set_name(nxt,arg1);
     } else if (strcmp(command,"stop")==0) {
-      nxt_stopprogram(nxt);
+      nxt_stop_program(nxt);
     } else if (strcmp(command,"tacho")==0) {
       int rot;
-      rot = nxt_tacho(nxt,motor);
+      rot = nxt_motor_get_rotation_count(nxt,motor);
       if (reset)
-        nxt_resettacho(nxt,motor,0);
+        nxt_motor_reset_tacho(nxt,motor,0);
       if (verbose) 
         snprintf(output,OUTPUT_SIZE,"Motor %c: ",motor+'A');
       snprintf(output,OUTPUT_SIZE,"%d%s\n",rot,verbose?"°":"");
     } else if (strcmp(command,"turnoff")==0) {
-      nxt_turnoff(nxt);
+      nxt_turn_off(nxt);
     } else if (strcmp(command,"up_run")==0) {
       if (arg1 != NULL) {
         int ret;
         int oflag = NXT_OWLINE;
 
-        nxt_stopprogram(nxt);
+        nxt_stop_program(nxt);
 
         nxt_wait_after_direct_command();
 
@@ -598,7 +599,7 @@ static void handle_commmands(char *command, char *fifo_out, char *fifo_err)
 
         ret = nxt_error(nxt);
         if (ret == 0)
-          nxt_startprogram(nxt,arg2);
+          nxt_run_program(nxt,arg2);
       }
     } else if (strcmp(command,"upload")==0) {
       if (arg1 != NULL) {

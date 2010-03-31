@@ -26,6 +26,7 @@
 #include <stdlib.h>
 
 #include <anxt/nxt.h>
+#include <anxt/motor.h>
 
 void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;
@@ -88,10 +89,10 @@ int main(int argc,char *argv[]) {
 
   int ret = 0;
   if (absolute ^ relative)
-    nxt_resettacho(nxt,motor,relative);
+    nxt_motor_reset_tacho(nxt,motor,relative);
   else {
-    nxt_resettacho(nxt,motor,0);
-    nxt_resettacho(nxt,motor,1);
+    nxt_motor_reset_tacho(nxt,motor,0);
+    nxt_motor_reset_tacho(nxt,motor,1);
   }
   ret = nxt_error(nxt);
   if (name!=NULL) free(name);

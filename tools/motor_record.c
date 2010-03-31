@@ -26,6 +26,7 @@
 #include <stdlib.h>
 
 #include <anxt/nxt.h>
+#include <anxt/motor.h>
 
 void usage(char *cmd,int r) {
   FILE *out = r==0?stdout:stderr;
@@ -56,7 +57,7 @@ int main(int argc,char *argv[]) {
         usage(argv[0],0);
         break;
       case 'm':
-        newmotor = nxt_str2motorport(optarg);
+        newmotor = nxt_str2motor(optarg);
         if (newmotor==-1) {
           fprintf(stderr,"Invalid motor: %s\n",optarg);
           usage(argv[0],1);

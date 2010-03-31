@@ -52,7 +52,7 @@ int main(int argc,char *argv[]) {
         break;
       case 'm':
         newbox = atoi(optarg)-1;
-        if (VALID_MAILBOX(newbox)) box = newbox;
+        if (NXT_VALID_MAILBOX(newbox)) box = newbox;
         else {
           fprintf(stderr,"Invalid mailbox: %d",newbox+1);
           usage(argv[0],1);
@@ -78,7 +78,7 @@ int main(int argc,char *argv[]) {
   if (optind<argc) msg = argv[optind];
   else msg = "";
 
-  if (nxt_sendmsg(nxt,box,msg)==-1) fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
+  if (nxt_send_msg(nxt,box,msg)==-1) fprintf(stderr,"Error: %s\n",nxt_strerror(nxt_error(nxt)));
 
   int ret = nxt_error(nxt);
   if (name!=NULL) free(name);

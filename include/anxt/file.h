@@ -37,8 +37,7 @@ ssize_t nxt_file_read(nxt_t *nxt,int handle,void *dest,size_t count);
 ssize_t nxt_file_write(nxt_t *nxt,int handle,void *src,size_t count);
 int nxt_file_close(nxt_t *nxt,int handle);
 int nxt_file_remove(nxt_t *nxt,const char *file);
-// TODO rename
-int nxt_findfirst(nxt_t *nxt,const char *wildcard,char **filename,size_t *filesize);
-int nxt_findnext(nxt_t *nxt,int handle,char **filename,size_t *filesize);
+int nxt_file_find_first(nxt_t *nxt,const char *wildcard,char **filename,size_t *filesize);
+int nxt_file_find_next(nxt_t *nxt,int handle,char **filename,size_t *filesize);
 
 #endif /* _ANXT_FILE_H_ */
