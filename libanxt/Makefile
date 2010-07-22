@@ -12,7 +12,7 @@ clean:
 
 ../lib/libanxt.a: sendrecv.o nxt.o display.o file.o i2c.o ls.o mod.o motor.o us.o nxtcam.o psp.o accel.o hid.o
 	$(AR) rs $@ $^
-	$(CC) -shared -Wl,-soname,libanxt.so.1 -o ../lib/libanxt.so.1 $^ -lc
+	$(CC) -shared -Wl,-soname,libanxt.so.1 -o ../lib/libanxt.so.1 $^ -lc -lanxt_net
 
 sendrecv.o: sendrecv.c
 	$(CC) $(CFLAGS) -c -o $@ $<

@@ -45,6 +45,9 @@ nxt_display_t *nxt_display_open(nxt_t *nxt) {
     display->modid = modid;
     nxt_display_clear(display,NXT_DISPLAY_WHITE);
   }
+  else {
+    return NULL;
+  }
 
   return display;
 }

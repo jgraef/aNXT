@@ -34,9 +34,9 @@ installfiles:
 
 install: installfiles
 	ln -sf $(PATH_LIB)/libanxt.so.1 $(PATH_LIB)/libanxt.so
-	ln -sf $(PATH_LIB)/libanxttools.so.1 $(PATH_LIB)/libanxttools.so
-	ln -sf $(PATH_LIB)/libanxtfile.so.1 $(PATH_LIB)/libanxtfile.so
-	ln -sf $(PATH_LIB)/libanxtnet.so.1 $(PATH_LIB)/libanxtnet.so
+	ln -sf $(PATH_LIB)/libanxt_tools.so.1 $(PATH_LIB)/libanxt_tools.so
+	ln -sf $(PATH_LIB)/libanxt_file.so.1 $(PATH_LIB)/libanxt_file.so
+	ln -sf $(PATH_LIB)/libanxt_net.so.1 $(PATH_LIB)/libanxt_net.so
 
 ##### Build distributable archive
 
