@@ -108,6 +108,28 @@ int nxt_display_flush(nxt_display_t *display,int notdirty) {
 }
 
 /**
+ * Clears display
+ *  @param display Display
+ *  @param color Color
+ */
+void nxt_display_clear(nxt_display_t *display,nxt_display_color_t color) {
+  memset(display->buffer,color,sizeof(display->buffer));
+  display->dirty = 1;
+}
+
+/**
+ * Draws a point on display
+ *  @param display Display
+ *  @param color Color
+ *  @param x1 Point - X
+ *  @param y1 Point - Y
+ */
+void nxt_display_point(nxt_display_t *display,nxt_display_color_t color,int x,int y) {
+  display->buffer[y][x] = color;
+  display->dirty = 1;
+}
+
+/**
  * Draws a line on display
  *  @param display Display
  *  @param color Color

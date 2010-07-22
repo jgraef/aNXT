@@ -76,3 +76,38 @@ int nxt_cam_get_colormap(nxt_t *nxt,int port,nxt_cam_colormap_t *colormap) {
 
   return 0;
 }
+
+/**
+ * Enable/Disable tracking
+ *  @param nxt NXT handle
+ *  @param port Sensor port
+ *  @param enable Enable or Disable
+ */
+void nxt_cam_enable_tracking(nxt_t *nxt,int port,int enable) {
+  nxt_cam_cmd(nxt,port,enable?NXT_CAM_CMD_TRACKING_ENABLE:NXT_CAM_CMD_TRACKING_DISABLE);
+}
+
+/**
+ * Set tracking mode
+ *  @param nxt NXT handle
+ *  @param port Sensor port
+ *  @param mode Which mode to set
+ */
+void nxt_cam_set_trackingmode(nxt_t *nxt,int port,int mode) {
+  nxt_cam_cmd(nxt,port,mode);
+}
+
+/**
+ * Reset camera
+ */
+void nxt_cam_reset(nxt_t *nxt,int port) {
+  nxt_cam_cmd(nxt,port,NXT_CAM_CMD_RESET);
+}
+
+/**
+ * Enable/Disable sorting by color
+ *  @param x Enable or Disable
+ */
+void nxt_cam_enable_colorsort(nxt_t *nxt,int port,int enable) {
+  nxt_cam_cmd(nxt,port,enable?NXT_CAM_CMD_COLORSORT_ENABLE:NXT_CAM_CMD_COLORSORT_DISABLE);
+}

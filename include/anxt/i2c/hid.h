@@ -264,13 +264,8 @@ int nxt_hid_i2c_addr;
 
 int nxt_hid_set_modifier(nxt_t *nxt, int port, int modifier);
 int nxt_hid_set_key(nxt_t *nxt, int port, int key);
-
-static __inline__ int nxt_hid_transmit(nxt_t *nxt, int port) {
-  return nxt_i2c_cmd(nxt, port, nxt_hid_i2c_addr, NXT_HID_CMD_TRANSMIT);
-}
-
-static __inline__ int nxt_hid_set_mode(nxt_t *nxt, int port, int mode) {
-  return nxt_i2c_cmd(nxt, port, nxt_hid_i2c_addr, mode);
-}
+int nxt_hid_transmit(nxt_t *nxt, int port);
+int nxt_hid_set_mode(nxt_t *nxt, int port, int mode);
+int nxt_hid_send_str(nxt_t *nxt, int port, const char *str);
 
 #endif /* _NXT_I2C_HID_H_ */

@@ -49,4 +49,14 @@ int nxt_hid_send_str(nxt_t *nxt, int port, const char *str) {
     nxt_hid_transmit(nxt, port);
     nxt_wait_after_communication_command();
   }
+
+  return 0;
+}
+
+int nxt_hid_transmit(nxt_t *nxt, int port) {
+  return nxt_i2c_cmd(nxt, port, nxt_hid_i2c_addr, NXT_HID_CMD_TRANSMIT);
+}
+
+int nxt_hid_set_mode(nxt_t *nxt, int port, int mode) {
+  return nxt_i2c_cmd(nxt, port, nxt_hid_i2c_addr, mode);
 }

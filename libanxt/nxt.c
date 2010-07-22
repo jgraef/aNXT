@@ -32,9 +32,24 @@
 #include "private.h"
 
 /**
+ * Returns linked-in version information (major version)
+ *  @return Major version
+ */
+int nxt_version_major(void) {
+  return NXT_VERSION_MAJOR;
+}
+
+/**
+ * Returns linked-in version information (minor version)
+ *  @return Minor version
+ */
+int nxt_version_minor(void) {
+  return NXT_VERSION_MINOR;
+}
+
+/**
  * Wait after a direct command
  */
-
 void nxt_wait_after_direct_command(void)
 {
   usleep(NXT_DIRECT_COMMAND_LATENCY);
@@ -43,7 +58,6 @@ void nxt_wait_after_direct_command(void)
 /**
  * Wait after a communication command
  */
-
 void nxt_wait_after_communication_command(void)
 {
   usleep(NXT_COMMUNICATION_COMMAND_LATENCY);
@@ -53,7 +67,6 @@ void nxt_wait_after_communication_command(void)
  * Extra long wait (after a communication command)
  * reason unknown
  */
-
 void nxt_wait_extra_long_after_communication_command(void)
 {
   usleep(10 * NXT_COMMUNICATION_COMMAND_LATENCY);

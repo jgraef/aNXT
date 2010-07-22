@@ -73,6 +73,7 @@ int nxt_accel_set_sensity(nxt_t *nxt,int port,float sensity) {
     return -1;
   }
 
+  // FIXME
   return nxt_accel_cmd(nxt,port,c);
 }
 
