@@ -10,7 +10,7 @@ all: ../lib/libanxt.a
 clean:
 	rm -f *.o mkfont font.h ../lib/libanxt.a ../lib/libanxt.so.*
 
-../lib/libanxt.a: sendrecv.o nxt.o display.o file.o i2c.o ls.o mod.o motor.o us.o nxtcam.o psp.o accel.o hid.o
+../lib/libanxt.a: sendrecv.o nxt.o display.o file.o i2c.o ls.o mod.o motor.o us.o nxtcam.o psp.o accel.o hid.o lineleader.o
 	$(AR) rs $@ $^
 	$(CC) -shared -Wl,-soname,libanxt.so.1 -o ../lib/libanxt.so.1 $^ -lc -lanxt_net
 
@@ -51,6 +51,9 @@ accel.o: accel.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 hid.o: hid.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+lineleader.o: lineleader.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 font.h: font_8x5.png mkfont

@@ -337,7 +337,7 @@ int main(int argc,char *argv[]) {
   else logfd = fopen(logfile,"a");
   if (logfd == 0) {
     perror(logfile);
-    printf("using standart output as logfile\n");
+    printf("using standard output as logfile\n");
     logfd = stdout;
   }
   server = nxtnet_srv_create(port,password,logfd,local);

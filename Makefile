@@ -46,7 +46,7 @@ tar.gz:
 ##### Clean target #####
 
 clean:
-	rm bin/anxt-config
+	rm -f bin/anxt-config
 	make -C libanxt/ clean
 	make -C libanxt_file/ clean
 	make -C libanxt_net/ clean
