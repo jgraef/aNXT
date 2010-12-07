@@ -2,7 +2,7 @@
     nxtd_bt_dummy.c
     aNXT - a NXt Toolkit
     Libraries and tools for LEGO Mindstorms NXT robots
-    Copyright (C) 2010  Janosch Gräf <janosch.graef@gmx.net>
+    Copyright (C) 2008  Janosch Gräf <janosch.graef@gmx.net>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 #define _NXTD_USB_LIBUSB_H_
 
 #include <sys/types.h>
-#include <libusb.h>
+#include <usb.h>
 
 #include "nxtd.h"
 
@@ -37,8 +37,8 @@
 
 struct nxtd_nxt_usb {
   struct nxtd_nxt nxt;
-  libusb_device_handle *usb_handle;
-  libusb_device *usb_dev;
+  struct usb_dev_handle *usb_handle;
+  struct usb_device *usb_dev;
 };
 
 int nxtd_usb_init();

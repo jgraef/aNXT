@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <pthread.h>
 
 #include <anxt/net.h>

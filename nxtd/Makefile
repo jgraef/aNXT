@@ -8,9 +8,12 @@
 all: ../bin/nxtd
 
 clean:
-	rm -f ../bin/nxtd
+	rm -f ../bin/nxtd nxtd_usb_libusb.libs
 
-../bin/nxtd: nxtd.c nxtd_usb_$(USB_MOD).c nxtd_bt_$(BT_MOD).c ../lib/libanxt_net.a
+nxtd_usb_libusb.libs:
+	pkg-config libusb-1.0 --cflags --libs > $@
+
+../bin/nxtd: nxtd.c nxtd_usb_$(USB_MOD).c nxtd_bt_$(BT_MOD).c ../lib/libanxt_net.a nxtd_usb_$(USB_MOD).libs nxtd_bt_$(BT_MOD).libs
 	$(CC) $(CFLAGS) -o $@ $< -L../lib/ -lanxt_net -lpthread \
          -DNXTD_PIDFILE=\"$(NXTD_PIDFILE)\" \
          nxtd_usb_$(USB_MOD).c \

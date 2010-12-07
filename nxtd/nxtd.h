@@ -21,7 +21,6 @@
 #ifndef _NXTD_H_
 #define _NXTD_H_
 
-#include <usb.h>
 #include <pthread.h>
 
 /// Max. number of NXTs

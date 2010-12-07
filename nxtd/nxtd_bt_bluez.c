@@ -25,6 +25,7 @@
 #include <bluetooth/hci_lib.h>
 #include <bluetooth/rfcomm.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
 
