@@ -34,7 +34,7 @@
  *  @return File handle
  *  @note Use nxt_file_open
  */
-static int nxt_file_open_write(nxt_t *nxt,const char *file,size_t size) {
+int nxt_file_open_write(nxt_t *nxt,const char *file,size_t size) {
   nxt_pack_start(nxt,0x81);
   nxt_pack_str(nxt,file,20);
   nxt_pack_dword(nxt,size);
@@ -53,7 +53,7 @@ static int nxt_file_open_write(nxt_t *nxt,const char *file,size_t size) {
  *  @return File handle
  *  @note Use nxt_file_open
  */
-static int nxt_file_open_write_linear(nxt_t *nxt,const char *file,size_t size) {
+int nxt_file_open_write_linear(nxt_t *nxt,const char *file,size_t size) {
   nxt_pack_start(nxt,0x89);
   nxt_pack_str(nxt,file,20);
   nxt_pack_dword(nxt,size);
@@ -71,7 +71,7 @@ static int nxt_file_open_write_linear(nxt_t *nxt,const char *file,size_t size) {
  *  @return File handle
  *  @note Use nxt_file_open
  */
-static int nxt_file_open_append(nxt_t *nxt,const char *file,size_t *avail) {
+int nxt_file_open_append(nxt_t *nxt,const char *file,size_t *avail) {
   nxt_pack_start(nxt,0x8C);
   nxt_pack_str(nxt,file,20);
   test(nxt_con_send(nxt));
@@ -93,7 +93,7 @@ static int nxt_file_open_append(nxt_t *nxt,const char *file,size_t *avail) {
  *  @return File handle
  *  @note Use nxt_file_open
  */
-static int nxt_file_open_read(nxt_t *nxt,const char *file,size_t *filesize) {
+int nxt_file_open_read(nxt_t *nxt,const char *file,size_t *filesize) {
   nxt_pack_start(nxt,0x80);
   nxt_pack_str(nxt,file,20);
   test(nxt_con_send(nxt));

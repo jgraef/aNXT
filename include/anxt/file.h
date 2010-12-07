@@ -32,6 +32,10 @@
 #define NXT_OREAD  4
 #define NXT_OWOVER 8 // can be or'd with write flags
 
+int nxt_file_open_write(nxt_t *nxt,const char *file,size_t size);
+int nxt_file_open_write_linear(nxt_t *nxt,const char *file,size_t size);
+int nxt_file_open_append(nxt_t *nxt,const char *file,size_t *avail);
+int nxt_file_open_read(nxt_t *nxt,const char *file,size_t *filesize);
 int nxt_file_open(nxt_t *nxt,const char *file,int oflag,...);
 ssize_t nxt_file_read(nxt_t *nxt,int handle,void *dest,size_t count);
 ssize_t nxt_file_write(nxt_t *nxt,int handle,void *src,size_t count);
