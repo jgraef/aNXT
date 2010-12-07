@@ -30,7 +30,7 @@ int nxt_accel_i2c_addr = 0x02;
  * Returns sensor sensity
  *  @param nxt NXT handle
  *  @param port Sensor port
- *  @return Sensity
+ *  @return Sensity (2.5, 3.3, 6.7 or 10.0)
  */
 float nxt_accel_get_sensity(nxt_t *nxt,int port) {
   float t[] = {2.5, 3.3, 6.7, 10.0};
@@ -50,7 +50,7 @@ float nxt_accel_get_sensity(nxt_t *nxt,int port) {
  * Sets sensor sensity
  *  @param nxt NXT handle
  *  @param port Sensor port
- *  @param sensity Sensity
+ *  @param sensity Sensity (2.5, 3.3, 6.7 or 10.0)
  *  @return 0 = Success
  *         -1 = Failure
  */
