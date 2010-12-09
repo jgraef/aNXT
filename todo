@@ -1,0 +1,3 @@
+#!/bin/sh
+
+grep -d recurse -ib -2 'todo' examples include libanxt libanxt_file libanxt_net libanxt_tools nxtd tools
