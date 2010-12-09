@@ -1,9 +1,0 @@
-[Desktop Entry]
-Version=1.0
-Type=Application
-Categories=Application;Tools;
-Encoding=UTF-8
-Name=nxt_pilot
-Comment=control a LEGO Mindstorms NXT brick without touching it
-Icon=nxt_pilot.png
-Exec=sh -c 'sh -c "nxtd &";sleep 15;nxt_pilot'
