@@ -1,0 +1,42 @@
+~~~~~~~~~~CODING GUIDELINES~~~~~~~~~~
+
+Function naming:
+	Function names are build up in the following way:
+	nxt[_GROUP]_PREDICATE[_OBJECT]
+	Examples:
+	nxt_sensor_get_value(), nxt_open, nxt_psp_get_joystick()
+	"sensor" and "psp" are the group names, the "get"s are predicates and
+	"value" and "joystick" are objects. All group names are defined below.
+
+	Frequently used predicates:
+		get
+		set
+		num: short for "(to) number"
+		send
+		recv: short for "(to) receive"
+		cmd: short for "(to) command"
+		reset
+	As you can see, frequently used predicates used to get shortened.
+
+	Group names:
+		(sys): TODO Do we need a sys group?
+		err: short for "error"
+		file
+		sensor
+		motor
+		tacho
+		msg: short for "message"
+		snd: short for "sound"
+		ls: short for "lowspeed"
+		i2c
+		mod
+		display
+		accel: short for acceleration
+		hid
+		cam
+		psp
+		us
+
+	Remember that those are just guidelines and nobody is forced to obey
+	them. But nevertheless those guidelines should help to get aNXT code
+	structured.
