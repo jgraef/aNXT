@@ -172,13 +172,16 @@ int nxtd_usb_scan() {
               nxt->nxt.name = strdup(name);
               nxt->nxt.conn_type = NXTD_USB;
               nxt->nxt.conn_timeout = 0;
-              nxt->usb_handle = NULL; // TODO why set this NULL and close handle?
+	      // nxt->usb_handle = NULL; // TODO why set this NULL and close handle?
+              nxt->usb_handle = handle;
               nxt->usb_dev = devlist[i];
               libusb_ref_device(devlist[i]);
               nxtd_nxt_reg((struct nxtd_nxt*)nxt);
               nxtd_usb_timeout(nxt);
             }
-            libusb_close(handle); // TODO why do we close this, even if NXT is added
+            else {
+              libusb_close(handle); // TODO why do we close this, even if NXT is added
+            }
           }
         }
       }
@@ -235,7 +238,7 @@ int nxtd_usb_disconnect(struct nxtd_nxt_usb *nxt) {
  *  @return How many bytes sent
  */
 ssize_t nxtd_usb_send(struct nxtd_nxt_usb *nxt, const void *data, size_t size) {
-  ssize_t transferred;
+  int transferred;
   size_t absolute = 0;
 
   nxtd_usb_connect(nxt);
@@ -260,7 +263,7 @@ ssize_t nxtd_usb_send(struct nxtd_nxt_usb *nxt, const void *data, size_t size) {
  *  @return How many bytes received
  */
 ssize_t nxtd_usb_recv(struct nxtd_nxt_usb *nxt,void *data,size_t size) {
-  ssize_t transferred;
+  int transferred;
   size_t absolute = 0;
 
   nxtd_usb_connect(nxt);
