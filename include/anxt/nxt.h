@@ -78,7 +78,7 @@
 #define NXT_BUFFER_HIGHSPEED 0x01
 
 #define NXT_VALID_SENSOR(s)  ((s)>=0 && (s)<=3)
-#define NXT_VALID_MAILBOX(m) ((m)>=0 && (m)<=9)
+#define NXT_VALID_MAILBOX(m) ((m)>=0 && (m)<=19)
 #define NXT_VALID_VOLUME(v)  ((v)>=0 && (v)<=4)
 #define NXT_VALID_BUTTON(b)  ((b)>=1 && (b)<=4)
 
@@ -178,6 +178,10 @@ struct nxt_sensor_values {
   int calibrated;
 };
 
+
+int nxt_version_major(void);
+int nxt_version_minor(void);
+void nxt_free(void *ptr);
 void nxt_wait_after_direct_command(void);
 void nxt_wait_after_communication_command(void);
 void nxt_wait_extra_long_after_communication_command(void);

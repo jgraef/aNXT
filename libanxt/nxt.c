@@ -54,6 +54,15 @@ int nxt_version_minor(void) {
 }
 
 /**
+ * Frees memory allocated by libanxt
+ *  @param ptr Pointer to allocated data
+ *  @note Alias for free(); pyNXT uses this
+ */
+void nxt_free(void *ptr) {
+  free(ptr);
+}
+
+/**
  * Wait after a direct command
  */
 void nxt_wait_after_direct_command(void)
@@ -261,7 +270,7 @@ int nxt_send_msg(nxt_t *nxt,int mailbox,char *data) {
  *  @param mailbox Mailbox
  *  @param clear Whether to clear message box
  *  @return Message as string
- *  @note The return pointer can and should be passed to free()
+ *  @note The return pointer can and should be passed to nxt_free()
  */
 char *nxt_recv_msg(nxt_t *nxt,int mailbox,int clear) {
   if (!NXT_VALID_MAILBOX(mailbox)) return NULL;
