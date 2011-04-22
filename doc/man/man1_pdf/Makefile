@@ -13,7 +13,7 @@ TARGETS = anxt-config.pdf nxt_beep.pdf nxt_calibrate.pdf nxt_delflash.pdf \
           nxt_server.pdf nxt_setbutton.pdf nxt_setname.pdf nxt_stop.pdf \
           nxt_tacho.pdf nxt_turnoff.pdf nxt_upload.pdf nxt_up_run.pdf
 
-OUTPUT_NAME = "aNXT utilities manual"
+OUTPUT_NAME = "aNXT utilities manual.pdf"
 
 .PHONY: all clean
 
@@ -21,7 +21,7 @@ all: $(TARGETS)
 	gs -q -sPAPERSIZE=letter -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=$(OUTPUT_NAME) $(TARGETS)
 
 clean:
-	rm -f *.pdf
+	rm -f $(TARGETS)
 
 %.pdf: $(MANDIR)/%.1
 	$(MAN) -t $< | ps2pdf - > $@
