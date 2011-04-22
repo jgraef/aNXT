@@ -27,7 +27,7 @@
 
 // Version information
 #define NXT_VERSION_MAJOR 0
-#define NXT_VERSION_MINOR 10
+#define NXT_VERSION_MINOR 11
 // Macro to test correct version (in head and built-in)
 #define NXT_VERSION_TEST() (nxt_version_major()==NXT_VERSION_MAJOR && nxt_version_minor()==NXT_VERSION_MINOR);
 
