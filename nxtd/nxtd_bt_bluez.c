@@ -46,10 +46,9 @@ static struct {
 /**
  * Identifies a NXT over Bluetooth
  *  @param class Device class
- *  @param sock Socket
  *  @return Whether device is a NXT
  */
-static int nxt_bt_identify(uint8_t class[3],int sock) {
+static int nxt_bt_identify(uint8_t class[3]) {
   return (class[0]==NXT_BT_DEVCLASS_BYTE0) && 
          (class[1]==NXT_BT_DEVCLASS_BYTE1) &&
          (class[2]==NXT_BT_DEVCLASS_BYTE2);
@@ -122,22 +121,29 @@ int nxtd_bt_scan() {
   max_rsp = 255;
   ii = malloc(max_rsp*sizeof(inquiry_info));
   num_rsp = hci_inquiry(bt_adapter.dev_id,8,max_rsp,NULL,&ii,0); // IREQ_CACHE_FLUSH
-  if (num_rsp<0) {
-    free(ii);
-    return -1;
-  }
 
   for (i=0;i<num_rsp;i++) {
     memset(bt_name,0,sizeof(bt_name));
-    if (nxtd_bt_finddev(&(ii+i)->bdaddr)==NULL && hci_read_remote_name(bt_adapter.sock,&(ii+i)->bdaddr,sizeof(bt_name),bt_name,NXT_BT_WAIT_TIMEOUT)==0) {
-      if (nxt_bt_identify((ii+i)->dev_class,bt_adapter.sock)) {
-        nxt = malloc(sizeof(struct nxtd_nxt_bt));
-        memset(nxt,0,sizeof(struct nxtd_nxt_bt));
-        nxt->nxt.name = strdup(bt_name);
-        memcpy(&nxt->nxt.id, &(ii+i)->bdaddr, sizeof(nxtd_id_t));
-        nxt->nxt.conn_type = NXTD_BT;
-        bacpy(&(nxt->bt_addr),&(ii+i)->bdaddr);
-        nxtd_nxt_reg((struct nxtd_nxt*)nxt);
+    if (nxtd_bt_finddev(&(ii+i)->bdaddr)==NULL) {
+      if (hci_read_remote_name(bt_adapter.sock,&(ii+i)->bdaddr,sizeof(bt_name),bt_name,NXT_BT_WAIT_TIMEOUT)!=-1) {
+        if (nxt_bt_identify((ii+i)->dev_class)) {
+          nxt = malloc(sizeof(struct nxtd_nxt_bt));
+          memset(nxt,0,sizeof(struct nxtd_nxt_bt));
+          nxt->nxt.name = strdup(bt_name);
+
+          // don't know why BT address is reversed
+          // memcpy(&nxt->nxt.id, &(ii+i)->bdaddr, sizeof(nxtd_id_t));
+          nxt->nxt.id[0] = ii[i].bdaddr.b[5];
+          nxt->nxt.id[1] = ii[i].bdaddr.b[4];
+          nxt->nxt.id[2] = ii[i].bdaddr.b[3];
+          nxt->nxt.id[3] = ii[i].bdaddr.b[2];
+          nxt->nxt.id[4] = ii[i].bdaddr.b[1];
+          nxt->nxt.id[5] = ii[i].bdaddr.b[0];
+
+          nxt->nxt.conn_type = NXTD_BT;
+          bacpy(&(nxt->bt_addr),&(ii+i)->bdaddr);
+          nxtd_nxt_reg((struct nxtd_nxt*)nxt);
+        }
       }
     }
     else {
@@ -156,32 +162,35 @@ int nxtd_bt_scan() {
  *  @return Success?
  */
 int nxtd_bt_connect(struct nxtd_nxt_bt *nxt) {
+  struct sockaddr_rc addr;
+  int sock, flags;
+
   if (!nxt->connected) {
-    struct sockaddr_rc addr = {0};
-    int sock;
-    size_t i;
-
     sock = socket(AF_BLUETOOTH,SOCK_STREAM,BTPROTO_RFCOMM);
+    memset(&addr, 0, sizeof(addr));
     addr.rc_family = AF_BLUETOOTH;
+    addr.rc_channel = 1;
     bacpy(&addr.rc_bdaddr,&(nxt->bt_addr));
-
-    for (i=1;i<31;i++) {
-      addr.rc_channel = i;
-      if (connect(sock, (struct sockaddr *)&addr, sizeof(addr))==0) {
-        int flags = fcntl(sock,F_GETFL,0);
-        if (flags==-1) flags = 0;
-        fcntl(sock,F_SETFL,flags|O_NONBLOCK);
-
-        nxt->bt_sock = sock;
-        nxt->connected = 1;
-        nxtd_bt_timeout(nxt);
-        return 0;
+   
+    if (connect(sock, (struct sockaddr *)&addr, sizeof(addr))==0) {
+      flags = fcntl(sock,F_GETFL,0);
+      if (flags==-1) {
+        flags = 0;
       }
-    }
+      fcntl(sock,F_SETFL,flags|O_NONBLOCK);
 
-    return -1;
+      nxt->bt_sock = sock;
+      nxt->connected = 1;
+      nxtd_bt_timeout(nxt);
+      return 0;
+    }
+    else {
+      return -1;
+    }
   }
-  else return 0;
+  else {
+    return 0;
+  }
 }
 
 /**
@@ -204,26 +213,36 @@ static uint64_t useconds(void) {
   return current.tv_sec*1000000+current.tv_usec;
 }
 
-static int write_timeout(int sock,const void *data,size_t size) {
+static size_t write_timeout(int sock,const void *data,size_t size) {
   uint64_t timeout = useconds()+NXT_BT_WAIT_TIMEOUT*1000;
   size_t i = 0;
+  ssize_t c;
+
   while (i<size && useconds()<timeout) {
-    int c = write(sock,data+i,size-i);
-    if (c>0) i += c;
+    c = write(sock,data+i,size-i);
+    if (c>0) {
+      i += c;
+    }
     usleep(1000);
   }
-  return size;
+
+  return i;
 }
 
-static int read_timeout(int sock,void *data,size_t size) {
+static size_t read_timeout(int sock,void *data,size_t size) {
   uint64_t timeout = useconds()+NXT_BT_WAIT_TIMEOUT*1000;
   size_t i = 0;
+  ssize_t c;
+
   while (i<size && useconds()<timeout) {
-    int c = read(sock,data+i,size-i);
-    if (c>0) i += c;
+    c = read(sock,data+i,size-i);
+    if (c>0) {
+      i += c;
+    }
     usleep(1000);
   }
-  return size;
+
+  return i;
 }
 
 /**
@@ -234,11 +253,18 @@ static int read_timeout(int sock,void *data,size_t size) {
  *  @return How many bytes sent
  */
 ssize_t nxtd_bt_send(struct nxtd_nxt_bt *nxt,const void *data,size_t size) {
-  if (nxtd_bt_connect(nxt) == -1) return 0;
   uint16_t sz = size;
+
+  if (nxtd_bt_connect(nxt)==-1) {
+    return -1;
+  }
+
   nxtd_bt_timeout(nxt);
-  if (write_timeout(nxt->bt_sock,&sz,sizeof(sz))<0) return 0;
-  return write_timeout(nxt->bt_sock,data,size);
+  if (write_timeout(nxt->bt_sock, &sz, 2)!=2) {
+    return -1;
+  }
+
+  return write_timeout(nxt->bt_sock, data, size);
 }
 
 /**
@@ -249,9 +275,18 @@ ssize_t nxtd_bt_send(struct nxtd_nxt_bt *nxt,const void *data,size_t size) {
  *  @return How many bytes received
  */
 ssize_t nxtd_bt_recv(struct nxtd_nxt_bt *nxt,void *data,size_t size) {
-  if (nxtd_bt_connect(nxt) == -1) return 0;
   uint16_t sz;
+
+  if (nxtd_bt_connect(nxt)==-1)  {
+    return 0;
+  }
+
   nxtd_bt_timeout(nxt);
-  if (read_timeout(nxt->bt_sock,&sz,sizeof(sz))<0) return 0;
-  return read_timeout(nxt->bt_sock,data,sz);
+
+  if (read_timeout(nxt->bt_sock, &sz, 2)!=2) {
+    return 0;
+  }
+
+  return read_timeout(nxt->bt_sock, data, sz);
 }
+
