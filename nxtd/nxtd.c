@@ -57,7 +57,7 @@ static void logmsg(const char *fmt,...) {
 const char *nxtd_id2str(nxtd_id_t id) {
   static char buf[13];
 
-  snprintf(buf,13,"%02X%02X%02X%02X%02X%02X\n",id[0]&0xFF,id[1]&0xFF,id[2]&0xFF,id[3]&0xFF,id[4]&0xFF,id[5]&0xFF);
+  snprintf(buf,13,"%02X:%02X:%02X:%02X:%02X:%02X\n",id[0]&0xFF,id[1]&0xFF,id[2]&0xFF,id[3]&0xFF,id[4]&0xFF,id[5]&0xFF);
   return buf;
 }
 
@@ -84,7 +84,7 @@ int nxtd_nxt_reg(struct nxtd_nxt *nxt) {
 
 void nxtd_nxt_remove(int handle) {
   if (nxts.list[handle]==NULL) return;
-  logmsg("Removing %s (%d;%s)\n", nxts.list[handle]->name, handle, nxts.list[handle]->conn_type==NXTD_USB?"USB":"BT");
+  logmsg("Removing %s (%d; %s)\n", nxts.list[handle]->name, handle, nxts.list[handle]->conn_type==NXTD_USB?"USB":"BT");
   if (nxts.list[handle]->conn_type==NXTD_USB) nxtd_usb_close((struct nxtd_nxt_usb*)nxts.list[handle]);
   else if (nxts.list[handle]->conn_type==NXTD_BT) nxtd_bt_close((struct nxtd_nxt_bt*)nxts.list[handle]);
   nxts.list[handle] = 0;
@@ -131,14 +131,26 @@ static void *nxtd_scanner(void *x) {
  */
 static int nxtd_keepalive(struct nxtd_nxt *nxt) {
   char buf[] = { 0x00,0x0D,0,0,0,0,0 };
+
   if (nxt->conn_type==NXTD_USB) {
-    if (nxtd_usb_send((struct nxtd_nxt_usb*)nxt,buf,2)!=2) return -1;
-    if (nxtd_usb_recv((struct nxtd_nxt_usb*)nxt,buf,7)!=7) return -1;
+    if (nxtd_usb_send((struct nxtd_nxt_usb*)nxt,buf,2)!=2) {
+      return -1;
+    }
+
+    if (nxtd_usb_recv((struct nxtd_nxt_usb*)nxt,buf,7)!=7) {
+      return -1;
+    }
   }
   else if (nxt->conn_type==NXTD_BT) {
-    if (nxtd_bt_send((struct nxtd_nxt_bt*)nxt,buf,2)!=2) return -1;
-    if (nxtd_bt_recv((struct nxtd_nxt_bt*)nxt,buf,7)!=7) return -1;
+    if (nxtd_bt_send((struct nxtd_nxt_bt*)nxt,buf,2)!=2) {
+      return -1;
+    }
+
+    if (nxtd_bt_recv((struct nxtd_nxt_bt*)nxt,buf,7)!=7) {
+      return -1;
+    }
   }
+  
   return buf[2]==0?0:-1;
 }
 
