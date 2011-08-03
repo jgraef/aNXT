@@ -128,7 +128,7 @@ static void nxtnet_srv_send(nxtnet_srv_t *srv,struct nxtnet_proto_packet *packet
   size_t size = ntohl(send_cs->size);
   int handle = ntohl(send_cs->handle);
 
-  nxtnet_srv_log(srv,"Sending %u bytes to NXT %u: %02x %02x\n",size,handle,send_cs->data[0]&0xFF,send_cs->data[1]&0xFF);
+  //nxtnet_srv_log(srv,"Sending %u bytes to NXT %u: %02x %02x\n",size,handle,send_cs->data[0]&0xFF,send_cs->data[1]&0xFF);
 
   if (srv->ops.send!=NULL) {
     size = srv->ops.send(handle,send_cs->data,size);
@@ -149,7 +149,7 @@ static void nxtnet_srv_recv(nxtnet_srv_t *srv,struct nxtnet_proto_packet *packet
   ssize_t size = ntohl(recv_cs->size);
   int handle = ntohl(recv_cs->handle);
 
-  nxtnet_srv_log(srv,"Receiving %u bytes from NXT %u\n",size,handle);
+  //nxtnet_srv_log(srv,"Receiving %u bytes from NXT %u\n",size,handle);
 
   if (srv->ops.recv!=NULL) {
     size = srv->ops.recv(handle,recv_sc->data,size);
