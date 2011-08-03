@@ -87,9 +87,13 @@ void nxt_wait_extra_long_after_communication_command(void)
   usleep(10 * NXT_COMMUNICATION_COMMAND_LATENCY);
 }
 
+
 /**
  * Opens a NXT
- *  @param name Name, Bluetooth address or ID of NXT
+ *  @param name     Name, Bluetooth address or ID of NXT
+ *  @param hostname Hostname of nxt daemon
+ *  @param port     Port of nxt daemon
+ *  @param password Password of nxtd daemon
  *  @return NXT handle
  *  @note You can pass a NULL pointer as name if you wish to use the first NXT found
  */
