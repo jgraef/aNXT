@@ -21,6 +21,9 @@
 #include <anxt/nxt.h>
 #include <anxt/i2c/nxtcam.h>
 
+
+/* TODO: set/get, load/store colormap */
+
 /// I2C Address
 int nxt_cam_i2c_addr = 0x02;
 
@@ -111,3 +114,4 @@ void nxt_cam_reset(nxt_t *nxt,int port) {
 void nxt_cam_enable_colorsort(nxt_t *nxt,int port,int enable) {
   nxt_cam_cmd(nxt,port,enable?NXT_CAM_CMD_COLORSORT_ENABLE:NXT_CAM_CMD_COLORSORT_DISABLE);
 }
+
