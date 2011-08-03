@@ -56,7 +56,7 @@ void nxtnet_scan(nxtnet_cli_t *cli) {
   if (list!=NULL) {
     for (i=0;i<list->num_items;i++) {
       nxt = list->nxts+i;
-      printf("%d:\t%s\t%s\t%02X%02X%02X%02X%02X%02X\n",nxt->handle, nxt->name,
+      printf("%d:\t%s\t%s\t%02X:%02X:%02X:%02X:%02X:%02X\n",nxt->handle, nxt->name,
                                                            nxt->is_bt?"Bluetooth":"USB",
                                                            nxt->id[0],nxt->id[1],nxt->id[2],
                                                            nxt->id[3],nxt->id[4],nxt->id[5]);
