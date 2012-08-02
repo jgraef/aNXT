@@ -55,9 +55,9 @@ static void logmsg(const char *fmt,...) {
 }
 
 const char *nxtd_id2str(nxtd_id_t id) {
-  static char buf[13];
+  static char buf[18];
 
-  snprintf(buf,13,"%02X:%02X:%02X:%02X:%02X:%02X\n",id[0]&0xFF,id[1]&0xFF,id[2]&0xFF,id[3]&0xFF,id[4]&0xFF,id[5]&0xFF);
+  snprintf(buf,18,"%02X:%02X:%02X:%02X:%02X:%02X",id[0]&0xFF,id[1]&0xFF,id[2]&0xFF,id[3]&0xFF,id[4]&0xFF,id[5]&0xFF);
   return buf;
 }
 
