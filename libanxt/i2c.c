@@ -196,10 +196,10 @@ int nxt_i2c_set_i2caddr(nxt_t *nxt, int port, int addr, int newaddr) {
  *  @return Version
  */
 const char *nxt_i2c_get_version(nxt_t *nxt,int port,int addr) {
-  static char buf[9];
+  static char buf[8];
 
   if (nxt_i2c_read(nxt,port,addr,NXT_I2C_REG_VERSION,8,buf)==8) {
-    buf[8] = 0;
+    buf[7] = 0;
     return buf;
   }
   else {
@@ -215,10 +215,10 @@ const char *nxt_i2c_get_version(nxt_t *nxt,int port,int addr) {
  *  @return Vendor ID
  */
 const char *nxt_i2c_get_vendorid(nxt_t *nxt,int port,int addr) {
-  static char buf[9];
+  static char buf[8];
 
   if (nxt_i2c_read(nxt,port,addr,NXT_I2C_REG_VENDORID,8,buf)==8) {
-    buf[8] = 0;
+    buf[7] = 0;
     return buf;
   }
   else {
@@ -234,13 +234,14 @@ const char *nxt_i2c_get_vendorid(nxt_t *nxt,int port,int addr) {
  *  @return Device ID
  */
 const char *nxt_i2c_get_deviceid(nxt_t *nxt,int port,int addr) {
-  static char buf[9];
+  static char buf[8];
 
   if (nxt_i2c_read(nxt,port,addr,NXT_I2C_REG_DEVICEID,8,buf)==8) {
-    buf[8] = 0;
+    buf[7] = 0;
     return buf;
   }
   else {
     return NULL;
   }
 }
+

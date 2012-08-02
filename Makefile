@@ -6,9 +6,9 @@
 .PHONY: all installfiles install tar.gz clean realclean
 
 all: bin/anxt-config
+	make -C libanxt_net/
 	make -C libanxt/
 	make -C libanxt_file/
-	make -C libanxt_net/
 	make -C libanxt_tools/
 	make -C nxtd/
 	make -C examples/

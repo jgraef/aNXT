@@ -16,6 +16,8 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+  NOTE: Not tested yet! I don't have the sensor
 */
 
 #ifndef _NXT_I2C_LINELEADER_H_
